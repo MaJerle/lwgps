@@ -1,10 +1,10 @@
 /**
  * \author  Tilen Majerle
  * \email   tilen@majerle.eu
- * \website http://majerle.eu/projects/
+ * \website http://majerle.eu/projects/gps-nmea-parser-parser-for-embedded-systems
  * \license MIT
  * \brief   GPS Library
- *	
+ *    
 \verbatim
    ----------------------------------------------------------------------
     Copyright (c) 2016 Tilen Majerle
@@ -90,139 +90,139 @@ extern "C" {
  * \brief  GPS library result enumeration
  */
 typedef enum _GPS_Result_t {
-	gpsOK,                              /*!< OK */
-	gpsERROR,                           /*!< An error occurred */
+    gpsOK,                              /*!< OK */
+    gpsERROR,                           /*!< An error occurred */
     gpsNODATA,                          /*!< No data from GPS */
-	gpsOLDDATA,                         /*!< An old data still remaining */
-	gpsNEWDATA                          /*!< New pack of fresh data just received */
+    gpsOLDDATA,                         /*!< An old data still remaining */
+    gpsNEWDATA                          /*!< New pack of fresh data just received */
 } GPS_Result_t;
 
 /**
  * \brief  GPS Fix type
  */
 typedef enum _GPS_Fix_t {
-	GPS_Fix_Invalid = 0x00,             /*!< No fix */
-	GPS_Fix_GPS = 0x01,                 /*!< Fix is GPS */
-	GPS_Fix_DGPS = 0x02                 /*!< Fix is Differential GPS */
+    GPS_Fix_Invalid = 0x00,             /*!< No fix */
+    GPS_Fix_GPS = 0x01,                 /*!< Fix is GPS */
+    GPS_Fix_DGPS = 0x02                 /*!< Fix is Differential GPS */
 } GPS_Fix_t;
 
 /**
  * \brief  GPS Fix mode
  */
 typedef enum GPS_FixMode_t {
-	GPS_FixMode_Invalid = 0x01,         /*!< No fix */
-	GPS_FixMode_2D = 0x02,              /*!< 2D fix */
-	GPS_FixMode_3D = 0x03               /*!< 3D fix */
+    GPS_FixMode_Invalid = 0x01,         /*!< No fix */
+    GPS_FixMode_2D = 0x02,              /*!< 2D fix */
+    GPS_FixMode_3D = 0x03               /*!< 3D fix */
 } GPS_FixMode_t;
 
 /**
  * \brief  GPS satellite description
  */
 typedef struct _GPS_Sat_t {
-	uint8_t ID;                         /*!< Satellite ID */
-	uint8_t Elevation;                  /*!< Elevation */
-	uint16_t Azimuth;                   /*!< Azimuth according to north */
-	uint8_t SNR;                        /*!< Signal to noise ration in units of dB */
+    uint8_t ID;                         /*!< Satellite ID */
+    uint8_t Elevation;                  /*!< Elevation */
+    uint16_t Azimuth;                   /*!< Azimuth according to north */
+    uint8_t SNR;                        /*!< Signal to noise ration in units of dB */
 } GPS_Sat_t;
 
 /**
  * \brief  GPS time
  */
 typedef struct _GPS_Time_t {
-	uint8_t Hours;
-	uint8_t Minutes;
-	uint8_t Seconds;
-	uint8_t Hundreds;
-	uint16_t Thousands;
+    uint8_t Hours;
+    uint8_t Minutes;
+    uint8_t Seconds;
+    uint8_t Hundreds;
+    uint16_t Thousands;
 } GPS_Time_t;
 
 /**
  * \brief  GPS date
  */
 typedef struct _GPS_Date_t {
-	uint8_t Day;
-	uint8_t Month;
-	uint8_t Year;
+    uint8_t Day;
+    uint8_t Month;
+    uint8_t Year;
 } GPS_Date_t;
 
 /**
  * \brief  GPS speed enumeration
  */
 typedef enum _GPS_Speed_t {
-	/* Metric */
-	GPS_Speed_KilometerPerSecond,		/*!< Convert speed to kilo meters per second */
-	GPS_Speed_MeterPerSecond,			/*!< Convert speed to meters per second */
-	GPS_Speed_KilometerPerHour,			/*!< Convert speed to kilo meters per hour */
-	GPS_Speed_MeterPerMinute,			/*!< Convert speed to meter per minute */
-	/* Imperial */
-	GPS_Speed_MilePerSecond,			/*!< Convert speed to miles per second */
-	GPS_Speed_MilePerHour,				/*!< Convert speed to miles per hour */
-	GPS_Speed_FootPerSecond,			/*!< Convert speed to foots per second */
-	GPS_Speed_FootPerMinute,			/*!< Convert speed to foots per minute */
-	/* For Runners and Joggers */
-	GPS_Speed_MinutePerKilometer,		/*!< Convert speed to minutes per kilo meter */
-	GPS_Speed_SecondPerKilometer,		/*!< Convert speed to seconds per kilo meter */
-	GPS_Speed_SecondPer100Meters,		/*!< Convert speed to seconds per 100 meters */
-	GPS_Speed_MinutePerMile,			/*!< Convert speed to minutes per mile */
-	GPS_Speed_SecondPerMile,			/*!< Convert speed to seconds per mile */
-	GPS_Speed_SecondPer100Yards,		/*!< Convert speed to seconds per 100 yards */
-	/* Nautical */
-	GPS_Speed_SeaMilePerHour,			/*!< Convert speed to sea miles per hour */
+    /* Metric */
+    GPS_Speed_KilometerPerSecond,       /*!< Convert speed to kilo meters per second */
+    GPS_Speed_MeterPerSecond,           /*!< Convert speed to meters per second */
+    GPS_Speed_KilometerPerHour,         /*!< Convert speed to kilo meters per hour */
+    GPS_Speed_MeterPerMinute,           /*!< Convert speed to meter per minute */
+    /* Imperial */
+    GPS_Speed_MilePerSecond,            /*!< Convert speed to miles per second */
+    GPS_Speed_MilePerHour,              /*!< Convert speed to miles per hour */
+    GPS_Speed_FootPerSecond,            /*!< Convert speed to foots per second */
+    GPS_Speed_FootPerMinute,            /*!< Convert speed to foots per minute */
+    /* For Runners and Joggers */
+    GPS_Speed_MinutePerKilometer,       /*!< Convert speed to minutes per kilo meter */
+    GPS_Speed_SecondPerKilometer,       /*!< Convert speed to seconds per kilo meter */
+    GPS_Speed_SecondPer100Meters,       /*!< Convert speed to seconds per 100 meters */
+    GPS_Speed_MinutePerMile,            /*!< Convert speed to minutes per mile */
+    GPS_Speed_SecondPerMile,            /*!< Convert speed to seconds per mile */
+    GPS_Speed_SecondPer100Yards,        /*!< Convert speed to seconds per 100 yards */
+    /* Nautical */
+    GPS_Speed_SeaMilePerHour,           /*!< Convert speed to sea miles per hour */
 } GPS_Speed_t;
 
 /**
  * \brief  GPS Distance and bearing
  */
 typedef struct _GPS_Distance_t  {
-	float Latitude1;					/*!< Latitude of starting point. */
-	float Longitude1; 					/*!< Longitude of starting point. */
-	float Latitude2;  					/*!< Latitude of ending point. */
-	float Longitude2; 					/*!< Longitude of ending point. */
-	float Distance;   					/*!< Distance between 2 points which will be calculated. */
-	float Bearing;    					/*!< Bearing from start to stop point according to North. */
+    float Latitude1;                    /*!< Latitude of starting point. */
+    float Longitude1;                   /*!< Longitude of starting point. */
+    float Latitude2;                    /*!< Latitude of ending point. */
+    float Longitude2;                   /*!< Longitude of ending point. */
+    float Distance;                     /*!< Distance between 2 points which will be calculated. */
+    float Bearing;                      /*!< Bearing from start to stop point according to North. */
 } GPS_Distance_t;
 
 typedef struct _GPS_Custom_t {
-	const char* Statement;				/*!< Statement value, including "$" at beginning. For example, "$GPRMC" */
-	uint8_t TermNumber;					/*!< Term number position inside statement */
-	char Value[13];						/*!< Value from GPS receiver at given statement and term number will be stored here.
-												\note Value will not be converted to number if needed, but will stay as a character */
-	uint8_t Updated;					/*!< Updated flag. If this parameter is set to 1, then new update has been made. Meant for private use */
+    const char* Statement;              /*!< Statement value, including "$" at beginning. For example, "$GPRMC" */
+    uint8_t TermNumber;                 /*!< Term number position inside statement */
+    char Value[13];                     /*!< Value from GPS receiver at given statement and term number will be stored here.
+                                                \note Value will not be converted to number if needed, but will stay as a character */
+    uint8_t Updated;                    /*!< Updated flag. If this parameter is set to 1, then new update has been made. Meant for private use */
 } GPS_Custom_t;
 
 /**
  * \brief  GPS working structure
  */
 typedef struct _GPS_t {
-	/* GPGGA statement */
-	float Latitude;                     /*!< GPS Latitude value */
-	float Longitude;                    /*!< GPS Longitude value */
-	float Altitude;                     /*!< GPS Altitude value */
-	GPS_Fix_t Fix;                      /*!< GPS Fix type */
-	uint8_t SatsInUse;                  /*!< Number of satellites in use for fix */
-	GPS_Time_t Time;                    /*!< UTC Time */
+    /* GPGGA statement */
+    float Latitude;                     /*!< GPS Latitude value */
+    float Longitude;                    /*!< GPS Longitude value */
+    float Altitude;                     /*!< GPS Altitude value */
+    GPS_Fix_t Fix;                      /*!< GPS Fix type */
+    uint8_t SatsInUse;                  /*!< Number of satellites in use for fix */
+    GPS_Time_t Time;                    /*!< UTC Time */
 
-	/* GPGSA statement */
-	GPS_FixMode_t FixMode;              /*!< GPS Fix mode */
-	uint8_t SatelliteIDs[12];           /*!< ID numbers of satellites in use. Valid range is from 0 to SatsInUse - 1*/
-	float HDOP;                         /*!< Horizontal dilution of precision */
-	float PDOP;                         /*!< Position dilution of precision */
-	float VDOP;                         /*!< Vertical dilution of precision */
+    /* GPGSA statement */
+    GPS_FixMode_t FixMode;              /*!< GPS Fix mode */
+    uint8_t SatelliteIDs[12];           /*!< ID numbers of satellites in use. Valid range is from 0 to SatsInUse - 1*/
+    float HDOP;                         /*!< Horizontal dilution of precision */
+    float PDOP;                         /*!< Position dilution of precision */
+    float VDOP;                         /*!< Vertical dilution of precision */
 
-	/* GPGSV statement */
-	uint8_t SatsInView;                 /*!< Satellites in view */
-	GPS_Sat_t SatsDesc[24];             /*!< Array of descriptions for satellites in view */
+    /* GPGSV statement */
+    uint8_t SatsInView;                 /*!< Satellites in view */
+    GPS_Sat_t SatsDesc[24];             /*!< Array of descriptions for satellites in view */
 
-	/* GPRMC statement */
-	GPS_Date_t Date;                    /*!< UTC date */
-	uint8_t Valid;                      /*!< GPS valid status */
-	float Speed;                        /*!< Current speed in knots */
-	float Coarse;                       /*!< Current coarse on ground */
-	float Variation;                    /*!< Variation value */
+    /* GPRMC statement */
+    GPS_Date_t Date;                    /*!< UTC date */
+    uint8_t Valid;                      /*!< GPS valid status */
+    float Speed;                        /*!< Current speed in knots */
+    float Coarse;                       /*!< Current coarse on ground */
+    float Variation;                    /*!< Variation value */
 
-	/* Private data */
-	GPS_Custom_t* CustomStatements[GPS_CUSTOM_COUNT];   /*!< Array of pointers to custom GPS statements */
-	uint8_t CustomStatementsCount;      /*!< Number of custom GPS statements */
+    /* Private data */
+    GPS_Custom_t* CustomStatements[GPS_CUSTOM_COUNT];   /*!< Array of pointers to custom GPS statements */
+    uint8_t CustomStatementsCount;      /*!< Number of custom GPS statements */
 } GPS_t;
 
 /**
@@ -291,10 +291,6 @@ GPS_Result_t GPS_Custom_Add(GPS_t* GPS, GPS_Custom_t* Custom, const char* GPG_St
  * \}
  */
 
-/**
- * \}
- */
- 
 /**
  * \}
  */
