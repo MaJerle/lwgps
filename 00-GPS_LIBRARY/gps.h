@@ -43,20 +43,7 @@ extern "C" {
  * \defgroup GPS
  * \brief  Platform independent, written in ANSII C, GPS AT parser library for SIMcom modules   
  * \{
- *
- * \par Features
- *
-\verbatim
-- Platform independant GPS NMEA Parser library
-- Written in ANSII C89
-- Low-level layer separated from application layer, thus allows you to write custom communication for GPS device
-- Allows you to add custom GPS statement which are not originally added to library
-- By default parses GPGGA, GPRMC, GPGSA and GPGSV statements which must exist in GPS output
-\endverbatim
- *
- * \par Download
- * 
- * Download and full source code with examples can be found on official <a href="https://github.com/MaJerle/GPS_NMEA_parser">Github repository</a>.
+ ?
  */
 #include "stdlib.h"
 #include "string.h"
@@ -174,10 +161,10 @@ typedef enum _GPS_Speed_t {
  * \brief  GPS Distance and bearing
  */
 typedef struct _GPS_Distance_t  {
-    float Latitude1;                    /*!< Latitude of starting point. */
-    float Longitude1;                   /*!< Longitude of starting point. */
-    float Latitude2;                    /*!< Latitude of ending point. */
-    float Longitude2;                   /*!< Longitude of ending point. */
+    float LatitudeStart;                /*!< Latitude of starting point. */
+    float LongitudeStart;               /*!< Longitude of starting point. */
+    float LatitudeEnd;                  /*!< Latitude of ending point. */
+    float LongitudeEnd;                 /*!< Longitude of ending point. */
     float Distance;                     /*!< Distance between 2 points which will be calculated. */
     float Bearing;                      /*!< Bearing from start to stop point according to North. */
 } GPS_Distance_t;
@@ -261,22 +248,22 @@ GPS_Result_t GPS_Update(GPS_t* GPS);
 /**
  * \brief  Converts speed in knots (from GPS) to user selectable speed
  * \param  speedInKnots: float value from GPS module
- * \param  toSpeed: Select to which speed you want conversion from knot. This parameter ca be a value of TM_GPS_Speed_t enumeration.
+ * \param  toSpeed: Select to which speed you want conversion from knot. This parameter ca be a value of GPS_Speed_t enumeration.
  * \retval Calculated speed from knots to user selectable format
  */
 float GPS_ConvertSpeed(float SpeedInKnots, GPS_Speed_t toSpeed);
 
 /**
  * \brief  Calculates distance between 2 coordinates on earth and bearing from start to end point in relation to the north
- * \note   Calculation results will be saved in *Distance_Data @ref TM_GPS_Distance_t structure
- * \param  *Distance: Pointer to @ref TM_GPS_Distance_t structure with latitude and longitude set values
+ * \note   Calculation results will be saved in *Distance_Data @ref GPS_Distance_t structure
+ * \param  *Distance: Pointer to @ref GPS_Distance_t structure with latitude and longitude set values
  * \retval Member of \ref GPS_Result_t enumeration
  */
 GPS_Result_t GPS_DistanceBetween(GPS_Distance_t* Distance);
 
 /**
  * \brief  Adds custom GPGxx statement to array of user selectable statements.
- *            Array is available to user using \ref TM_GPS_t working structure
+ *            Array is available to user using \ref GPS_t working structure
  * \note   Also note, that your GPS receiver HAVE TO send statement type you use in this function, or
  *            \ref GPS_Update function will always return that there is no new data available to read
  * \param  *GPS: Pointer to working \ref GPS_t structure

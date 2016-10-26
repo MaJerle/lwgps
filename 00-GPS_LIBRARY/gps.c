@@ -62,9 +62,9 @@ typedef struct {
 #define GPS_ADDTOTERM(ch)                   do { Int.Term[Int.Flags.F.Term_Pos++] = (ch); Int.Term[Int.Flags.F.Term_Pos] = 0; } while (0);    /* Add new element to term object */
 #define GPS_START_NEXT_TERM()               do { Int.Term[0]= 0; Int.Flags.F.Term_Pos = 0; Int.Flags.F.Term_Num++; } while (0);
 
-#define GPS_EARTH_RADIUS                    6371            /* Earth radius */
-#define GPS_DEGREES2RADIANS(x)              ((x) * 0.01745329251994f)   /* Degreestoradiansconverter */
-#define GPS_RADIANS2DEGREES(x)              ((x) * 57.29577951308232f)  /* Radianstodegrees */
+#define GPS_EARTH_RADIUS                    6371.0f            /* Earth radius */
+#define GPS_DEGREES2RADIANS(x)              (float)((x) * 0.01745329251994f)   /* Degreestoradiansconverter */
+#define GPS_RADIANS2DEGREES(x)              (float)((x) * 57.29577951308232f)  /* Radianstodegrees */
 #define GPS_MAX_SATS_IN_VIEW                24              /* Maximalnumberofsatellitesinview */
 
 /* GPS statements definitions */
@@ -75,7 +75,7 @@ typedef struct {
 #define GPS_GPRMC                           4
 #define GPS_FLAGS_ALL                       (1 << GPS_GPGGA | 1 << GPS_GPGSA | 1 << GPS_GPGSV | 1 << GPS_GPRMC)
 
-#define GPS_CONCAT(x,y)                    (uint16_t)((x) << 8 | (y))
+#define GPS_CONCAT(x, y)                    (uint16_t)((x) << 8 | (y))
 
 /******************************************************************************/
 /******************************************************************************/
@@ -223,7 +223,7 @@ void ParseValue(GPS_t* GPS) {
                         GPS->Time.Thousands = 100 * tmp;
                         break;
                     case 2:
-                        GPS->Time.Hundreds = tmp;
+                        GPS->Time.Hundreds = (uint8_t)tmp;
                         GPS->Time.Thousands = 10 * tmp;
                         break;
                     case 3:
@@ -446,20 +446,20 @@ GPS_Result_t GPS_DistanceBetween(GPS_Distance_t* Distance) {
     float f1, f2, l1, l2, df, dfi, a;
 
     /* Calculate distance between 2 pointes */
-    f1 = GPS_DEGREES2RADIANS(Distance->Latitude1);
-    f2 = GPS_DEGREES2RADIANS(Distance->Latitude2);
-    l1 = GPS_DEGREES2RADIANS(Distance->Longitude1);
-    l2 = GPS_DEGREES2RADIANS(Distance->Longitude2);
-    df = GPS_DEGREES2RADIANS(Distance->Latitude2 - Distance->Latitude1);
-    dfi = GPS_DEGREES2RADIANS(Distance->Longitude2 - Distance->Longitude1);
+	f1 = GPS_DEGREES2RADIANS(Distance->LatitudeStart);
+	f2 = GPS_DEGREES2RADIANS(Distance->LatitudeEnd);
+	l1 = GPS_DEGREES2RADIANS(Distance->LongitudeStart);
+	l2 = GPS_DEGREES2RADIANS(Distance->LongitudeEnd);
+    df = GPS_DEGREES2RADIANS(Distance->LatitudeEnd - Distance->LatitudeStart);
+    dfi = GPS_DEGREES2RADIANS(Distance->LongitudeEnd - Distance->LongitudeStart);
 
-    a = sin(df * 0.5f) * sin(df * 0.5f) + cos(f1) * cos(f2) * sin(dfi * 0.5f) * sin(dfi * 0.5f);
-    Distance->Distance = GPS_EARTH_RADIUS * 2 * atan2(sqrt(a), sqrt(1 - a)) * 1000;    /* Get distance in meters */
+    a = (float)(sin(df * 0.5f) * sin(df * 0.5f) + cos(f1) * cos(f2) * sin(dfi * 0.5f) * sin(dfi * 0.5f));
+    Distance->Distance = (float)(GPS_EARTH_RADIUS * 2.0f * atan2(sqrt(a), sqrt(1 - a)) * 1000.0f);    /* Get distance in meters */
 
     /* Calculate bearing between two points from point1 to point2 */
-    df = sin(l2 - l1) * cos(f2);
-    dfi = cos(f1) * sin(f2) - sin(f1) * cos(f2) * cos(l2 - l1);
-    Distance->Bearing = (GPS_RADIANS2DEGREES(atan2(df, dfi)));
+    df = (float)(sin(l2 - l1) * cos(f2));
+    dfi = (float)(cos(f1) * sin(f2) - sin(f1) * cos(f2) * cos(l2 - l1));
+    Distance->Bearing = (float)(GPS_RADIANS2DEGREES(atan2(df, dfi)));
 
     /* Make bearing always positive from 0 - 360 degrees instead of -180 to 180 */
     if (Distance->Bearing < 0) {
