@@ -162,7 +162,7 @@ float ParseFloatNumber(const char* ptr, uint8_t* cnt) {
 
 /* Parses latitude and longitude coordinates */
 static
-void ParseLatLong(GPS_t* GPS, const char* term, uint8_t id, float* out) {
+float ParseLatLong(const char* term) {
     float num;
     uint8_t cnt;
 
@@ -175,7 +175,7 @@ void ParseLatLong(GPS_t* GPS, const char* term, uint8_t id, float* out) {
         num += (float)(10 * CHARTONUM(term[3]) + CHARTONUM(term[4])) / 60.0f;   /* Parse minutes */
         num += (float)ParseNumber(&term[6], &cnt) / (60.0f * (float)pow(10, cnt));  /* Parse seconds */
     }
-    *out = num;
+	return num;
 }
 
 /* Parse term value from GPS*/
@@ -201,7 +201,25 @@ void ParseValue(GPS_t* GPS) {
     /* Check custom terms */
     for (i = 0; i < GPS->CustomStatementsCount; i++) {      /* Check each term separatelly */
         if (Int.Flags.F.Term_Num == GPS->CustomStatements[i]->TermNumber && strcmp(GPS->CustomStatements[i]->Statement, Int.Statement) == 0) {
-            strcpy(GPS->CustomStatements[i]->Value, Int.Term);  /* Copy value*/
+            switch (GPS->CustomStatements[i]->Type) {
+                case GPS_CustomType_String:					/* Save value as string */
+                    strcpy(GPS->CustomStatements[i]->Value.S, Int.Term);
+                    break;
+				case GPS_CustomType_Char:					/* Save value as character */
+					GPS->CustomStatements[i]->Value.C = Int.Term[0];
+					break;
+				case GPS_CustomType_Int:
+					GPS->CustomStatements[i]->Value.I = ParseNumber(Int.Term, NULL);
+					break;
+				case GPS_CustomType_Float:					/* Save value as float */
+					GPS->CustomStatements[i]->Value.F = ParseFloatNumber(Int.Term, NULL);
+					break;
+				case GPS_CustomType_LatLong:				/* Parse latitude or longitude */
+					GPS->CustomStatements[i]->Value.F = ParseLatLong(Int.Term);
+					break;
+                default:
+                    break;
+            }
             GPS->CustomStatements[i]->Updated = 1;          /* Set flag as updated value */
         }
     }
@@ -234,7 +252,7 @@ void ParseValue(GPS_t* GPS) {
             }
             break;
         case GPS_CONCAT(GPS_GPGGA, 2):                      /* Latitude */
-            ParseLatLong(GPS,Int.Term,0,&GPS->Latitude);    /* Parse latitude and save data */
+			GPS->Latitude = ParseLatLong(Int.Term);    /* Parse latitude and save data */
             break;
         case GPS_CONCAT(GPS_GPGGA, 3):                      /* Latitude north or south */
             if (Int.Term[0] == 'S' || Int.Term[0] == 's') {
@@ -242,7 +260,7 @@ void ParseValue(GPS_t* GPS) {
             }
             break;
         case GPS_CONCAT(GPS_GPGGA, 4):                      /* Longitude*/
-            ParseLatLong(GPS, Int.Term, 0, &GPS->Longitude);/* Parse longitude and save data */
+			GPS->Longitude = ParseLatLong(Int.Term);    /* Parse latitude and save data */
             break;
         case GPS_CONCAT(GPS_GPGGA, 5):                      /* Longitude west or east */
             if (Int.Term[0] == 'W' || Int.Term[0] == 'w') {
@@ -430,13 +448,14 @@ GPS_Result_t GPS_Update(GPS_t* GPS) {
     return gpsOLDDATA;
 }
 
-GPS_Result_t GPS_Custom_Add(GPS_t* GPS, GPS_Custom_t* Custom, const char* GPG_Statement, uint8_t TermNumber) {
+GPS_Result_t GPS_Custom_Add(GPS_t* GPS, GPS_Custom_t* Custom, const char* GPG_Statement, GPS_CustomType_t Type, uint8_t TermNumber) {
     if (GPS->CustomStatementsCount >= GPS_CUSTOM_COUNT) {
         return gpsERROR;
     }
     
     Custom->Statement = GPG_Statement;                      /* Save term start name */
     Custom->TermNumber = TermNumber;                        /* Save term number */
+    Custom->Type = Type;                                    /* Save data type */
 
     GPS->CustomStatements[GPS->CustomStatementsCount++] = Custom;   /* Save pointer to custom object */
     return gpsOK;                                           /* Return OK */

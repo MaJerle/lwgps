@@ -50,8 +50,8 @@ int main(void) {
     TM_USART_Init(GPS_USART, GPS_USART_PP, 115200);         /* Init USART for GPS receive data */
     GPS_Init(&GPS);                                         /* Init GPS stack */
     
-    /* Add custom statement parser */
-    GPS_Custom_Add(&GPS, &Custom, "$GPRMC", 2);
+    /* Add custom statement parser, GPRMC sentence, parse as latitude or longitude, data number 3 in sentence */
+    GPS_Custom_Add(&GPS, &Custom, "$GPRMC", GPS_CustomType_LatLong, 3);
     
     /* While loop */
     while (1) {
@@ -62,8 +62,8 @@ int main(void) {
                 printf("GPS is valid! Latitude: %f, Longitude: %f, Altitude: %f\r\n", 
                     GPS.Latitude, GPS.Longitude, GPS.Altitude);
                 
-                /* Print custom value */
-                printf("Custom GPRMC.2 value: %s\r\n", Custom.Value);
+                /* Print custom value, latitude/longitude print as float */
+                printf("Custom $GPRMC.3 value: %f\r\n", Custom.Value.F);
             }
         }
     }

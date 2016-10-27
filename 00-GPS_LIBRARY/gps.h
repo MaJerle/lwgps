@@ -169,11 +169,27 @@ typedef struct _GPS_Distance_t  {
     float Bearing;                      /*!< Bearing from start to stop point according to North. */
 } GPS_Distance_t;
 
+typedef enum _GPS_CustomType_t {
+    GPS_CustomType_Float,				/*!< Parse received data as float */
+    GPS_CustomType_Int,					/*!< Parse received data as int */
+    GPS_CustomType_String,				/*!< Parse received data as string */
+	GPS_CustomType_Char,				/*!< Parse received data as char */
+	GPS_CustomType_LatLong				/*!< Parse received data as latitude or longitude */
+} GPS_CustomType_t;
+
+/**
+ * \brief  Structure for custom data
+ */
 typedef struct _GPS_Custom_t {
     const char* Statement;              /*!< Statement value, including "$" at beginning. For example, "$GPRMC" */
     uint8_t TermNumber;                 /*!< Term number position inside statement */
-    char Value[13];                     /*!< Value from GPS receiver at given statement and term number will be stored here.
-                                                \note Value will not be converted to number if needed, but will stay as a character */
+    union {
+        char S[13];                     /*!< Value from GPS receiver stored as string */
+        char C;                         /*!< Value saved as character */
+        float F;                        /*!< Value saved as float number */
+        int I;                          /*!< Value saved as integer number */
+    } Value;
+    GPS_CustomType_t Type;              /*!< Type for data */
     uint8_t Updated;                    /*!< Updated flag. If this parameter is set to 1, then new update has been made. Meant for private use */
 } GPS_Custom_t;
 
@@ -272,7 +288,7 @@ GPS_Result_t GPS_DistanceBetween(GPS_Distance_t* Distance);
  * \param  TermNumber: Position in NMEA statement
  * \retval Member of \ref GPS_Result_t enumeration
  */
-GPS_Result_t GPS_Custom_Add(GPS_t* GPS, GPS_Custom_t* Custom, const char* GPG_Statement, uint8_t TermNumber);
+GPS_Result_t GPS_Custom_Add(GPS_t* GPS, GPS_Custom_t* Custom, const char* GPG_Statement, GPS_CustomType_t Type, uint8_t TermNumber);
 
 /**
  * \}
