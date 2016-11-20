@@ -37,11 +37,11 @@ GPS_Result_t gpsRes;
 GPS_Custom_t Custom;
 
 int main(void) {
-	TM_RCC_InitSystem();                                    /* Init system */
-	HAL_Init();                                             /* Init HAL layer */
-	TM_DISCO_LedInit();                                     /* Init leds */
-	TM_DISCO_ButtonInit();                                  /* Init button */
-	TM_DELAY_Init();                                        /* Init delay */
+    TM_RCC_InitSystem();                                    /* Init system */
+    HAL_Init();                                             /* Init HAL layer */
+    TM_DISCO_LedInit();                                     /* Init leds */
+    TM_DISCO_ButtonInit();                                  /* Init button */
+    TM_DELAY_Init();                                        /* Init delay */
     TM_USART_Init(DEBUG_USART, DEBUG_USART_PP, 921600);     /* Init USART for debug, PA2 is TX output */
     
     printf("GPS NMEA parser; Compiled date and time: %s %s\r\n", __DATE__, __TIME__);
@@ -51,7 +51,7 @@ int main(void) {
     GPS_Init(&GPS);                                         /* Init GPS stack */
     
     /* Add custom statement parser, GPRMC sentence, parse as latitude or longitude, data number 3 in sentence */
-    GPS_Custom_Add(&GPS, &Custom, "$GPRMC", GPS_CustomType_LatLong, 3);
+    GPS_Custom_Add(&GPS, &Custom, "$GPRMC", 3, GPS_CustomType_LatLong);
     
     /* While loop */
     while (1) {
@@ -62,8 +62,8 @@ int main(void) {
                 printf("GPS is valid! Latitude: %f, Longitude: %f, Altitude: %f\r\n", 
                     GPS.Latitude, GPS.Longitude, GPS.Altitude);
                 
-                /* Print custom value, latitude/longitude print as float */
-                printf("Custom $GPRMC.3 value: %f\r\n", Custom.Value.F);
+                /* Print custom value, latitude/longitude print as latitude/longitude (float number) */
+                printf("Custom $GPRMC.3 value: %f\r\n", Custom.Value.L);
             }
         }
     }
