@@ -3,6 +3,7 @@
  * \email   tilen@majerle.eu
  * \website http://majerle.eu/projects/gps-nmea-parser-parser-for-embedded-systems
  * \license MIT
+ * \version v0.1
  * \brief   GPS Library
  *    
 \verbatim
@@ -116,20 +117,20 @@ typedef struct _GPS_Sat_t {
  * \brief  GPS time
  */
 typedef struct _GPS_Time_t {
-    uint8_t Hours;
-    uint8_t Minutes;
-    uint8_t Seconds;
-    uint8_t Hundreds;
-    uint16_t Thousands;
+    uint8_t Hours;                      /*!< Hours in 24h format, 0 to 23 */
+    uint8_t Minutes;                    /*!< Minutes */
+    uint8_t Seconds;                    /*!< Seconds */
+    uint8_t Hundreds;                   /*!< Hundreds of second */
+    uint16_t Thousands;                 /*!< Thousands of second */
 } GPS_Time_t;
 
 /**
  * \brief  GPS date
  */
 typedef struct _GPS_Date_t {
-    uint8_t Day;
-    uint8_t Month;
-    uint8_t Year;
+    uint8_t Day;                        /*!< Day in a month, 1 to 31 */
+    uint8_t Month;                      /*!< Month in a year, 1 to 12 */
+    uint16_t Year;                      /*!< Full year in 2xxx format */
 } GPS_Date_t;
 
 /**
@@ -169,6 +170,9 @@ typedef struct _GPS_Distance_t  {
     float Bearing;                      /*!< Bearing from start to stop point according to North. */
 } GPS_Distance_t;
 
+/**
+ * \brief  Custom data types for custom statements
+ */
 typedef enum _GPS_CustomType_t {
     GPS_CustomType_Float,				/*!< Parse received data as float */
     GPS_CustomType_Int,					/*!< Parse received data as int */
@@ -187,8 +191,9 @@ typedef struct _GPS_Custom_t {
         char S[13];                     /*!< Value from GPS receiver stored as string */
         char C;                         /*!< Value saved as character */
         float F;                        /*!< Value saved as float number */
+        float L;                        /*!< Value saved as latitude/longitude (float number) */
         int I;                          /*!< Value saved as integer number */
-    } Value;
+    } Value;                            /*!< Union of different types of data to read as user */
     GPS_CustomType_t Type;              /*!< Type for data */
     uint8_t Updated;                    /*!< Updated flag. If this parameter is set to 1, then new update has been made. Meant for private use */
 } GPS_Custom_t;
@@ -263,7 +268,7 @@ GPS_Result_t GPS_Update(GPS_t* GPS);
 
 /**
  * \brief  Converts speed in knots (from GPS) to user selectable speed
- * \param  speedInKnots: float value from GPS module
+ * \param  SpeedInKnots: float value from GPS module
  * \param  toSpeed: Select to which speed you want conversion from knot. This parameter ca be a value of GPS_Speed_t enumeration.
  * \retval Calculated speed from knots to user selectable format
  */
@@ -286,9 +291,10 @@ GPS_Result_t GPS_DistanceBetween(GPS_Distance_t* Distance);
  * \param  *Custom: Pointer to empty \ref GPS_Custom_t structure
  * \param  *GPG_Statement: String of NMEA starting line address, including "$" at beginning
  * \param  TermNumber: Position in NMEA statement
+ * \param  Type: Data type to parse at given position
  * \retval Member of \ref GPS_Result_t enumeration
  */
-GPS_Result_t GPS_Custom_Add(GPS_t* GPS, GPS_Custom_t* Custom, const char* GPG_Statement, GPS_CustomType_t Type, uint8_t TermNumber);
+GPS_Result_t GPS_Custom_Add(GPS_t* GPS, GPS_Custom_t* Custom, const char* GPG_Statement, uint8_t TermNumber, GPS_CustomType_t Type);
 
 /**
  * \}

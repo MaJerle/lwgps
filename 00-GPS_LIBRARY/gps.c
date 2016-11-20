@@ -215,7 +215,7 @@ void ParseValue(GPS_t* GPS) {
 					GPS->CustomStatements[i]->Value.F = ParseFloatNumber(Int.Term, NULL);
 					break;
 				case GPS_CustomType_LatLong:				/* Parse latitude or longitude */
-					GPS->CustomStatements[i]->Value.F = ParseLatLong(Int.Term);
+					GPS->CustomStatements[i]->Value.L = ParseLatLong(Int.Term);
 					break;
                 default:
                     break;
@@ -318,7 +318,7 @@ void ParseValue(GPS_t* GPS) {
         case GPS_CONCAT(GPS_GPRMC, 9):                      /* Date */
             GPS->Date.Day = 10 * CHARTONUM(Int.Term[0]) + CHARTONUM(Int.Term[1]);
             GPS->Date.Month = 10 * CHARTONUM(Int.Term[2]) + CHARTONUM(Int.Term[3]);
-            GPS->Date.Year = 10 * CHARTONUM(Int.Term[4]) + CHARTONUM(Int.Term[5]);
+            GPS->Date.Year = 2000 + 10 * CHARTONUM(Int.Term[4]) + CHARTONUM(Int.Term[5]);
             break;
         case GPS_CONCAT(GPS_GPRMC, 10):                     /* Variation */
             GPS->Variation = ParseFloatNumber(Int.Term, NULL);
@@ -448,7 +448,7 @@ GPS_Result_t GPS_Update(GPS_t* GPS) {
     return gpsOLDDATA;
 }
 
-GPS_Result_t GPS_Custom_Add(GPS_t* GPS, GPS_Custom_t* Custom, const char* GPG_Statement, GPS_CustomType_t Type, uint8_t TermNumber) {
+GPS_Result_t GPS_Custom_Add(GPS_t* GPS, GPS_Custom_t* Custom, const char* GPG_Statement, uint8_t TermNumber, GPS_CustomType_t Type) {
     if (GPS->CustomStatementsCount >= GPS_CUSTOM_COUNT) {
         return gpsERROR;
     }
