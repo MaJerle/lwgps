@@ -3,7 +3,7 @@
  * \email   tilen@majerle.eu
  * \website http://majerle.eu/projects/gps-nmea-parser-parser-for-embedded-systems
  * \license MIT
- * \version v0.1
+ * \version v0.2
  * \brief   GPS Library
  *    
 \verbatim
@@ -33,7 +33,7 @@
 \endverbatim
  */
 #ifndef GPS_H
-#define GPS_H 010
+#define GPS_H 020
 
 /* C++ detection */
 #ifdef __cplusplus
@@ -244,14 +244,14 @@ typedef struct _GPS_t {
 */
 
 /**
- * \brief  Initializes GPS stack
+ * \brief  Initialize GPS stack
  * \param  *GPS: Pointer to working \ref GPS_t structure
  * \retval Member of \ref GPS_Result_t enumeration
  */
 GPS_Result_t GPS_Init(GPS_t* GPS);
 
 /**
- * \brief  Adds new data to GPS stack
+ * \brief  Add new data to GPS stack
  * \note   This function must be called when new data are received from GPS. Use it as input method for GPS stack
  * \param  *ch: Pointer to characters to write to stack
  * \param  count: Number of characters to write at a time
@@ -267,7 +267,7 @@ uint32_t GPS_DataReceived(uint8_t* ch, size_t count);
 GPS_Result_t GPS_Update(GPS_t* GPS);
 
 /**
- * \brief  Converts speed in knots (from GPS) to user selectable speed
+ * \brief  Convert speed in knots (from GPS) to user selectable speed
  * \param  SpeedInKnots: float value from GPS module
  * \param  toSpeed: Select to which speed you want conversion from knot. This parameter ca be a value of GPS_Speed_t enumeration.
  * \retval Calculated speed from knots to user selectable format
@@ -275,7 +275,7 @@ GPS_Result_t GPS_Update(GPS_t* GPS);
 float GPS_ConvertSpeed(float SpeedInKnots, GPS_Speed_t toSpeed);
 
 /**
- * \brief  Calculates distance between 2 coordinates on earth and bearing from start to end point in relation to the north
+ * \brief  Calculate distance between 2 coordinates on earth and bearing from start to end point in relation to the north
  * \note   Calculation results will be saved in *Distance_Data @ref GPS_Distance_t structure
  * \param  *Distance: Pointer to @ref GPS_Distance_t structure with latitude and longitude set values
  * \retval Member of \ref GPS_Result_t enumeration
@@ -283,7 +283,7 @@ float GPS_ConvertSpeed(float SpeedInKnots, GPS_Speed_t toSpeed);
 GPS_Result_t GPS_DistanceBetween(GPS_Distance_t* Distance);
 
 /**
- * \brief  Adds custom GPGxx statement to array of user selectable statements.
+ * \brief  Add custom GPGxx statement to array of user selectable statements.
  *            Array is available to user using \ref GPS_t working structure
  * \note   Also note, that your GPS receiver HAVE TO send statement type you use in this function, or
  *            \ref GPS_Update function will always return that there is no new data available to read
@@ -295,6 +295,15 @@ GPS_Result_t GPS_DistanceBetween(GPS_Distance_t* Distance);
  * \retval Member of \ref GPS_Result_t enumeration
  */
 GPS_Result_t GPS_Custom_Add(GPS_t* GPS, GPS_Custom_t* Custom, const char* GPG_Statement, uint8_t TermNumber, GPS_CustomType_t Type);
+
+/**
+* \brief  Delete custom GPGxx statement from array of user selectable statements.
+*            Array is available to user using \ref GPS_t working structure
+* \param  *GPS: Pointer to working \ref GPS_t structure
+* \param  *Custom: Pointer to \ref GPS_Custom_t structure to delete from list of custom statements
+* \retval Member of \ref GPS_Result_t enumeration
+*/
+GPS_Result_t GPS_Custom_Delete(GPS_t* GPS, GPS_Custom_t* Custom);
 
 /**
  * \}

@@ -402,7 +402,7 @@ GPS_Result_t GPS_Update(GPS_t* GPS) {
             ParseValue(GPS);                                /* Check term */
             GPS_START_NEXT_TERM();                          /* Start next term */
         } else if (ch == '\r') {
-            if ((uint8_t)ParseHexNumber(Int.Term, NULL) == Int.CRC) {   /* CRC is not OK, data failed somewhere */
+            if ((uint8_t)ParseHexNumber(Int.Term, NULL) == Int.CRC) {   /* CRC is OK data valid */
                 switch (Int.Flags.F.Statement) {
                     case GPS_GPGGA:
                     case GPS_GPGSA:
@@ -449,16 +449,42 @@ GPS_Result_t GPS_Update(GPS_t* GPS) {
 }
 
 GPS_Result_t GPS_Custom_Add(GPS_t* GPS, GPS_Custom_t* Custom, const char* GPG_Statement, uint8_t TermNumber, GPS_CustomType_t Type) {
-    if (GPS->CustomStatementsCount >= GPS_CUSTOM_COUNT) {
+	if (GPS->CustomStatementsCount >= GPS_CUSTOM_COUNT) {
+		return gpsERROR;
+	}
+
+	Custom->Statement = GPG_Statement;                      /* Save term start name */
+	Custom->TermNumber = TermNumber;                        /* Save term number */
+	Custom->Type = Type;                                    /* Save data type */
+    Custom->Updated = 0;                                    /* Reset update flag */
+
+	GPS->CustomStatements[GPS->CustomStatementsCount++] = Custom;   /* Save pointer to custom object */
+	return gpsOK;                                           /* Return OK */
+}
+
+GPS_Result_t GPS_Custom_Delete(GPS_t* GPS, GPS_Custom_t* Custom) {
+    uint16_t i;
+    if (GPS->CustomStatementsCount == 0) {
         return gpsERROR;
     }
-    
-    Custom->Statement = GPG_Statement;                      /* Save term start name */
-    Custom->TermNumber = TermNumber;                        /* Save term number */
-    Custom->Type = Type;                                    /* Save data type */
 
-    GPS->CustomStatements[GPS->CustomStatementsCount++] = Custom;   /* Save pointer to custom object */
-    return gpsOK;                                           /* Return OK */
+    /* Find position */
+    for (i = 0; i < GPS->CustomStatementsCount; i++) {      /* Find object in array */
+        if (GPS->CustomStatements[i] == Custom) {
+            break;
+        }
+    }
+
+    /* Shift others */
+    if (i < GPS->CustomStatementsCount) {                   /* Shift objects up for 1 */
+        for (; i < GPS->CustomStatementsCount - 1; i++) {
+            GPS->CustomStatements[i] = GPS->CustomStatements[i + 1];
+        }
+        GPS->CustomStatements[i] = 0;                       /* Reset last object */
+        GPS->CustomStatementsCount--;                       /* Decrease number of objects */
+        return gpsOK;                                       /* Return OK */
+    }
+    return gpsERROR;                                        /* Return ERROR */
 }
 
 GPS_Result_t GPS_DistanceBetween(GPS_Distance_t* Distance) {
