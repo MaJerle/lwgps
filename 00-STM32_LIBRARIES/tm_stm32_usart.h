@@ -1,8 +1,8 @@
 /**
  * @author  Tilen Majerle
  * @email   tilen@majerle.eu
- * @website http://stm32f4-discovery.com
- * @link    http://stm32f4-discovery.com/2015/07/hal-library-07-usart-for-stm32fxxx
+ * @website http://stm32f4-discovery.net
+ * @link    http://stm32f4-discovery.net/2015/07/hal-library-07-usart-for-stm32fxxx
  * @version v1.2.1
  * @ide     Keil uVision
  * @license MIT
@@ -49,7 +49,7 @@ extern "C" {
 
 /**
  * @defgroup TM_USART
- * @brief    TM USART Library for STM32Fxxx - http://stm32f4-discovery.com/2015/07/hal-library-07-usart-for-stm32fxxx
+ * @brief    TM USART Library for STM32Fxxx - http://stm32f4-discovery.net/2015/07/hal-library-07-usart-for-stm32fxxx
  * @{
  *
  * <b>Library works for all 8 U(S)ARTs which are supported on STM32Fxxx devices.</b>
@@ -134,7 +134,7 @@ void TM_X_ReceiveHandler(uint8_t c) {
 U(S)ARTX     |TX     RX      |TX     RX      |TX     RX
 
 //STM32F4xx and STM32F7xx
-USART1       |PA9    PA10    |PB6    PB7     |-      -
+USART1       |PA9    PA10    |PB6    PB7     |PA9    PB7
 USART2       |PA2    PA3     |PD5    PD6     |-      -
 USART3       |PB10   PB11    |PC10   PC11    |PD8    PD9
 UART4        |PA0    PA1     |PC10   PC11    |-      -
@@ -526,9 +526,13 @@ typedef enum {
 #define USART_TX_REG(USARTx)                ((USARTx)->TDR)
 #define USART_WRITE_DATA(USARTx, data)      ((USARTx)->TDR = (data))
 #define USART_READ_DATA(USARTx)             ((USARTx)->RDR)
+#if defined(STM32F7xx)
+#define GPIO_AF_UART5                       (GPIO_AF8_UART5)
+#else
 #define GPIO_AF_UART5                       (GPIO_AF7_UART5)
+#endif /* STM32F7xx */
 #define USART_STATUS_REG                    ISR
-#endif
+#endif /* STM32F4XX */
 
 /* Wait for TX empty */
 #define USART_TXEMPTY(USARTx)               ((USARTx)->USART_STATUS_REG & USART_FLAG_TXE)
@@ -590,7 +594,7 @@ static __INLINE void TM_USART_Putc(USART_TypeDef* USARTx, volatile char c) {
  * @param  *str: Pointer to string to send over USART
  * @retval None
  */
-void TM_USART_Puts(USART_TypeDef* USARTx, const char* str);
+void TM_USART_Puts(USART_TypeDef* USARTx, char* str);
 
 /**
  * @brief  Sends data array to USART port
@@ -682,7 +686,7 @@ void TM_USART_SetCustomStringEndCharacter(USART_TypeDef* USARTx, uint8_t Charact
  *            -  < 0: String is not in buffer
  *            - >= 0: String is in buffer
  */
-int16_t TM_USART_FindString(USART_TypeDef* USARTx, const char* str);
+int16_t TM_USART_FindString(USART_TypeDef* USARTx, char* str);
 
 /**
  * @brief  Callback for custom pins initialization for USARTx.

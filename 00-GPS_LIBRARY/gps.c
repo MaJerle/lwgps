@@ -128,7 +128,7 @@ uint32_t ParseHexNumber(const char* ptr, uint8_t* cnt) {
         ptr++;
         i++;
     }
-    if (cnt != NULL) {                                      /* Save number of characters used for number*/
+    if (cnt != NULL) {                                      /* Save number of characters used for number */
         *cnt = i;
     }
     return sum;                                             /* Return number */
@@ -154,7 +154,7 @@ float ParseFloatNumber(const char* ptr, uint8_t* cnt) {
         j += i + 1;
     }
 
-    if (cnt != NULL) {                                      /* Save number of characters used for number*/
+    if (cnt != NULL) {                                      /* Save number of characters used for number */
         *cnt = j;
     }
     return sum;                                             /* Return number */
@@ -225,7 +225,7 @@ void ParseValue(GPS_t* GPS) {
     }
 
     /* Parse core statements */
-    switch (GPS_CONCAT(Int.Flags.F.Statement,Int.Flags.F.Term_Num)) {   /* Match statement and term */
+    switch (GPS_CONCAT(Int.Flags.F.Statement, Int.Flags.F.Term_Num)) {  /* Match statement and term */
         /* GPGGA statement */
         case GPS_CONCAT(GPS_GPGGA, 1):                      /* Current UTC time */
             GPS->Time.Hours = 10 * CHARTONUM(Int.Term[0]) + CHARTONUM(Int.Term[1]);

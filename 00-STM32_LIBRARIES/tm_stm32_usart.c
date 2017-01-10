@@ -388,7 +388,7 @@ uint16_t TM_USART_Gets(USART_TypeDef* USARTx, char* buffer, uint16_t bufsize) {
 	return TM_BUFFER_ReadString(TM_USART_INT_GetUSARTBuffer(USARTx), buffer, bufsize);
 }
 
-void TM_USART_Puts(USART_TypeDef* USARTx, const char* str) {
+void TM_USART_Puts(USART_TypeDef* USARTx, char* str) {
 	/* Go through entire string */
 	while (*str) {
 		/* Wait to be ready, buffer empty */
@@ -416,7 +416,7 @@ int16_t TM_USART_FindCharacter(USART_TypeDef* USARTx, uint8_t c) {
 	return TM_BUFFER_FindElement(TM_USART_INT_GetUSARTBuffer(USARTx), c);
 }
 
-int16_t TM_USART_FindString(USART_TypeDef* USARTx, const char* str) {
+int16_t TM_USART_FindString(USART_TypeDef* USARTx, char* str) {
 	return TM_BUFFER_Find(TM_USART_INT_GetUSARTBuffer(USARTx), (uint8_t *)str, strlen(str));
 }
 
@@ -441,13 +441,22 @@ void TM_USART_SetCustomStringEndCharacter(USART_TypeDef* USARTx, uint8_t Charact
 }
 
 /************************************/
-/*    USART CUSTOM PINS CALLBACK    */
+/*              CALLBACKS           */
 /************************************/
 __weak void TM_USART_InitCustomPinsCallback(USART_TypeDef* USARTx, uint16_t AlternateFunction) { 
 	/* NOTE: This function Should not be modified, when the callback is needed,
            the TM_USART_InitCustomPinsCallback could be implemented in the user file
 	*/
 }
+
+__weak void TM_USART1_ReceiveHandler(uint8_t c) { }
+__weak void TM_USART2_ReceiveHandler(uint8_t c) { }
+__weak void TM_USART3_ReceiveHandler(uint8_t c) { }
+__weak void TM_UART4_ReceiveHandler(uint8_t c) { }
+__weak void TM_UART5_ReceiveHandler(uint8_t c) { }
+__weak void TM_USART6_ReceiveHandler(uint8_t c) { }
+__weak void TM_UART7_ReceiveHandler(uint8_t c) { }
+__weak void TM_UART8_ReceiveHandler(uint8_t c) { }
 
 /* Private functions */
 static void TM_USART_INT_InsertToBuffer(TM_BUFFER_t* u, uint8_t c) {
@@ -605,6 +614,12 @@ void TM_USART1_InitPins(TM_USART_PinsPack_t pinspack) {
 #if defined(GPIOB)
 	if (pinspack == TM_USART_PinsPack_2) {
 		TM_GPIO_InitAlternate(GPIOB, GPIO_PIN_6 | GPIO_PIN_7, TM_GPIO_OType_PP, TM_GPIO_PuPd_UP, TM_GPIO_Speed_High, GPIO_AF_USART1);
+	}
+#endif
+#if defined(GPIOA) && defined(GPIOB)
+	if (pinspack == TM_USART_PinsPack_3) {
+		TM_GPIO_InitAlternate(GPIOA, GPIO_PIN_9, TM_GPIO_OType_PP, TM_GPIO_PuPd_UP, TM_GPIO_Speed_High, GPIO_AF_USART1);
+		TM_GPIO_InitAlternate(GPIOB, GPIO_PIN_7, TM_GPIO_OType_PP, TM_GPIO_PuPd_UP, TM_GPIO_Speed_High, GPIO_AF_USART1);
 	}
 #endif
 	if (pinspack == TM_USART_PinsPack_Custom) {
@@ -1354,7 +1369,11 @@ static void TM_USART_INT_Init(
 #if defined(STM32F0xx)
 	UARTHandle.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
 #endif
-	
+#if defined(STM32F7xx)
+    UARTHandle.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
+	UARTHandle.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
+#endif
+    
 	/* Disable IRQ */
 	HAL_NVIC_DisableIRQ(irq);
 
@@ -1397,13 +1416,3 @@ static void TM_USART_INT_ClearAllFlags(USART_TypeDef* USARTx, IRQn_Type irq) {
 	/* Clear IRQ bit */
 	HAL_NVIC_ClearPendingIRQ(irq);
 }
-
-
-__weak void TM_USART1_ReceiveHandler(uint8_t c) {}
-__weak void TM_USART2_ReceiveHandler(uint8_t c) {}
-__weak void TM_USART3_ReceiveHandler(uint8_t c) {}
-__weak void TM_UART4_ReceiveHandler(uint8_t c) {}
-__weak void TM_UART5_ReceiveHandler(uint8_t c) {}
-__weak void TM_USART6_ReceiveHandler(uint8_t c) {}
-__weak void TM_UART7_ReceiveHandler(uint8_t c) {}
-__weak void TM_UART8_ReceiveHandler(uint8_t c) {}

@@ -25,7 +25,7 @@
  */
 #include "buffer.h"
 
-uint8_t BUFFER_Init(BUFFER_t* Buffer, uint32_t Size, uint8_t* BufferPtr) {
+uint8_t BUFFER_Init(BUFFER_t* Buffer, uint32_t Size, void* BufferPtr) {
 	if (Buffer == NULL) {									/* Check buffer structure */
 		return 1;
 	}
@@ -60,9 +60,10 @@ void BUFFER_Free(BUFFER_t* Buffer) {
 	Buffer->Size = 0;
 }
 
-uint32_t BUFFER_Write(BUFFER_t* Buffer, const uint8_t* Data, uint32_t count) {
+uint32_t BUFFER_Write(BUFFER_t* Buffer, const void* Data, uint32_t count) {
 	uint32_t i = 0;
 	uint32_t free;
+    const uint8_t* d = (const uint8_t *)Data;
 #if BUFFER_FAST
 	uint32_t tocopy;
 #endif
@@ -87,12 +88,12 @@ uint32_t BUFFER_Write(BUFFER_t* Buffer, const uint8_t* Data, uint32_t count) {
 	if (tocopy > count) {									/* Check for copy count */
 		tocopy = count;
 	}
-	memcpy(&Buffer->Buffer[Buffer->In], Data, tocopy);		/* Copy content to buffer */
+	memcpy(&Buffer->Buffer[Buffer->In], d, tocopy);		    /* Copy content to buffer */
 	i += tocopy;											/* Increase number of bytes we copied already */
 	Buffer->In += tocopy;	
 	count -= tocopy;
 	if (count > 0) {										/* Check if anything to write */	
-		memcpy(Buffer->Buffer, &Data[i], count);			/* Copy content */
+		memcpy(Buffer->Buffer, (void *)&d[i], count);		/* Copy content */
 		Buffer->In = count;									/* Set input pointer */
 	}
 	if (Buffer->In >= Buffer->Size) {						/* Check input overflow */
@@ -101,7 +102,7 @@ uint32_t BUFFER_Write(BUFFER_t* Buffer, const uint8_t* Data, uint32_t count) {
 	return (i + count);										/* Return number of elements stored in memory */
 #else
 	while (count--) {										/* Go through all elements */
-		Buffer->Buffer[Buffer->In++] = *Data++;				/* Add to buffer */
+		Buffer->Buffer[Buffer->In++] = *d++;				/* Add to buffer */
 		i++;												/* Increase number of written elements */
 		if (Buffer->In >= Buffer->Size) {					/* Check input overflow */
 			Buffer->In = 0;
@@ -111,9 +112,10 @@ uint32_t BUFFER_Write(BUFFER_t* Buffer, const uint8_t* Data, uint32_t count) {
 #endif
 }
 
-uint32_t BUFFER_WriteToTop(BUFFER_t* Buffer, const uint8_t* Data, uint32_t count) {
+uint32_t BUFFER_WriteToTop(BUFFER_t* Buffer, const void* Data, uint32_t count) {
 	uint32_t i = 0;
 	uint32_t free;
+    uint8_t *d = (uint8_t *)Data;
 
 	if (Buffer == NULL || count == 0) {						/* Check buffer structure */
 		return 0;
@@ -131,21 +133,22 @@ uint32_t BUFFER_WriteToTop(BUFFER_t* Buffer, const uint8_t* Data, uint32_t count
 		}
 		count = free;										/* Set values for write */
 	}
-	Data += count - 1;										/* Start on bottom */
+	d += count - 1;										    /* Start on bottom */
 	while (count--) {										/* Go through all elements */
 		if (Buffer->Out == 0) {								/* Check output pointer */
 			Buffer->Out = Buffer->Size - 1;
 		} else {
 			Buffer->Out--;
 		}
-		Buffer->Buffer[Buffer->Out] = *Data--;				/* Add to buffer */
+		Buffer->Buffer[Buffer->Out] = *d--;				    /* Add to buffer */
 		i++;												/* Increase pointers */
 	}
 	return i;												/* Return number of elements written */
 }
 
-uint32_t BUFFER_Read(BUFFER_t* Buffer, uint8_t* Data, uint32_t count) {
+uint32_t BUFFER_Read(BUFFER_t* Buffer, void* Data, uint32_t count) {
 	uint32_t i = 0, full;
+    uint8_t *d = (uint8_t *)Data;
 #if BUFFER_FAST
 	uint32_t tocopy;
 #endif
@@ -168,12 +171,12 @@ uint32_t BUFFER_Read(BUFFER_t* Buffer, uint8_t* Data, uint32_t count) {
 	if (tocopy > count) {									/* Check for copy count */
 		tocopy = count;
 	}
-	memcpy(Data, &Buffer->Buffer[Buffer->Out], tocopy);		/* Copy content from buffer */
+	memcpy(d, &Buffer->Buffer[Buffer->Out], tocopy);		/* Copy content from buffer */
 	i += tocopy;											/* Increase number of bytes we copied already */
 	Buffer->Out += tocopy;
 	count -= tocopy;
 	if (count > 0) {										/* Check if anything to read */
-		memcpy(&Data[i], Buffer->Buffer, count);			/* Copy content */
+		memcpy(&d[i], Buffer->Buffer, count);			    /* Copy content */
 		Buffer->Out = count;								/* Set input pointer */
 	}
 	if (Buffer->Out >= Buffer->Size) {						/* Check output overflow */
@@ -182,7 +185,7 @@ uint32_t BUFFER_Read(BUFFER_t* Buffer, uint8_t* Data, uint32_t count) {
 	return (i + count);										/* Return number of elements stored in memory */
 #else
 	while (count--) {										/* Go through all elements */
-		*Data++ = Buffer->Buffer[Buffer->Out++];			/* Read from buffer */
+		*d++ = Buffer->Buffer[Buffer->Out++];			    /* Read from buffer */
 		i++;												/* Increase pointers */
 		if (Buffer->Out >= Buffer->Size) {					/* Check output overflow */
 			Buffer->Out = 0;
@@ -274,9 +277,10 @@ int32_t BUFFER_FindElement(BUFFER_t* Buffer, uint8_t Element) {
 	return -1;												/* Element is not in buffer */
 }
 
-int32_t BUFFER_Find(BUFFER_t* Buffer, const uint8_t* Data, uint32_t Size) {
+int32_t BUFFER_Find(BUFFER_t* Buffer, const void* Data, uint32_t Size) {
 	uint32_t Num, Out, i, retval = 0;
 	uint8_t found = 0;
+    uint8_t* d = (uint8_t *)Data;
 
 	if (Buffer == NULL || (Num = BUFFER_GetFull(Buffer)) < Size) {	/* Check buffer structure and number of elements in buffer */
 		return -1;
@@ -286,7 +290,7 @@ int32_t BUFFER_Find(BUFFER_t* Buffer, const uint8_t* Data, uint32_t Size) {
 		if (Out >= Buffer->Size) {							/* Check output overflow */
 			Out = 0;
 		}
-		if ((uint8_t)Buffer->Buffer[Out] == (uint8_t)Data[0]) {	/* Check if current element in buffer matches first element in data array */
+		if ((uint8_t)Buffer->Buffer[Out] == d[0]) {	        /* Check if current element in buffer matches first element in data array */
 			found = 1;
 		}
 		
@@ -299,7 +303,7 @@ int32_t BUFFER_Find(BUFFER_t* Buffer, const uint8_t* Data, uint32_t Size) {
 				if (Out >= Buffer->Size) {					/* Check output overflow */
 					Out = 0;
 				}
-				if ((uint8_t)Buffer->Buffer[Out] != (uint8_t)Data[i]) {	/* Check if current character in buffer matches character in string */
+				if ((uint8_t)Buffer->Buffer[Out] != d[i]) {	/* Check if current character in buffer matches character in string */
 					retval += i - 1;
 					break;
 				}
