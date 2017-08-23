@@ -205,11 +205,9 @@ uint32_t BUFFER_GetFree(BUFFER_t* Buffer) {
 	out = Buffer->Out;
 	if (in == out) {										/* Check if the same */
 		size = Buffer->Size;
-	}	
-	if (out > in) {											/* Check normal mode */
+	} else if (out > in) {									/* Check normal mode */
 		size = out - in;
-	}
-	if (in > out) {											/* Check if overflow mode */
+	} else {												/* Check if overflow mode */
 		size = Buffer->Size - (in - out);
 	}
 	return size - 1;										/* Return free memory */
@@ -225,11 +223,9 @@ uint32_t BUFFER_GetFull(BUFFER_t* Buffer) {
 	out = Buffer->Out;
 	if (in == out) {										/* Pointer are same? */
 		size = 0;
-	}
-	if (in > out) {											/* Buffer is not in overflow mode */
+	} else if (in > out) {									/* Buffer is not in overflow mode */
 		size = in - out;
-	}
-	if (out > in) {											/* Buffer is in overflow mode */
+	} else {												/* Buffer is in overflow mode */
 		size = Buffer->Size - (out - in);
 	}
 	return size;											/* Return number of elements in buffer */

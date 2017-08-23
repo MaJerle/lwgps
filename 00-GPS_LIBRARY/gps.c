@@ -60,12 +60,12 @@ typedef struct {
 
 #define GPS_ADDTOCRC(ch)                    do { Int.CRC ^= (uint8_t)(ch); } while (0)
 #define GPS_ADDTOTERM(ch)                   do { Int.Term[Int.Flags.F.Term_Pos++] = (ch); Int.Term[Int.Flags.F.Term_Pos] = 0; } while (0);    /* Add new element to term object */
-#define GPS_START_NEXT_TERM()               do { Int.Term[0]= 0; Int.Flags.F.Term_Pos = 0; Int.Flags.F.Term_Num++; } while (0);
+#define GPS_START_NEXT_TERM()               do { Int.Term[0] = 0; Int.Flags.F.Term_Pos = 0; Int.Flags.F.Term_Num++; } while (0);
 
 #define GPS_EARTH_RADIUS                    6371.0f            /* Earth radius */
-#define GPS_DEGREES2RADIANS(x)              (float)((x) * 0.01745329251994f)   /* Degreestoradiansconverter */
-#define GPS_RADIANS2DEGREES(x)              (float)((x) * 57.29577951308232f)  /* Radianstodegrees */
-#define GPS_MAX_SATS_IN_VIEW                24              /* Maximalnumberofsatellitesinview */
+#define GPS_DEGREES2RADIANS(x)              (float)((x) * 0.01745329251994f)   /* Degrees to radians */
+#define GPS_RADIANS2DEGREES(x)              (float)((x) * 57.29577951308232f)  /* Radians to degrees */
+#define GPS_MAX_SATS_IN_VIEW                24                  /* Maximal number of satellites in view */
 
 /* GPS statements definitions */
 #define GPS_UNKNOWN                         0
@@ -164,16 +164,23 @@ float ParseFloatNumber(const char* ptr, uint8_t* cnt) {
 static
 float ParseLatLong(const char* term) {
     float num;
+    float tmp;
     uint8_t cnt;
 
     if (term[4] == '.') {
+        tmp = (float)ParseNumber(&term[5], &cnt);
+        tmp /= (60.0f * (float)pow(10, cnt));               /* Parse seconds */
+        
         num = (float)(10 * CHARTONUM(term[0]) + CHARTONUM(term[1]));    /* Parse degrees */
         num += (float)(10 * CHARTONUM(term[2]) + CHARTONUM(term[3])) / 60.0f;   /* Parse minutes */
-        num += (float)ParseNumber(&term[5], &cnt) / (60.0f * (float)pow(10, cnt));  /* Parse seconds */
+        num += tmp;
     } else {
+        tmp = (float)ParseNumber(&term[6], &cnt);
+        tmp /= (60.0f * (float)pow(10, cnt));               /* Parse seconds */
+        
         num = (float)(100 * CHARTONUM(term[0]) + 10 * CHARTONUM(term[1]) + CHARTONUM(term[2])); /* Parse degrees */
         num += (float)(10 * CHARTONUM(term[3]) + CHARTONUM(term[4])) / 60.0f;   /* Parse minutes */
-        num += (float)ParseNumber(&term[6], &cnt) / (60.0f * (float)pow(10, cnt));  /* Parse seconds */
+        num += tmp;
     }
 	return num;
 }
