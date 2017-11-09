@@ -271,7 +271,7 @@ void ParseValue(GPS_t* GPS) {
             break;
         case GPS_CONCAT(GPS_GPGGA, 5):                      /* Longitude west or east */
             if (Int.Term[0] == 'W' || Int.Term[0] == 'w') {
-                GPS->Latitude = -GPS->Latitude;
+                GPS->Longitude = -GPS->Longitude;
             }
             break;
         case GPS_CONCAT(GPS_GPGGA, 6):                      /* GPS fix status */
