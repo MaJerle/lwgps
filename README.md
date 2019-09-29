@@ -17,10 +17,6 @@ Platform independent GPS NMEA parser for embedded systems
 - Works with different communication interfaces
 - User friendly MIT license
 
-## Examples and resources
-
-For examples, please check second repository, available at https://github.com/MaJerle/GPS_NMEA_Parser_res
-
 ## Documentation
 
 Full API documentation with description and examples is available and is regulary updated with the source changes
