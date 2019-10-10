@@ -29,6 +29,7 @@
  * This file is part of GPS NMEA parser library.
  *
  * Author:          Tilen MAJERLE <tilen@majerle.eu>
+ * Version:         $_version_$
  */
 #include "gps/gps_buff.h"
 
