@@ -21,8 +21,8 @@
  *
  * \section         sect_resources Download & Resources
  *
- *  - <a class="download_url" href="https://github.com/MaJerle/GPS_NMEA_Parser/releases">Download library from Github releases</a>
- *  - <a href="https://github.com/MaJerle/GPS_NMEA_Parser_res">Resources and examples repository</a>
+ *  - <a class="download_url" href="https://github.com/MaJerle/GPS_NMEA_Parser/releases">Download library at Github releases</a>
+ *  - <a href="https://github.com/MaJerle/GPS_NMEA_Parser">Resources and examples repository</a>
  *  - <a href="https://github.com/MaJerle/GPS_NMEA_Parser">Official development repository on Github</a>
  *
  * \section         sect_contribute How to contribute
