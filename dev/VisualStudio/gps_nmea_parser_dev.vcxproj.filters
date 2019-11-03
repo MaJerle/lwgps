@@ -13,9 +13,6 @@
     <ClCompile Include="..\..\GPS_NMEA_Parser\src\gps\gps.c">
       <Filter>Source Files\GPS</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\GPS_NMEA_Parser\src\gps\gps_buff.c">
-      <Filter>Source Files\GPS</Filter>
-    </ClCompile>
     <ClCompile Include="main.c">
       <Filter>Source Files</Filter>
     </ClCompile>
