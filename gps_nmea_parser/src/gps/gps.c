@@ -78,7 +78,7 @@ parse_number(gps_t* gh, const char* t) {
     }
     for (; t != NULL && *t == ' '; ++t) {}      /* Strip leading spaces */
 
-    minus = (*t == '-' ? (t++, 1) : 0);
+    minus = (*t == '-' ? (++t, 1) : 0);
     for (; t != NULL && CIN(*t); ++t) {
         res = 10 * res + CTN(*t);
     }
@@ -366,7 +366,7 @@ uint8_t
 gps_process(gps_t* gh, const void* data, size_t len) {
     const uint8_t* d = data;
 
-    for (; len-- > 0, ++d) {                    /* Process all bytes */
+    for (; len-- > 0; ++d) {                    /* Process all bytes */
         if (*d == '$') {                        /* Check for beginning of NMEA line */
             memset(&gh->p, 0x00, sizeof(gh->p));/* Reset private memory */
             TERM_ADD(gh, *d);                   /* Add character to term */     
