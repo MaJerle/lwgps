@@ -3,7 +3,6 @@
 * to process dummy NMEA data from GPS receiver
 */
 #include "gps/gps.h"
-#include "gps/gps_buff.h"
 #include <string.h>
 #include <stdio.h>
 #include <math.h>
