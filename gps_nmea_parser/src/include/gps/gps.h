@@ -29,7 +29,7 @@
  * This file is part of GPS NMEA parser library.
  *
  * Author:          Tilen MAJERLE <tilen@majerle.eu>
- * Version:         v1.1.0
+ * Version:         $_version_$
  */
 #ifndef GPS_HDR_H
 #define GPS_HDR_H

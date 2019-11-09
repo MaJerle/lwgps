@@ -1,21 +1,14 @@
 #include "stdafx.h"
 #include "gps/gps.h"
-#include "ringbuff/ringbuff.h"
+#include "gps/gps_buff.h"
 #include <string.h>
-
-/*
- * Ringbuffer library does not come with GPS parser library.
- *
- * We propose to take generic ringbuff library, 
- * download available here: https://github.com/MaJerle/ringbuff
- */
 
 /* GPS handle  */
 gps_t hgps;
 
 /* GPS buffer */
-ringbuff_t hringbuff;
-uint8_t ringbuff_data[12];
+gps_buff_t hgps_buff;
+uint8_t hgps_buff_data[12];
 
 /**
  * \brief           Dummy data from GPS receiver
@@ -47,7 +40,7 @@ main() {
     gps_init(&hgps);                            /* Init GPS */
 
     /* Create buffer for received data */
-    ringbuff_init(&hringbuff, ringbuff_data, sizeof(ringbuff_data));
+    gps_buff_init(&hgps_buff, hgps_buff_data, sizeof(hgps_buff_data));
 
     while (1) {
         /* Add new character to buffer */
@@ -56,8 +49,8 @@ main() {
 
         /* Process all input data */
         /* Read from buffer byte-by-byte and call processing function */
-        if (ringbuff_get_full(&hringbuff) > 0) {/* Check if anything in buffer now */
-            while (ringbuff_read(&hringbuff, &rx, 1)) {
+        if (gps_buff_get_full(&hgps_buff)) {    /* Check if anything in buffer now */
+            while (gps_buff_read(&hgps_buff, &rx, 1)) {
                 gps_process(&hgps, &rx, 1);     /* Process byte-by-byte */
             }
         } else {
@@ -81,6 +74,6 @@ uart_irqhandler(void) {
     /* Only write to received buffer and process later */
     if (write_ptr < strlen(gps_rx_data)) {
         /* Write to buffer only */
-        ringbuff_write(&hringbuff, &gps_rx_data[write_ptr++], 1);
+        gps_buff_write(&hgps_buff, &gps_rx_data[write_ptr++], 1);
     }
 }

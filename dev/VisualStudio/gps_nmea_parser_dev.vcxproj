@@ -140,6 +140,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\..\GPS_NMEA_Parser\src\gps\gps.c" />
+    <ClCompile Include="..\..\GPS_NMEA_Parser\src\gps\gps_buff.c" />
     <ClCompile Include="main.c" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
