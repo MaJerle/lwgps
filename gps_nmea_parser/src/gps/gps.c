@@ -51,11 +51,11 @@
 #define CRC_ADD(_gh, ch)    (_gh)->p.crc_calc ^= (uint8_t)(ch)
 #define TERM_ADD(_gh, ch)   do {    \
     if ((_gh)->p.term_pos < (sizeof((_gh)->p.term_str) - 1)) {  \
-        (_gh)->p.term_str[(_gh)->p.term_pos] = (ch);  \
-        (_gh)->p.term_str[++(_gh)->p.term_pos] = 0;   \
+        (_gh)->p.term_str[(_gh)->p.term_pos++] = (ch);  \
+        (_gh)->p.term_str[(_gh)->p.term_pos] = 0;   \
     }                               \
 } while (0)
-#define TERM_NEXT(_gh)      do { (_gh)->p.term_str[((_gh)->p.term_pos = 0)] = 0; ++(_gh)->p.term_num; } while (0)
+#define TERM_NEXT(_gh)      do { (_gh)->p.term_str[((_gh)->p.term_pos = 0)] = 0; (_gh)->p.term_num++; } while (0)
 
 #define CIN(x)              ((x) >= '0' && (x) <= '9')
 #define CIHN(x)             (((x) >= '0' && (x) <= '9') || ((x) >= 'a' && (x) <= 'f') || ((x) >= 'A' && (x) <= 'F'))
@@ -76,10 +76,10 @@ parse_number(gps_t* gh, const char* t) {
     if (t == NULL) {
         t = gh->p.term_str;
     }
-    for (; t != NULL && *t == ' '; ++t) {}      /* Strip leading spaces */
+    for (; t != NULL && *t == ' '; t++) {}      /* Strip leading spaces */
 
-    minus = (*t == '-' ? (++t, 1) : 0);
-    for (; t != NULL && CIN(*t); ++t) {
+    minus = (*t == '-' ? (t++, 1) : 0);
+    for (; t != NULL && CIN(*t); t++) {
         res = 10 * res + CTN(*t);
     }
     return minus ? -res : res;
@@ -98,7 +98,7 @@ parse_float_number(gps_t* gh, const char* t) {
     if (t == NULL) {
         t = gh->p.term_str;
     }
-    for (; t != NULL && *t == ' '; ++t) {}      /* Strip leading spaces */
+    for (; t != NULL && *t == ' '; t++) {}      /* Strip leading spaces */
 	
 #if GPS_CFG_DOUBLE
     res = strtod(t, NULL);                      /* Parse string to double */
@@ -366,7 +366,7 @@ uint8_t
 gps_process(gps_t* gh, const void* data, size_t len) {
     const uint8_t* d = data;
 
-    for (; len-- > 0; ++d) {                    /* Process all bytes */
+    while (len--) {                             /* Process all bytes */
         if (*d == '$') {                        /* Check for beginning of NMEA line */
             memset(&gh->p, 0x00, sizeof(gh->p));/* Reset private memory */
             TERM_ADD(gh, *d);                   /* Add character to term */     
@@ -389,6 +389,7 @@ gps_process(gps_t* gh, const void* data, size_t len) {
             }
             TERM_ADD(gh, *d);                   /* Add character to term */
         }
+        d++;                                    /* Process next character */
     }
     return 1;
 }
