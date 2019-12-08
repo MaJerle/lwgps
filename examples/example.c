@@ -3,7 +3,6 @@
  * to process dummy NMEA data from GPS receiver
  */
 #include "gps/gps.h"
-#include "gps/gps_buff.h"
 #include <string.h>
 #include <stdio.h>
 
@@ -32,7 +31,8 @@ gps_rx_data[] = ""
 
 int
 main() {
-    gps_init(&hgps);                            /* Init GPS */
+	/* Init GPS */
+    gps_init(&hgps);
 
     /* Process all input data */
     gps_process(&hgps, gps_rx_data, strlen(gps_rx_data));
