@@ -31,7 +31,7 @@ Requirements
 
 * C compiler
 * Driver for receiving data from GPS receiver
-* Few *kB* of volatile memory
+* Few *kB* of non volatile memory
 
 Contribute
 ^^^^^^^^^^
