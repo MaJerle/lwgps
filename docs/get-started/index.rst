@@ -62,3 +62,4 @@ Run below example to test and verify library
 
 .. literalinclude:: ../../examples/example.c
 	:language: c
+    :caption: Test verification code

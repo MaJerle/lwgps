@@ -13,6 +13,7 @@ Application can then check if GPS signal has been detected as valid and use othe
 
 .. literalinclude:: ../../examples/example.c
 	:language: c
+    :caption: Minimum example code
 
 Parse received data from interrupt/DMA
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -26,6 +27,7 @@ Data are later processed outside interrupt context.
 
 .. literalinclude:: ../../examples/example_buff.c
 	:language: c
+    :caption: Example of buffer
 
 .. toctree::
 	:maxdepth: 2
