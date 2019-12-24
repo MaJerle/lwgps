@@ -6,7 +6,7 @@ GPS NMEA Parser is lightweight, platform independent library to parse NMEA state
 .. rst-class:: center
 .. rst-class:: index_links
 
-  	:ref:`download_library` · `Github <https://github.com/MaJerle/gps-nmea-parser>`_
+  	:ref:`download_library` · `Open Github <https://github.com/MaJerle/gps-nmea-parser>`_
 
 Features
 ^^^^^^^^
