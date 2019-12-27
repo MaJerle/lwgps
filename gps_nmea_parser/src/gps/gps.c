@@ -99,7 +99,7 @@ parse_float_number(gps_t* gh, const char* t) {
         t = gh->p.term_str;
     }
     for (; t != NULL && *t == ' '; t++) {}      /* Strip leading spaces */
-	
+
 #if GPS_CFG_DOUBLE
     res = strtod(t, NULL);                      /* Parse string to double */
 #else /* GPS_CFG_DOUBLE */
