@@ -12,7 +12,8 @@ In this example, block of data is prepared as big string array and sent to proce
 Application can then check if GPS signal has been detected as valid and use other data accordingly.
 
 .. literalinclude:: ../../examples/example.c
-	:language: c
+    :language: c
+    :linenos:
     :caption: Minimum example code
 
 Parse received data from interrupt/DMA
@@ -26,7 +27,8 @@ Data are later processed outside interrupt context.
 	For the sake of this example, application *implements* interrupts as function call in *while loop*.
 
 .. literalinclude:: ../../examples/example_buff.c
-	:language: c
+    :language: c
+    :linenos:
     :caption: Example of buffer
 
 .. toctree::

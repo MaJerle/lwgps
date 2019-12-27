@@ -61,5 +61,6 @@ Minimal example code
 Run below example to test and verify library
 
 .. literalinclude:: ../../examples/example.c
-	:language: c
+    :language: c
+    :linenos:
     :caption: Test verification code
