@@ -2,7 +2,7 @@
 
 Platform independent GPS NMEA parser for embedded systems.
 
-<h3><a href="http://docs.majerle.eu/projects/gps-nmea-parser">Documentation</a></h3>
+<h3><a href="http://docs.majerle.eu/projects/gps-nmea-parser/">Documentation</a></h3>
 
 ## Features
 
