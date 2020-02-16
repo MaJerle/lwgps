@@ -1,5 +1,7 @@
-GPS NMEA Parser documentation!
-==============================
+GPS NMEA Parser |version| documentation
+=======================================
+
+Welcome to the documentation for version |version|.
 
 GPS NMEA Parser is lightweight, platform independent library to parse NMEA statements from GPS receivers. It is highly optimized for embedded systems.
 
