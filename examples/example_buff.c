@@ -38,7 +38,7 @@ main() {
     uint8_t rx;
 
     /* Init GPS */
-    gps_init(&hgps);                            
+    gps_init(&hgps);
 
     /* Create buffer for received data */
     ringbuff_init(&hgps_buff, hgps_buff_data, sizeof(hgps_buff_data));
