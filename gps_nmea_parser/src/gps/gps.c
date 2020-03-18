@@ -5,24 +5,24 @@
 
 /*
  * Copyright (c) 2020 Tilen MAJERLE
- *  
+ *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
  * files (the "Software"), to deal in the Software without restriction,
  * including without limitation the rights to use, copy, modify, merge,
- * publish, distribute, sublicense, and/or sell copies of the Software, 
- * and to permit persons to whom the Software is furnished to do so, 
+ * publish, distribute, sublicense, and/or sell copies of the Software,
+ * and to permit persons to whom the Software is furnished to do so,
  * subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be
  * included in all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
  * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
  * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE
  * AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
  * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
- * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
  * OTHER DEALINGS IN THE SOFTWARE.
  *
@@ -111,7 +111,7 @@ parse_float_number(gps_t* gh, const char* t) {
 
 /**
  * \brief           Parse latitude/longitude NMEA format to double
- * 
+ *
  *                  NMEA output for latitude is ddmm.sss and longitude is dddmm.sss
  * \param[in]       gh: GPS handle
  * \return          Latitude/Longitude value in degrees
@@ -124,7 +124,7 @@ parse_lat_long(gps_t* gh) {
     deg = FLT((int)((int)ll / 100));            /* Get absolute degrees value, interested in integer part only */
     min = ll - (deg * FLT(100));                /* Get remaining part from full number, minutes */
     ll = deg + (min / FLT(60.0));               /* Calculate latitude/longitude */
-    
+
     return ll;
 }
 
@@ -139,17 +139,17 @@ parse_term(gps_t* gh) {
         if (0) {
 #if GPS_CFG_STATEMENT_GPGGA
         } else if (!strncmp(gh->p.term_str, "$GPGGA", 6) || !strncmp(gh->p.term_str, "$GNGGA", 6)) {
-            gh->p.stat = STAT_GGA; 
+            gh->p.stat = STAT_GGA;
 #endif /* GPS_CFG_STATEMENT_GPGGA */
-#if GPS_CFG_STATEMENT_GPGSA 
+#if GPS_CFG_STATEMENT_GPGSA
         } else if (!strncmp(gh->p.term_str, "$GPGSA", 6) || !strncmp(gh->p.term_str, "$GNGSA", 6)) {
-            gh->p.stat = STAT_GSA;  
+            gh->p.stat = STAT_GSA;
 #endif /* GPS_CFG_STATEMENT_GPGSA */
 #if GPS_CFG_STATEMENT_GPGSV
         } else if (!strncmp(gh->p.term_str, "$GPGSV", 6) || !strncmp(gh->p.term_str, "$GNGSV", 6)) {
-            gh->p.stat = STAT_GSV; 
+            gh->p.stat = STAT_GSV;
 #endif /* GPS_CFG_STATEMENT_GPGSV */
-#if GPS_CFG_STATEMENT_GPRMC 
+#if GPS_CFG_STATEMENT_GPRMC
         } else if (!strncmp(gh->p.term_str, "$GPRMC", 6) || !strncmp(gh->p.term_str, "$GNRMC", 6)) {
             gh->p.stat = STAT_RMC;
 #endif /* GPS_CFG_STATEMENT_GPRMC */
@@ -158,7 +158,7 @@ parse_term(gps_t* gh) {
         }
         return 1;
     }
-    
+
     /* Start parsing terms */
     if (gh->p.stat == STAT_UNKNOWN) {
 #if GPS_CFG_STATEMENT_GPGGA
@@ -237,7 +237,7 @@ parse_term(gps_t* gh) {
                 if (gh->p.term_num >= 4 && gh->p.term_num <= 19) {  /* Check current term number */
                     uint8_t index, term_num = gh->p.term_num - 4;   /* Normalize term number from 4-19 to 0-15 */
                     uint16_t value;
-                    
+
                     index = 4 * (gh->p.data.gsv.stat_num - 1) + term_num / 4;   /* Get array index */
                     if (index < sizeof(gh->sats_in_view_desc) / sizeof(gh->sats_in_view_desc[0])) {
                         value = (uint16_t)parse_number(gh, NULL);   /* Parse number as integer */
@@ -369,7 +369,7 @@ gps_process(gps_t* gh, const void* data, size_t len) {
     while (len--) {                             /* Process all bytes */
         if (*d == '$') {                        /* Check for beginning of NMEA line */
             memset(&gh->p, 0x00, sizeof(gh->p));/* Reset private memory */
-            TERM_ADD(gh, *d);                   /* Add character to term */     
+            TERM_ADD(gh, *d);                   /* Add character to term */
         } else if (*d == ',') {                 /* Term separator character */
             parse_term(gh);                     /* Parse term we have currently in memory */
             CRC_ADD(gh, *d);                    /* Add character to CRC computation */
@@ -446,7 +446,7 @@ gps_distance_bearing(gps_float_t las, gps_float_t los, gps_float_t lae, gps_floa
      * Result will tell us in which direction (according to north) we should move,
      * to reach point 2.
      *
-     * Example: 
+     * Example:
      *      Bearing is 0 => move to north
      *      Bearing is 90 => move to east
      *      Bearing is 180 => move to south

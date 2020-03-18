@@ -5,24 +5,24 @@
 
 /*
  * Copyright (c) 2020 Tilen MAJERLE
- *  
+ *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
  * files (the "Software"), to deal in the Software without restriction,
  * including without limitation the rights to use, copy, modify, merge,
- * publish, distribute, sublicense, and/or sell copies of the Software, 
- * and to permit persons to whom the Software is furnished to do so, 
+ * publish, distribute, sublicense, and/or sell copies of the Software,
+ * and to permit persons to whom the Software is furnished to do so,
  * subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be
  * included in all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
  * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
  * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE
  * AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
  * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
- * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
  * OTHER DEALINGS IN THE SOFTWARE.
  *
@@ -49,7 +49,7 @@ extern "C" {
  */
 
 /**
- * \brief           Enables `1` or disables `0` `double precision` for floating point 
+ * \brief           Enables `1` or disables `0` `double precision` for floating point
  *                  values such as latitude, longitude, altitude.
  *
  *                  `double` is used as variable type when enabled, `float` when disabled.
@@ -129,7 +129,7 @@ extern "C" {
  * \brief           GPS float definition, can be either `float` or `double`
  * \note            Check for \ref GPS_CFG_DOUBLE configuration
  */
-#if GPS_CFG_DOUBLE || __DOXYGEN__                 
+#if GPS_CFG_DOUBLE || __DOXYGEN__
 typedef double gps_float_t;
 #else
 typedef float gps_float_t;
@@ -196,11 +196,11 @@ typedef struct {
         char term_str[13];                      /*!< Current term in string format */
         uint8_t term_pos;                       /*!< Current index position in term */
         uint8_t term_num;                       /*!< Current term number */
-        
+
         uint8_t star;                           /*!< Star detected flag */
-        
+
         uint8_t crc_calc;                       /*!< Calculated CRC string */
-        
+
         union {
             uint8_t dummy;                      /*!< Dummy byte */
 #if GPS_CFG_STATEMENT_GPGGA
@@ -234,9 +234,9 @@ typedef struct {
 #if GPS_CFG_STATEMENT_GPRMC
             struct {
                 uint8_t is_valid;               /*!< Status whether GPS status is valid or not */
-                uint8_t date;                   /*!< Current UTF date */
-                uint8_t month;                  /*!< Current UTF month */
-                uint8_t year;                   /*!< Current UTF year */
+                uint8_t date;                   /*!< Current UTC date */
+                uint8_t month;                  /*!< Current UTC month */
+                uint8_t year;                   /*!< Current UTC year */
                 gps_float_t speed;              /*!< Current spead over the ground in knots */
                 gps_float_t coarse;             /*!< Current coarse made good */
                 gps_float_t variation;          /*!< Current magnetic variation in degrees */
