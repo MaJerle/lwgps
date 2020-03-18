@@ -30,6 +30,10 @@ gps_rx_data[] = ""
 "$GPGSA,A,3,02,,,07,,09,24,26,,,,,1.6,1.6,1.0*3D\r\n"
 "$GPGSV,2,1,08,02,43,088,38,04,42,145,00,05,11,291,00,07,60,043,35*71\r\n"
 "$GPGSV,2,2,08,08,02,145,00,09,46,303,47,24,16,178,32,26,18,231,43*77\r\n"
+#if GPS_CFG_STATEMENT_PUBX_TIME
+"$PUBX,04*37\r\n"
+"$PUBX,04,073731.00,091202,113851.00,1196,15D,1930035,-2660.664,43*71\r\n"
+#endif /* GPS_CFG_STATEMENT_PUBX_TIME */
 "";
 
 /**
@@ -72,10 +76,25 @@ run_tests() {
     RUN_TEST(INT_IS_EQUAL(hgps.satellites_ids[10], 0));
     RUN_TEST(INT_IS_EQUAL(hgps.satellites_ids[11], 0));
 
+#if GPS_CFG_STATEMENT_PUBX_TIME
+    RUN_TEST(INT_IS_EQUAL(hgps.hours, 7));
+    RUN_TEST(INT_IS_EQUAL(hgps.minutes, 37));
+    RUN_TEST(INT_IS_EQUAL(hgps.seconds, 31));
+    RUN_TEST(INT_IS_EQUAL(hgps.date, 9));
+    RUN_TEST(INT_IS_EQUAL(hgps.month, 12));
+    RUN_TEST(INT_IS_EQUAL(hgps.year, 2));
+    RUN_TEST(FLT_IS_EQUAL(hgps.utc_tow, 113851.00));
+    RUN_TEST(INT_IS_EQUAL(hgps.utc_wk, 1196));
+    RUN_TEST(INT_IS_EQUAL(hgps.leap_sec, 15));
+    RUN_TEST(INT_IS_EQUAL(hgps.clk_bias, 1930035));
+    RUN_TEST(FLT_IS_EQUAL(hgps.clk_drift, -2660.664));
+    RUN_TEST(INT_IS_EQUAL(hgps.tp_gran, 43));
+#else
     RUN_TEST(INT_IS_EQUAL(hgps.date, 8));
     RUN_TEST(INT_IS_EQUAL(hgps.month, 3));
     RUN_TEST(INT_IS_EQUAL(hgps.year, 1));
     RUN_TEST(INT_IS_EQUAL(hgps.hours, 18));
     RUN_TEST(INT_IS_EQUAL(hgps.minutes, 37));
     RUN_TEST(INT_IS_EQUAL(hgps.seconds, 30));
+#endif /* GPS_CFG_STATEMENT_PUBX_TIME */
 }
