@@ -116,6 +116,37 @@ extern "C" {
 #endif
 
 /**
+ * \brief           Enables `1` or disables `0` parsing and generation
+ *                  of PUBX (uBlox) messages
+ *
+ *                  PUBX are a nonstandard ublox-specific extensions,
+ *                  so disabled by default.
+ */
+#ifndef GPS_CFG_STATEMENT_PUBX
+#define GPS_CFG_STATEMENT_PUBX     0
+#endif
+
+#if GPS_CFG_STATEMENT_PUBX
+
+/**
+ * \brief           Enables `1` or disables `0` parsing and generation
+ *                  of PUBX (uBlox) TIME messages.
+ *
+ * \note            TIME messages can be used to obtain:
+ *                      - UTC time of week
+ *                      - UTC week number
+ *                      - Leap seconds (allows conversion to eg. TAI)
+ *
+ *                  This is a nonstandard ublox-specific extension,
+ *                  so disabled by default.
+ */
+#ifndef GPS_CFG_STATEMENT_PUBX_TIME
+#define GPS_CFG_STATEMENT_PUBX_TIME     0
+#endif
+
+#endif /* GPS_CFG_STATEMENT_PUBX */
+
+/**
  * \}
  */
 
@@ -190,6 +221,28 @@ typedef struct {
     uint8_t year;                               /*!< Fix year */
 #endif /* GPS_CFG_STATEMENT_GPRMC || __DOXYGEN__ */
 
+#if GPS_CFG_STATEMENT_PUBX_TIME || __DOXYGEN__
+#if ! GPS_CFG_STATEMENT_GPGGA && ! __DOXYGEN__
+    /* rely on time fields from GPGGA if possible */
+    uint8_t hours;
+    uint8_t minutes;
+    uint8_t seconds;
+#endif /* ! GPS_CFG_STATEMENT_GPGGA && ! __DOXYGEN__ */
+#if ! GPS_CFG_STATEMENT_GPRMC && ! __DOXYGEN__
+    /* rely on date fields from GPRMC if possible */
+    uint8_t date;
+    uint8_t month;
+    uint8_t year;
+#endif /* ! GPS_CFG_STATEMENT_GPRMC && ! __DOXYGEN__ */
+    /* fields only available in PUBX_TIME */
+    gps_float_t utc_tow;                        /*!< UTC TimeOfWeek, eg 113851.00 */
+    uint16_t utc_wk;                            /*!< UTC week number, continues beyond 1023 */
+    uint8_t leap_sec;                           /*!< UTC leap seconds; UTC + leap_sec = TAI */
+    uint32_t clk_bias;                          /*!< Receiver clock bias, eg 1930035 */
+    gps_float_t clk_drift;                      /*!< Receiver clock drift, eg -2660.664 */
+    uint32_t tp_gran;                           /*!< Time pulse granularity, eg 43 */
+#endif /* GPS_CFG_STATEMENT_PUBX_TIME || __DOXYGEN__ */
+
 #if !__DOXYGEN__
     struct {
         uint8_t stat;                           /*!< Statement index */
@@ -242,6 +295,22 @@ typedef struct {
                 gps_float_t variation;          /*!< Current magnetic variation in degrees */
             } rmc;                              /*!< GPRMC message */
 #endif /* GPS_CFG_STATEMENT_GPRMC */
+#if GPS_CFG_STATEMENT_PUBX_TIME
+            struct {
+                uint8_t hours;                  /*!< Current UTC hours */
+                uint8_t minutes;                /*!< Current UTC minutes */
+                uint8_t seconds;                /*!< Current UTC seconds */
+                uint8_t date;                   /*!< Current UTC date */
+                uint8_t month;                  /*!< Current UTC month */
+                uint8_t year;                   /*!< Current UTC year */
+                gps_float_t utc_tow;            /*!< UTC TimeOfWeek, eg 113851.00 */
+                uint16_t utc_wk;                /*!< UTC week number, continues beyond 1023 */
+                uint8_t leap_sec;               /*!< UTC leap seconds; UTC + leap_sec = TAI */
+                uint32_t clk_bias;              /*!< Receiver clock bias, eg 1930035 */
+                gps_float_t clk_drift;          /*!< Receiver clock drift, eg -2660.664 */
+                uint32_t tp_gran;               /*!< Time pulse granularity, eg 43 */
+            } time;                             /*!< PUBX TIME message */
+#endif /* GPS_CFG_STATEMENT_PUBX_TIME */
         } data;                                 /*!< Union with data for each information */
     } p;                                        /*!< Structure with private data */
 #endif /* !__DOXYGEN__ */

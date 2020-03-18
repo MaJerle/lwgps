@@ -55,6 +55,8 @@
 #define STAT_GSA            2
 #define STAT_GSV            3
 #define STAT_RMC            4
+#define STAT_UBX            5
+#define STAT_UBX_TIME       6
 
 #define CRC_ADD(_gh, ch)    (_gh)->p.crc_calc ^= (uint8_t)(ch)
 #define TERM_ADD(_gh, ch)   do {    \
@@ -161,6 +163,10 @@ parse_term(gps_t* gh) {
         } else if (!strncmp(gh->p.term_str, "$GPRMC", 6) || !strncmp(gh->p.term_str, "$GNRMC", 6)) {
             gh->p.stat = STAT_RMC;
 #endif /* GPS_CFG_STATEMENT_GPRMC */
+#if GPS_CFG_STATEMENT_PUBX
+        } else if (!strncmp(gh->p.term_str, "$PUBX", 5)) {
+            gh->p.stat = STAT_UBX;
+#endif /* GPS_CFG_STATEMENT_PUBX */
         } else {
             gh->p.stat = STAT_UNKNOWN;          /* Invalid statement for library */
         }
@@ -290,6 +296,56 @@ parse_term(gps_t* gh) {
             default: break;
         }
 #endif /* GPS_CFG_STATEMENT_GPRMC */
+#if GPS_CFG_STATEMENT_PUBX
+    } else if (gh->p.stat == STAT_UBX) {        /* Disambiguate generic PUBX statement */
+        if (gh->p.term_str[0] == '0' && gh->p.term_str[1] == '4') {
+            gh->p.stat = STAT_UBX_TIME;
+        }
+#if GPS_CFG_STATEMENT_PUBX_TIME
+    } else if (gh->p.stat == STAT_UBX_TIME) {   /* Process PUBX (uBlox) TIME statement */
+        switch (gh->p.term_num) {
+            case 2:                             /* Process UTC time; ignore fractions of seconds */
+                gh->p.data.time.hours = 10 * CTN(gh->p.term_str[0]) + CTN(gh->p.term_str[1]);
+                gh->p.data.time.minutes = 10 * CTN(gh->p.term_str[2]) + CTN(gh->p.term_str[3]);
+                gh->p.data.time.seconds = 10 * CTN(gh->p.term_str[4]) + CTN(gh->p.term_str[5]);
+                break;
+            case 3:                             /* Process UTC date */
+                gh->p.data.time.date = 10 * CTN(gh->p.term_str[0]) + CTN(gh->p.term_str[1]);
+                gh->p.data.time.month = 10 * CTN(gh->p.term_str[2]) + CTN(gh->p.term_str[3]);
+                gh->p.data.time.year = 10 * CTN(gh->p.term_str[4]) + CTN(gh->p.term_str[5]);
+                break;
+            case 4:                             /* Process UTC TimeOfWeek */
+                gh->p.data.time.utc_tow = parse_float_number(gh, NULL);
+                break;
+            case 5:                             /* Process UTC WeekNumber */
+                gh->p.data.time.utc_wk = parse_number(gh, NULL);
+                break;
+            case 6:                             /* Process UTC leap seconds */
+                /* Accomodate a 2- or 3-digit leap second count;
+                 * a trailing 'D' means this is the firmware's default value.
+                 */
+                if (gh->p.term_str[2] == 'D' || gh->p.term_str[2] == ',') {
+                    gh->p.data.time.leap_sec = 10 * CTN(gh->p.term_str[0])
+                                                + CTN(gh->p.term_str[1]);
+                } else {
+                    gh->p.data.time.leap_sec = 100 * CTN(gh->p.term_str[0])
+                                                + 10 * CTN(gh->p.term_str[1])
+                                                + CTN(gh->p.term_str[2]);
+                }
+                break;
+            case 7:                             /* Process clock bias */
+                gh->p.data.time.clk_bias = parse_number(gh, NULL);
+                break;
+            case 8:                             /* Process clock drift */
+                gh->p.data.time.clk_drift = parse_float_number(gh, NULL);
+                break;
+            case 9:                             /* Process time pulse granularity */
+                gh->p.data.time.tp_gran = parse_number(gh, NULL);
+                break;
+            default: break;
+        }
+#endif /* GPS_CFG_STATEMENT_PUBX_TIME */
+#endif /* GPS_CFG_STATEMENT_PUBX */
     }
     return 1;
 }
@@ -352,6 +408,21 @@ copy_from_tmp_memory(gps_t* gh) {
         gh->month = gh->p.data.rmc.month;
         gh->year = gh->p.data.rmc.year;
 #endif /* GPS_CFG_STATEMENT_GPRMC */
+#if GPS_CFG_STATEMENT_PUBX_TIME
+    } else if (gh->p.stat == STAT_UBX_TIME) {
+        gh->hours = gh->p.data.time.hours;
+        gh->minutes = gh->p.data.time.minutes;
+        gh->seconds = gh->p.data.time.seconds;
+        gh->date = gh->p.data.time.date;
+        gh->month = gh->p.data.time.month;
+        gh->year = gh->p.data.time.year;
+        gh->utc_tow = gh->p.data.time.utc_tow;
+        gh->utc_wk = gh->p.data.time.utc_wk;
+        gh->leap_sec = gh->p.data.time.leap_sec;
+        gh->clk_bias = gh->p.data.time.clk_bias;
+        gh->clk_drift = gh->p.data.time.clk_drift;
+        gh->tp_gran = gh->p.data.time.tp_gran;
+#endif /* GPS_CFG_STATEMENT_PUBX_TIME */
     }
     return 1;
 }
