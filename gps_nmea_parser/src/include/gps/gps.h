@@ -234,9 +234,9 @@ typedef struct {
 #if GPS_CFG_STATEMENT_GPRMC
             struct {
                 uint8_t is_valid;               /*!< Status whether GPS status is valid or not */
-                uint8_t date;                   /*!< Current UTF date */
-                uint8_t month;                  /*!< Current UTF month */
-                uint8_t year;                   /*!< Current UTF year */
+                uint8_t date;                   /*!< Current UTC date */
+                uint8_t month;                  /*!< Current UTC month */
+                uint8_t year;                   /*!< Current UTC year */
                 gps_float_t speed;              /*!< Current spead over the ground in knots */
                 gps_float_t coarse;             /*!< Current coarse made good */
                 gps_float_t variation;          /*!< Current magnetic variation in degrees */
