@@ -316,7 +316,7 @@ parse_term(gps_t* gh) {
                 /* Accomodate a 2- or 3-digit leap second count;
                  * a trailing 'D' means this is the firmware's default value.
                  */
-                if (gh->p.term_str[2] == 'D' || gh->p.term_str[2] == ',') {
+                if (gh->p.term_str[2] == 'D' || gh->p.term_str[2] == '\0') {
                     gh->p.data.time.leap_sec = 10 * CTN(gh->p.term_str[0])
                                                 + CTN(gh->p.term_str[1]);
                 } else {
