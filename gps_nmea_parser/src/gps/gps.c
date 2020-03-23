@@ -50,14 +50,6 @@
 #define R2D(x)              FLT(FLT(x) * FLT(57.29577951308232))/*!< Radians to degrees */
 #define EARTH_RADIUS        FLT(6371.0) /*!< Earth radius in units of kilometers */
 
-#define STAT_UNKNOWN        0
-#define STAT_GGA            1
-#define STAT_GSA            2
-#define STAT_GSV            3
-#define STAT_RMC            4
-#define STAT_UBX            5
-#define STAT_UBX_TIME       6
-
 #define CRC_ADD(_gh, ch)    (_gh)->p.crc_calc ^= (uint8_t)(ch)
 #define TERM_ADD(_gh, ch)   do {    \
     if ((_gh)->p.term_pos < (sizeof((_gh)->p.term_str) - 1)) {  \

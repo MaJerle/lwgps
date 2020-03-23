@@ -177,6 +177,18 @@ typedef struct {
 } gps_sat_t;
 
 /**
+ * \brief           ENUM of possible GPS statements parsed
+ */
+typedef enum {
+    STAT_UNKNOWN    = 0,
+    STAT_GGA        = 1,
+    STAT_GSA        = 2,
+    STAT_GSV        = 3,
+    STAT_RMC        = 4,
+    STAT_UBX        = 5,
+    STAT_UBX_TIME   = 6
+}__attribute__((packed)) gps_statement_t;
+/**
  * \brief           GPS main structure
  */
 typedef struct {
@@ -245,7 +257,7 @@ typedef struct {
 
 #if !__DOXYGEN__
     struct {
-        uint8_t stat;                           /*!< Statement index */
+        gps_statement_t stat;                   /*!< Statement index */
         char term_str[13];                      /*!< Current term in string format */
         uint8_t term_pos;                       /*!< Current index position in term */
         uint8_t term_num;                       /*!< Current term number */
