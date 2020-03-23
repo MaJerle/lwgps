@@ -59,6 +59,16 @@ extern "C" {
 #endif
 
 /**
+ * \brief           Enables `1` or disables `0` status reporting callback
+ *                  by gps_process()
+ *
+ * \note            This is an extension, so not enabled by default.
+ */
+#ifndef GPS_CFG_STATUS
+#define GPS_CFG_STATUS                      0
+#endif
+
+/**
  * \brief           Enables `1` or disables `0` `GGA` statement parsing.
  *
  * \note            This statement must be enabled to parse:
@@ -186,7 +196,8 @@ typedef enum {
     STAT_GSV        = 3,
     STAT_RMC        = 4,
     STAT_UBX        = 5,
-    STAT_UBX_TIME   = 6
+    STAT_UBX_TIME   = 6,
+    STAT_CHECKSUM_FAIL = UINT8_MAX
 }__attribute__((packed)) gps_statement_t;
 /**
  * \brief           GPS main structure
@@ -369,7 +380,13 @@ typedef enum {
 } gps_speed_t;
 
 uint8_t     gps_init(gps_t* gh);
+
+#if GPS_CFG_STATUS
+typedef void (*gps_process_cb_t)(gps_statement_t res);
+uint8_t     gps_process(gps_t* gh, const void* data, size_t len, gps_process_cb_t callback);
+#else
 uint8_t     gps_process(gps_t* gh, const void* data, size_t len);
+#endif /* GPS_CFG_STATUS */
 
 uint8_t     gps_distance_bearing(gps_float_t las, gps_float_t los, gps_float_t lae, gps_float_t loe, gps_float_t* d, gps_float_t* b);
 gps_float_t gps_to_speed(gps_float_t sik, gps_speed_t ts);

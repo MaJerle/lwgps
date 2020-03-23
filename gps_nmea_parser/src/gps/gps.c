@@ -438,7 +438,11 @@ gps_init(gps_t* gh) {
  * \return          `1` on success, `0` otherwise
  */
 uint8_t
+#if GPS_CFG_STATUS
+gps_process(gps_t* gh, const void* data, size_t len, gps_process_cb_t callback) {
+#else
 gps_process(gps_t* gh, const void* data, size_t len) {
+#endif /* GPS_CFG_STATUS */
     const uint8_t* d = data;
 
     while (len--) {                             /* Process all bytes */
@@ -457,6 +461,13 @@ gps_process(gps_t* gh, const void* data, size_t len) {
             if (check_crc(gh)) {                /* Check for CRC result */
                 /* CRC is OK, in theory we can copy data from statements to user data */
                 copy_from_tmp_memory(gh);       /* Copy memory from temporary to user memory */
+#if GPS_CFG_STATUS
+                if (callback) {
+                    callback(gh->p.stat);
+                }
+            } else if (callback) {
+                callback(STAT_CHECKSUM_FAIL);
+#endif /* GPS_CFG_STATUS */
             }
         } else {
             if (!gh->p.star) {                  /* Add to CRC only if star not yet detected */
