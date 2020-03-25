@@ -34,12 +34,12 @@
 #ifndef GPS_HDR_H
 #define GPS_HDR_H
 
+#include <stdint.h>
+#include <stddef.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
-
-#include <stdint.h>
-#include <stddef.h>
 
 /**
  * \addtogroup      GPS_NMEA

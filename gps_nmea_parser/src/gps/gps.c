@@ -31,11 +31,10 @@
  * Author:          Tilen MAJERLE <tilen@majerle.eu>
  * Version:         v1.1.0
  */
-#include "gps/gps.h"
-
 #include <math.h>
 #include <string.h>
 #include <stdlib.h>
+#include "gps/gps.h"
 
 #define FLT(x)              ((gps_float_t)(x))
 #define D2R(x)              FLT(FLT(x) * FLT(0.01745329251994)) /*!< Degrees to radians */
