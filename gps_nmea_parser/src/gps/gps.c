@@ -426,7 +426,7 @@ gps_init(gps_t* gh) {
  */
 uint8_t
 #if GPS_CFG_STATUS
-gps_process(gps_t* gh, const void* data, size_t len, gps_process_cb_t callback) {
+gps_process(gps_t* gh, const void* data, size_t len, gps_process_cb_t evt_fn) {
 #else
 gps_process(gps_t* gh, const void* data, size_t len) {
 #endif /* GPS_CFG_STATUS */
@@ -449,11 +449,11 @@ gps_process(gps_t* gh, const void* data, size_t len) {
                 /* CRC is OK, in theory we can copy data from statements to user data */
                 copy_from_tmp_memory(gh);       /* Copy memory from temporary to user memory */
 #if GPS_CFG_STATUS
-                if (callback) {
-                    callback(gh->p.stat);
+                if (evt_fn != NULL) {
+                    evt_fn(gh->p.stat);
                 }
-            } else if (callback) {
-                callback(STAT_CHECKSUM_FAIL);
+            } else if (evt_fn != NULL) {
+                evt_fn(STAT_CHECKSUM_FAIL);
 #endif /* GPS_CFG_STATUS */
             }
         } else {

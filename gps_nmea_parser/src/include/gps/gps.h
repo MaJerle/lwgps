@@ -383,7 +383,7 @@ uint8_t     gps_init(gps_t* gh);
 
 #if GPS_CFG_STATUS
 typedef void (*gps_process_cb_t)(gps_statement_t res);
-uint8_t     gps_process(gps_t* gh, const void* data, size_t len, gps_process_cb_t callback);
+uint8_t     gps_process(gps_t* gh, const void* data, size_t len, gps_process_cb_t evt_fn);
 #else
 uint8_t     gps_process(gps_t* gh, const void* data, size_t len);
 #endif /* GPS_CFG_STATUS */
