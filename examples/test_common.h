@@ -1,5 +1,5 @@
-#ifndef test_common_h_
-#define test_common_h_
+#ifndef TEST_COMMON_HDR_H
+#define TEST_COMMON_HDR_H
 
 #include <math.h>
 #include <stdlib.h>
@@ -15,4 +15,4 @@
 #define FLT_IS_EQUAL(x, y)      (fabs((double)(x) - (double)(y)) < 0.00001)
 #define INT_IS_EQUAL(x, y)      ((int)((x) == (y)))
 
-#endif /* test_common_h_ */
+#endif /* TEST_COMMON_HDR_H */
