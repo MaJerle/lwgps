@@ -198,7 +198,7 @@ typedef enum {
     STAT_UBX        = 5,
     STAT_UBX_TIME   = 6,
     STAT_CHECKSUM_FAIL = UINT8_MAX
-}__attribute__((packed)) gps_statement_t;
+} gps_statement_t;
 /**
  * \brief           GPS main structure
  */
