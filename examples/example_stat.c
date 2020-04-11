@@ -58,10 +58,10 @@ void callback(gps_statement_t res) {
     if (res != expected[i]) {
         printf("failed i %d, expected res %d but received %d\n",
                 i, expected[i], res);
-        err_cnt++;
+        ++err_cnt;
     }
 
-    i++;
+    ++i;
 }
 
 int
