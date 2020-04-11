@@ -422,17 +422,18 @@ gps_init(gps_t* gh) {
  * \param[in]       gh: GPS handle structure
  * \param[in]       data: Received data
  * \param[in]       len: Number of bytes to process
+ * \param[in]       evt_fn: Event function to notify application layer
  * \return          `1` on success, `0` otherwise
  */
 uint8_t
-#if GPS_CFG_STATUS
+#if GPS_CFG_STATUS || __DOXYGEN__
 gps_process(gps_t* gh, const void* data, size_t len, gps_process_fn evt_fn) {
-#else
+#else /* GPS_CFG_STATUS */
 gps_process(gps_t* gh, const void* data, size_t len) {
-#endif /* GPS_CFG_STATUS */
+#endif /* !GPS_CFG_STATUS */
     const uint8_t* d = data;
 
-    while (len--) {                             /* Process all bytes */
+    for (; len > 0; ++d, --len) {               /* Process all bytes */
         if (*d == '$') {                        /* Check for beginning of NMEA line */
             memset(&gh->p, 0x00, sizeof(gh->p));/* Reset private memory */
             TERM_ADD(gh, *d);                   /* Add character to term */
@@ -462,7 +463,6 @@ gps_process(gps_t* gh, const void* data, size_t len) {
             }
             TERM_ADD(gh, *d);                   /* Add character to term */
         }
-        d++;                                    /* Process next character */
     }
     return 1;
 }

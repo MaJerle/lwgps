@@ -36,6 +36,7 @@
 
 #include <stdint.h>
 #include <stddef.h>
+#include <limits.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -192,15 +193,16 @@ typedef struct {
  * \brief           ENUM of possible GPS statements parsed
  */
 typedef enum {
-    STAT_UNKNOWN    = 0,
-    STAT_GGA        = 1,
-    STAT_GSA        = 2,
-    STAT_GSV        = 3,
-    STAT_RMC        = 4,
-    STAT_UBX        = 5,
-    STAT_UBX_TIME   = 6,
-    STAT_CHECKSUM_FAIL = UINT8_MAX
+    STAT_UNKNOWN    = 0,                        /*!< Unknown NMEA statement */
+    STAT_GGA        = 1,                        /*!< GPGGA statement */
+    STAT_GSA        = 2,                        /*!< GPGSA statement */
+    STAT_GSV        = 3,                        /*!< GPGSV statement */
+    STAT_RMC        = 4,                        /*!< GPRMC statement */
+    STAT_UBX        = 5,                        /*!< UBX statement (uBlox specific) */
+    STAT_UBX_TIME   = 6,                        /*!< UBX TIME statement (uBlox specific) */
+    STAT_CHECKSUM_FAIL = UINT8_MAX              /*!< Special case, used when checksum fails */
 } gps_statement_t;
+
 /**
  * \brief           GPS main structure
  */
@@ -342,18 +344,6 @@ typedef struct {
 } gps_t;
 
 /**
- * \brief           Check if current GPS data contain valid signal
- * \note            \ref GPS_CFG_STATEMENT_GPRMC must be enabled and `GPRMC` statement must be sent from GPS receiver
- * \param[in]       _gh: GPS handle
- * \return          `1` on success, `0` otherwise
- */
-#if GPS_CFG_STATEMENT_GPRMC || __DOXYGEN__
-#define gps_is_valid(_gh)           ((_gh)->is_valid)
-#else
-#define gps_is_valid(_gh)           (0)
-#endif /* GPS_CFG_STATEMENT_GPRMC || __DOXYGEN__ */
-
-/**
  * \brief           List of optional speed transformation from GPS values (in knots)
  */
 typedef enum {
@@ -381,20 +371,30 @@ typedef enum {
     gps_speed_smph,                             /*!< Sea miles per hour */
 } gps_speed_t;
 
-uint8_t     gps_init(gps_t* gh);
-
 /**
  * \brief           Signature for caller-suplied callback function from gps_process
  * \param[in]       res: statement type of recently parsed statement
  */
 typedef void (*gps_process_fn)(gps_statement_t res);
 
-#if GPS_CFG_STATUS
-uint8_t     gps_process(gps_t* gh, const void* data, size_t len, gps_process_fn evt_fn);
+/**
+ * \brief           Check if current GPS data contain valid signal
+ * \note            \ref GPS_CFG_STATEMENT_GPRMC must be enabled and `GPRMC` statement must be sent from GPS receiver
+ * \param[in]       _gh: GPS handle
+ * \return          `1` on success, `0` otherwise
+ */
+#if GPS_CFG_STATEMENT_GPRMC || __DOXYGEN__
+#define gps_is_valid(_gh)           ((_gh)->is_valid)
 #else
-uint8_t     gps_process(gps_t* gh, const void* data, size_t len);
-#endif /* GPS_CFG_STATUS */
+#define gps_is_valid(_gh)           (0)
+#endif /* GPS_CFG_STATEMENT_GPRMC || __DOXYGEN__ */
 
+uint8_t     gps_init(gps_t* gh);
+#if GPS_CFG_STATUS || __DOXYGEN__
+uint8_t     gps_process(gps_t* gh, const void* data, size_t len, gps_process_fn evt_fn);
+#else /* GPS_CFG_STATUS */
+uint8_t     gps_process(gps_t* gh, const void* data, size_t len);
+#endif /* !GPS_CFG_STATUS */
 uint8_t     gps_distance_bearing(gps_float_t las, gps_float_t los, gps_float_t lae, gps_float_t loe, gps_float_t* d, gps_float_t* b);
 gps_float_t gps_to_speed(gps_float_t sik, gps_speed_t ts);
 
