@@ -136,8 +136,6 @@ extern "C" {
 #define GPS_CFG_STATEMENT_PUBX     0
 #endif
 
-#if GPS_CFG_STATEMENT_PUBX
-
 /**
  * \brief           Enables `1` or disables `0` parsing and generation
  *                  of PUBX (uBlox) TIME messages.
@@ -149,12 +147,16 @@ extern "C" {
  *
  *                  This is a nonstandard ublox-specific extension,
  *                  so disabled by default.
+ *
+ *                  This configure option requires GPS_CFG_STATEMENT_PUBX
  */
 #ifndef GPS_CFG_STATEMENT_PUBX_TIME
 #define GPS_CFG_STATEMENT_PUBX_TIME     0
 #endif
-
-#endif /* GPS_CFG_STATEMENT_PUBX */
+/* Guard against accidental parser breakage */
+#if GPS_CFG_STATEMENT_PUBX_TIME && !GPS_CFG_STATEMENT_PUBX
+#error GPS_CFG_STATEMENT_PUBX must be enabled when enabling GPS_CFG_STATEMENT_PUBX_TIME
+#endif /* GPS_CFG_STATEMENT_PUBX_TIME && !GPS_CFG_STATEMENT_PUBX */
 
 /**
  * \}
