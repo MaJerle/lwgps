@@ -2,9 +2,9 @@
  * This example uses direct processing function,
  * to process dummy PUBX TIME packets from GPS receiver
  */
-#include "gps/gps.h"
 #include <string.h>
 #include <stdio.h>
+#include "gps/gps.h"
 #include "test_common.h"
 
 #if ! GPS_CFG_STATEMENT_PUBX_TIME
