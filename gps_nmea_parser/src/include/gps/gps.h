@@ -381,9 +381,14 @@ typedef enum {
 
 uint8_t     gps_init(gps_t* gh);
 
+/**
+ * \brief           Signature for caller-suplied callback function from gps_process
+ * \param[in]       res: statement type of recently parsed statement
+ */
+typedef void (*gps_process_fn)(gps_statement_t res);
+
 #if GPS_CFG_STATUS
-typedef void (*gps_process_cb_t)(gps_statement_t res);
-uint8_t     gps_process(gps_t* gh, const void* data, size_t len, gps_process_cb_t evt_fn);
+uint8_t     gps_process(gps_t* gh, const void* data, size_t len, gps_process_fn evt_fn);
 #else
 uint8_t     gps_process(gps_t* gh, const void* data, size_t len);
 #endif /* GPS_CFG_STATUS */

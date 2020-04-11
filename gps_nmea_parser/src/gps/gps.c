@@ -426,7 +426,7 @@ gps_init(gps_t* gh) {
  */
 uint8_t
 #if GPS_CFG_STATUS
-gps_process(gps_t* gh, const void* data, size_t len, gps_process_cb_t evt_fn) {
+gps_process(gps_t* gh, const void* data, size_t len, gps_process_fn evt_fn) {
 #else
 gps_process(gps_t* gh, const void* data, size_t len) {
 #endif /* GPS_CFG_STATUS */
