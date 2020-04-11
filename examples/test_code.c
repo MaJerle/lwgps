@@ -39,7 +39,7 @@ run_tests() {
     RUN_TEST(FLT_IS_EQUAL(hgps.latitude, 39.1226000000));
     RUN_TEST(FLT_IS_EQUAL(hgps.longitude, -121.0413666666));
     RUN_TEST(FLT_IS_EQUAL(hgps.altitude, 646.4000000000));
-    RUN_TEST(FLT_IS_EQUAL(hgps.coarse, 360.0000000000));
+    RUN_TEST(FLT_IS_EQUAL(hgps.course, 360.0000000000));
     RUN_TEST(INT_IS_EQUAL(hgps.dop_p, 1.6000000000));
     RUN_TEST(INT_IS_EQUAL(hgps.dop_h, 1.6000000000));
     RUN_TEST(INT_IS_EQUAL(hgps.dop_v, 1.0000000000));

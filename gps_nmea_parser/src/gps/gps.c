@@ -31,11 +31,10 @@
  * Author:          Tilen MAJERLE <tilen@majerle.eu>
  * Version:         v1.1.0
  */
-#include "gps/gps.h"
-
 #include <math.h>
 #include <string.h>
 #include <stdlib.h>
+#include "gps/gps.h"
 
 #if DEBUG
 #ifndef DEBUG_PRINTF
@@ -270,7 +269,7 @@ parse_term(gps_t* gh) {
                 gh->p.data.rmc.speed = parse_float_number(gh, NULL);
                 break;
             case 8:                             /* Process true ground coarse */
-                gh->p.data.rmc.coarse = parse_float_number(gh, NULL);
+                gh->p.data.rmc.course = parse_float_number(gh, NULL);
                 break;
             case 9:                             /* Process date */
                 gh->p.data.rmc.date = (uint8_t)(10 * CTN(gh->p.term_str[0]) + CTN(gh->p.term_str[1]));
@@ -392,7 +391,7 @@ copy_from_tmp_memory(gps_t* gh) {
 #endif /* GPS_CFG_STATEMENT_GPGSV */
 #if GPS_CFG_STATEMENT_GPRMC
     } else if (gh->p.stat == STAT_RMC) {
-        gh->coarse = gh->p.data.rmc.coarse;
+        gh->course = gh->p.data.rmc.course;
         gh->is_valid = gh->p.data.rmc.is_valid;
         gh->speed = gh->p.data.rmc.speed;
         gh->variation = gh->p.data.rmc.variation;

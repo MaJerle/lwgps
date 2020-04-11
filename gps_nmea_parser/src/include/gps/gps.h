@@ -34,12 +34,12 @@
 #ifndef GPS_HDR_H
 #define GPS_HDR_H
 
+#include <stdint.h>
+#include <stddef.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
-
-#include <stdint.h>
-#include <stddef.h>
 
 /**
  * \addtogroup      GPS_NMEA
@@ -237,7 +237,7 @@ typedef struct {
     /* Information related to GPRMC statement */
     uint8_t is_valid;                           /*!< GPS valid status */
     gps_float_t speed;                          /*!< Ground speed in knots */
-    gps_float_t coarse;                         /*!< Ground coarse */
+    gps_float_t course;                         /*!< Ground coarse */
     gps_float_t variation;                      /*!< Magnetic variation */
     uint8_t date;                               /*!< Fix date */
     uint8_t month;                              /*!< Fix month */
@@ -314,7 +314,7 @@ typedef struct {
                 uint8_t month;                  /*!< Current UTC month */
                 uint8_t year;                   /*!< Current UTC year */
                 gps_float_t speed;              /*!< Current spead over the ground in knots */
-                gps_float_t coarse;             /*!< Current coarse made good */
+                gps_float_t course;             /*!< Current course over ground */
                 gps_float_t variation;          /*!< Current magnetic variation in degrees */
             } rmc;                              /*!< GPRMC message */
 #endif /* GPS_CFG_STATEMENT_GPRMC */
