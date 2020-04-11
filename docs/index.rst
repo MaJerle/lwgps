@@ -58,11 +58,11 @@ Table of contents
 ^^^^^^^^^^^^^^^^^
 
 .. toctree::
-	:maxdepth: 2
+  :maxdepth: 2
 
-    self
-	get-started/index
-	user-manual/index
-	api-reference/index
-	examples/index
+  self
+  get-started/index
+  user-manual/index
+  api-reference/index
+  examples/index
 
