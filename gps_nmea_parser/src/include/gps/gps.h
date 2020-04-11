@@ -245,18 +245,18 @@ typedef struct {
 #endif /* GPS_CFG_STATEMENT_GPRMC || __DOXYGEN__ */
 
 #if GPS_CFG_STATEMENT_PUBX_TIME || __DOXYGEN__
-#if ! GPS_CFG_STATEMENT_GPGGA && ! __DOXYGEN__
+#if !GPS_CFG_STATEMENT_GPGGA && !__DOXYGEN__
     /* rely on time fields from GPGGA if possible */
     uint8_t hours;
     uint8_t minutes;
     uint8_t seconds;
-#endif /* ! GPS_CFG_STATEMENT_GPGGA && ! __DOXYGEN__ */
-#if ! GPS_CFG_STATEMENT_GPRMC && ! __DOXYGEN__
+#endif /* !GPS_CFG_STATEMENT_GPGGA && !__DOXYGEN__ */
+#if !GPS_CFG_STATEMENT_GPRMC && !__DOXYGEN__
     /* rely on date fields from GPRMC if possible */
     uint8_t date;
     uint8_t month;
     uint8_t year;
-#endif /* ! GPS_CFG_STATEMENT_GPRMC && ! __DOXYGEN__ */
+#endif /* !GPS_CFG_STATEMENT_GPRMC && !__DOXYGEN__ */
     /* fields only available in PUBX_TIME */
     gps_float_t utc_tow;                        /*!< UTC TimeOfWeek, eg 113851.00 */
     uint16_t utc_wk;                            /*!< UTC week number, continues beyond 1023 */
