@@ -5,7 +5,7 @@
 #include "gps/gps.h"
 #include <string.h>
 #include <stdio.h>
-#include <test_common.h>
+#include "test_common.h"
 
 /* GPS handle  */
 gps_t hgps;

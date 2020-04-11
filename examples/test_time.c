@@ -5,7 +5,7 @@
 #include "gps/gps.h"
 #include <string.h>
 #include <stdio.h>
-#include <test_common.h>
+#include "test_common.h"
 
 #if ! GPS_CFG_STATEMENT_PUBX_TIME
 #error "this test must be compiled with -DGPS_CFG_STATEMENT_PUBX_TIME=1"
