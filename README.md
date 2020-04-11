@@ -31,3 +31,10 @@ Alternatively you may:
 
 1. Report a bug
 2. Ask for a feature request
+
+## Test
+
+To build the code and run basic tests on your host::
+
+        cd examples
+        make test

@@ -1,10 +1,14 @@
 /**
- * This example uses direct processing function
- * to process dummy NMEA data from GPS receiver
+ * This example tests the callback functionality of gps_process()
+ * when the GPS_CFG_STATUS flag is set.
  */
 #include "gps/gps.h"
 #include <string.h>
 #include <stdio.h>
+
+#if ! GPS_CFG_STATUS
+#error "this test must be compiled with -DGPS_CFG_STATUS=1"
+#endif /* ! GPS_CFG_STATUS */
 
 /* GPS handle  */
 gps_t hgps;
@@ -29,19 +33,44 @@ gps_rx_data[] = ""
 "$GPRMC,183731,A,3907.482,N,12102.436,W,000.0,360.0,080301,015.5,E*67\r\n"
 "$GPRMB,A,,,,,,,,,,,,V*71\r\n";
 
+const gps_statement_t expected[] = {
+    STAT_RMC,
+    STAT_UNKNOWN,
+    STAT_GGA,
+    STAT_GSA,
+    STAT_GSV,
+    STAT_GSV,
+    STAT_UNKNOWN,
+    STAT_UNKNOWN,
+    STAT_UNKNOWN,
+    STAT_CHECKSUM_FAIL,
+    STAT_UNKNOWN,
+    STAT_UNKNOWN,
+    STAT_RMC,
+    STAT_UNKNOWN
+};
+
+static int err_cnt;
+
+void callback(gps_statement_t res) {
+    static int i;
+
+    if (res != expected[i]) {
+        printf("failed i %d, expected res %d but received %d\n",
+                i, expected[i], res);
+        ++err_cnt;
+    }
+
+    ++i;
+}
+
 int
 main() {
     /* Init GPS */
     gps_init(&hgps);
 
     /* Process all input data */
-    gps_process(&hgps, gps_rx_data, strlen(gps_rx_data));
+    gps_process(&hgps, gps_rx_data, strlen(gps_rx_data), callback);
 
-    /* Print messages */
-    printf("Valid status: %d\r\n", hgps.is_valid);
-    printf("Latitude: %f degrees\r\n", hgps.latitude);
-    printf("Longitude: %f degrees\r\n", hgps.longitude);
-    printf("Altitude: %f meters\r\n", hgps.altitude);
-
-    return 0;
+    return err_cnt;
 }

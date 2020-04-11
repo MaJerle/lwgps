@@ -36,6 +36,7 @@
 
 #include <stdint.h>
 #include <stddef.h>
+#include <limits.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -56,6 +57,16 @@ extern "C" {
  */
 #ifndef GPS_CFG_DOUBLE
 #define GPS_CFG_DOUBLE                      1
+#endif
+
+/**
+ * \brief           Enables `1` or disables `0` status reporting callback
+ *                  by gps_process()
+ *
+ * \note            This is an extension, so not enabled by default.
+ */
+#ifndef GPS_CFG_STATUS
+#define GPS_CFG_STATUS                      0
 #endif
 
 /**
@@ -116,6 +127,39 @@ extern "C" {
 #endif
 
 /**
+ * \brief           Enables `1` or disables `0` parsing and generation
+ *                  of PUBX (uBlox) messages
+ *
+ *                  PUBX are a nonstandard ublox-specific extensions,
+ *                  so disabled by default.
+ */
+#ifndef GPS_CFG_STATEMENT_PUBX
+#define GPS_CFG_STATEMENT_PUBX     0
+#endif
+
+/**
+ * \brief           Enables `1` or disables `0` parsing and generation
+ *                  of PUBX (uBlox) TIME messages.
+ *
+ * \note            TIME messages can be used to obtain:
+ *                      - UTC time of week
+ *                      - UTC week number
+ *                      - Leap seconds (allows conversion to eg. TAI)
+ *
+ *                  This is a nonstandard ublox-specific extension,
+ *                  so disabled by default.
+ *
+ *                  This configure option requires GPS_CFG_STATEMENT_PUBX
+ */
+#ifndef GPS_CFG_STATEMENT_PUBX_TIME
+#define GPS_CFG_STATEMENT_PUBX_TIME     0
+#endif
+/* Guard against accidental parser breakage */
+#if GPS_CFG_STATEMENT_PUBX_TIME && !GPS_CFG_STATEMENT_PUBX
+#error GPS_CFG_STATEMENT_PUBX must be enabled when enabling GPS_CFG_STATEMENT_PUBX_TIME
+#endif /* GPS_CFG_STATEMENT_PUBX_TIME && !GPS_CFG_STATEMENT_PUBX */
+
+/**
  * \}
  */
 
@@ -144,6 +188,20 @@ typedef struct {
     uint16_t azimuth;                           /*!< Azimuth in degrees */
     uint8_t snr;                                /*!< Signal-to-noise ratio */
 } gps_sat_t;
+
+/**
+ * \brief           ENUM of possible GPS statements parsed
+ */
+typedef enum {
+    STAT_UNKNOWN    = 0,                        /*!< Unknown NMEA statement */
+    STAT_GGA        = 1,                        /*!< GPGGA statement */
+    STAT_GSA        = 2,                        /*!< GPGSA statement */
+    STAT_GSV        = 3,                        /*!< GPGSV statement */
+    STAT_RMC        = 4,                        /*!< GPRMC statement */
+    STAT_UBX        = 5,                        /*!< UBX statement (uBlox specific) */
+    STAT_UBX_TIME   = 6,                        /*!< UBX TIME statement (uBlox specific) */
+    STAT_CHECKSUM_FAIL = UINT8_MAX              /*!< Special case, used when checksum fails */
+} gps_statement_t;
 
 /**
  * \brief           GPS main structure
@@ -190,9 +248,31 @@ typedef struct {
     uint8_t year;                               /*!< Fix year */
 #endif /* GPS_CFG_STATEMENT_GPRMC || __DOXYGEN__ */
 
+#if GPS_CFG_STATEMENT_PUBX_TIME || __DOXYGEN__
+#if !GPS_CFG_STATEMENT_GPGGA && !__DOXYGEN__
+    /* rely on time fields from GPGGA if possible */
+    uint8_t hours;
+    uint8_t minutes;
+    uint8_t seconds;
+#endif /* !GPS_CFG_STATEMENT_GPGGA && !__DOXYGEN__ */
+#if !GPS_CFG_STATEMENT_GPRMC && !__DOXYGEN__
+    /* rely on date fields from GPRMC if possible */
+    uint8_t date;
+    uint8_t month;
+    uint8_t year;
+#endif /* !GPS_CFG_STATEMENT_GPRMC && !__DOXYGEN__ */
+    /* fields only available in PUBX_TIME */
+    gps_float_t utc_tow;                        /*!< UTC TimeOfWeek, eg 113851.00 */
+    uint16_t utc_wk;                            /*!< UTC week number, continues beyond 1023 */
+    uint8_t leap_sec;                           /*!< UTC leap seconds; UTC + leap_sec = TAI */
+    uint32_t clk_bias;                          /*!< Receiver clock bias, eg 1930035 */
+    gps_float_t clk_drift;                      /*!< Receiver clock drift, eg -2660.664 */
+    uint32_t tp_gran;                           /*!< Time pulse granularity, eg 43 */
+#endif /* GPS_CFG_STATEMENT_PUBX_TIME || __DOXYGEN__ */
+
 #if !__DOXYGEN__
     struct {
-        uint8_t stat;                           /*!< Statement index */
+        gps_statement_t stat;                   /*!< Statement index */
         char term_str[13];                      /*!< Current term in string format */
         uint8_t term_pos;                       /*!< Current index position in term */
         uint8_t term_num;                       /*!< Current term number */
@@ -242,22 +322,26 @@ typedef struct {
                 gps_float_t variation;          /*!< Current magnetic variation in degrees */
             } rmc;                              /*!< GPRMC message */
 #endif /* GPS_CFG_STATEMENT_GPRMC */
+#if GPS_CFG_STATEMENT_PUBX_TIME
+            struct {
+                uint8_t hours;                  /*!< Current UTC hours */
+                uint8_t minutes;                /*!< Current UTC minutes */
+                uint8_t seconds;                /*!< Current UTC seconds */
+                uint8_t date;                   /*!< Current UTC date */
+                uint8_t month;                  /*!< Current UTC month */
+                uint8_t year;                   /*!< Current UTC year */
+                gps_float_t utc_tow;            /*!< UTC TimeOfWeek, eg 113851.00 */
+                uint16_t utc_wk;                /*!< UTC week number, continues beyond 1023 */
+                uint8_t leap_sec;               /*!< UTC leap seconds; UTC + leap_sec = TAI */
+                uint32_t clk_bias;              /*!< Receiver clock bias, eg 1930035 */
+                gps_float_t clk_drift;          /*!< Receiver clock drift, eg -2660.664 */
+                uint32_t tp_gran;               /*!< Time pulse granularity, eg 43 */
+            } time;                             /*!< PUBX TIME message */
+#endif /* GPS_CFG_STATEMENT_PUBX_TIME */
         } data;                                 /*!< Union with data for each information */
     } p;                                        /*!< Structure with private data */
 #endif /* !__DOXYGEN__ */
 } gps_t;
-
-/**
- * \brief           Check if current GPS data contain valid signal
- * \note            \ref GPS_CFG_STATEMENT_GPRMC must be enabled and `GPRMC` statement must be sent from GPS receiver
- * \param[in]       _gh: GPS handle
- * \return          `1` on success, `0` otherwise
- */
-#if GPS_CFG_STATEMENT_GPRMC || __DOXYGEN__
-#define gps_is_valid(_gh)           ((_gh)->is_valid)
-#else
-#define gps_is_valid(_gh)           (0)
-#endif /* GPS_CFG_STATEMENT_GPRMC || __DOXYGEN__ */
 
 /**
  * \brief           List of optional speed transformation from GPS values (in knots)
@@ -287,9 +371,30 @@ typedef enum {
     gps_speed_smph,                             /*!< Sea miles per hour */
 } gps_speed_t;
 
-uint8_t     gps_init(gps_t* gh);
-uint8_t     gps_process(gps_t* gh, const void* data, size_t len);
+/**
+ * \brief           Signature for caller-suplied callback function from gps_process
+ * \param[in]       res: statement type of recently parsed statement
+ */
+typedef void (*gps_process_fn)(gps_statement_t res);
 
+/**
+ * \brief           Check if current GPS data contain valid signal
+ * \note            \ref GPS_CFG_STATEMENT_GPRMC must be enabled and `GPRMC` statement must be sent from GPS receiver
+ * \param[in]       _gh: GPS handle
+ * \return          `1` on success, `0` otherwise
+ */
+#if GPS_CFG_STATEMENT_GPRMC || __DOXYGEN__
+#define gps_is_valid(_gh)           ((_gh)->is_valid)
+#else
+#define gps_is_valid(_gh)           (0)
+#endif /* GPS_CFG_STATEMENT_GPRMC || __DOXYGEN__ */
+
+uint8_t     gps_init(gps_t* gh);
+#if GPS_CFG_STATUS || __DOXYGEN__
+uint8_t     gps_process(gps_t* gh, const void* data, size_t len, gps_process_fn evt_fn);
+#else /* GPS_CFG_STATUS */
+uint8_t     gps_process(gps_t* gh, const void* data, size_t len);
+#endif /* !GPS_CFG_STATUS */
 uint8_t     gps_distance_bearing(gps_float_t las, gps_float_t los, gps_float_t lae, gps_float_t loe, gps_float_t* d, gps_float_t* b);
 gps_float_t gps_to_speed(gps_float_t sik, gps_speed_t ts);
 

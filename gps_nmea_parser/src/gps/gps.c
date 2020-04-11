@@ -41,12 +41,6 @@
 #define R2D(x)              FLT(FLT(x) * FLT(57.29577951308232))/*!< Radians to degrees */
 #define EARTH_RADIUS        FLT(6371.0) /*!< Earth radius in units of kilometers */
 
-#define STAT_UNKNOWN        0
-#define STAT_GGA            1
-#define STAT_GSA            2
-#define STAT_GSV            3
-#define STAT_RMC            4
-
 #define CRC_ADD(_gh, ch)    (_gh)->p.crc_calc ^= (uint8_t)(ch)
 #define TERM_ADD(_gh, ch)   do {    \
     if ((_gh)->p.term_pos < (sizeof((_gh)->p.term_str) - 1)) {  \
@@ -152,6 +146,10 @@ parse_term(gps_t* gh) {
         } else if (!strncmp(gh->p.term_str, "$GPRMC", 6) || !strncmp(gh->p.term_str, "$GNRMC", 6)) {
             gh->p.stat = STAT_RMC;
 #endif /* GPS_CFG_STATEMENT_GPRMC */
+#if GPS_CFG_STATEMENT_PUBX
+        } else if (!strncmp(gh->p.term_str, "$PUBX", 5)) {
+            gh->p.stat = STAT_UBX;
+#endif /* GPS_CFG_STATEMENT_PUBX */
         } else {
             gh->p.stat = STAT_UNKNOWN;          /* Invalid statement for library */
         }
@@ -281,6 +279,56 @@ parse_term(gps_t* gh) {
             default: break;
         }
 #endif /* GPS_CFG_STATEMENT_GPRMC */
+#if GPS_CFG_STATEMENT_PUBX
+    } else if (gh->p.stat == STAT_UBX) {        /* Disambiguate generic PUBX statement */
+        if (gh->p.term_str[0] == '0' && gh->p.term_str[1] == '4') {
+            gh->p.stat = STAT_UBX_TIME;
+        }
+#if GPS_CFG_STATEMENT_PUBX_TIME
+    } else if (gh->p.stat == STAT_UBX_TIME) {   /* Process PUBX (uBlox) TIME statement */
+        switch (gh->p.term_num) {
+            case 2:                             /* Process UTC time; ignore fractions of seconds */
+                gh->p.data.time.hours = 10 * CTN(gh->p.term_str[0]) + CTN(gh->p.term_str[1]);
+                gh->p.data.time.minutes = 10 * CTN(gh->p.term_str[2]) + CTN(gh->p.term_str[3]);
+                gh->p.data.time.seconds = 10 * CTN(gh->p.term_str[4]) + CTN(gh->p.term_str[5]);
+                break;
+            case 3:                             /* Process UTC date */
+                gh->p.data.time.date = 10 * CTN(gh->p.term_str[0]) + CTN(gh->p.term_str[1]);
+                gh->p.data.time.month = 10 * CTN(gh->p.term_str[2]) + CTN(gh->p.term_str[3]);
+                gh->p.data.time.year = 10 * CTN(gh->p.term_str[4]) + CTN(gh->p.term_str[5]);
+                break;
+            case 4:                             /* Process UTC TimeOfWeek */
+                gh->p.data.time.utc_tow = parse_float_number(gh, NULL);
+                break;
+            case 5:                             /* Process UTC WeekNumber */
+                gh->p.data.time.utc_wk = parse_number(gh, NULL);
+                break;
+            case 6:                             /* Process UTC leap seconds */
+                /* Accomodate a 2- or 3-digit leap second count;
+                 * a trailing 'D' means this is the firmware's default value.
+                 */
+                if (gh->p.term_str[2] == 'D' || gh->p.term_str[2] == '\0') {
+                    gh->p.data.time.leap_sec = 10 * CTN(gh->p.term_str[0])
+                                                + CTN(gh->p.term_str[1]);
+                } else {
+                    gh->p.data.time.leap_sec = 100 * CTN(gh->p.term_str[0])
+                                                + 10 * CTN(gh->p.term_str[1])
+                                                + CTN(gh->p.term_str[2]);
+                }
+                break;
+            case 7:                             /* Process clock bias */
+                gh->p.data.time.clk_bias = parse_number(gh, NULL);
+                break;
+            case 8:                             /* Process clock drift */
+                gh->p.data.time.clk_drift = parse_float_number(gh, NULL);
+                break;
+            case 9:                             /* Process time pulse granularity */
+                gh->p.data.time.tp_gran = parse_number(gh, NULL);
+                break;
+            default: break;
+        }
+#endif /* GPS_CFG_STATEMENT_PUBX_TIME */
+#endif /* GPS_CFG_STATEMENT_PUBX */
     }
     return 1;
 }
@@ -339,6 +387,21 @@ copy_from_tmp_memory(gps_t* gh) {
         gh->month = gh->p.data.rmc.month;
         gh->year = gh->p.data.rmc.year;
 #endif /* GPS_CFG_STATEMENT_GPRMC */
+#if GPS_CFG_STATEMENT_PUBX_TIME
+    } else if (gh->p.stat == STAT_UBX_TIME) {
+        gh->hours = gh->p.data.time.hours;
+        gh->minutes = gh->p.data.time.minutes;
+        gh->seconds = gh->p.data.time.seconds;
+        gh->date = gh->p.data.time.date;
+        gh->month = gh->p.data.time.month;
+        gh->year = gh->p.data.time.year;
+        gh->utc_tow = gh->p.data.time.utc_tow;
+        gh->utc_wk = gh->p.data.time.utc_wk;
+        gh->leap_sec = gh->p.data.time.leap_sec;
+        gh->clk_bias = gh->p.data.time.clk_bias;
+        gh->clk_drift = gh->p.data.time.clk_drift;
+        gh->tp_gran = gh->p.data.time.tp_gran;
+#endif /* GPS_CFG_STATEMENT_PUBX_TIME */
     }
     return 1;
 }
@@ -359,13 +422,18 @@ gps_init(gps_t* gh) {
  * \param[in]       gh: GPS handle structure
  * \param[in]       data: Received data
  * \param[in]       len: Number of bytes to process
+ * \param[in]       evt_fn: Event function to notify application layer
  * \return          `1` on success, `0` otherwise
  */
 uint8_t
+#if GPS_CFG_STATUS || __DOXYGEN__
+gps_process(gps_t* gh, const void* data, size_t len, gps_process_fn evt_fn) {
+#else /* GPS_CFG_STATUS */
 gps_process(gps_t* gh, const void* data, size_t len) {
+#endif /* !GPS_CFG_STATUS */
     const uint8_t* d = data;
 
-    while (len--) {                             /* Process all bytes */
+    for (; len > 0; ++d, --len) {               /* Process all bytes */
         if (*d == '$') {                        /* Check for beginning of NMEA line */
             memset(&gh->p, 0x00, sizeof(gh->p));/* Reset private memory */
             TERM_ADD(gh, *d);                   /* Add character to term */
@@ -381,6 +449,13 @@ gps_process(gps_t* gh, const void* data, size_t len) {
             if (check_crc(gh)) {                /* Check for CRC result */
                 /* CRC is OK, in theory we can copy data from statements to user data */
                 copy_from_tmp_memory(gh);       /* Copy memory from temporary to user memory */
+#if GPS_CFG_STATUS
+                if (evt_fn != NULL) {
+                    evt_fn(gh->p.stat);
+                }
+            } else if (evt_fn != NULL) {
+                evt_fn(STAT_CHECKSUM_FAIL);
+#endif /* GPS_CFG_STATUS */
             }
         } else {
             if (!gh->p.star) {                  /* Add to CRC only if star not yet detected */
@@ -388,7 +463,6 @@ gps_process(gps_t* gh, const void* data, size_t len) {
             }
             TERM_ADD(gh, *d);                   /* Add character to term */
         }
-        d++;                                    /* Process next character */
     }
     return 1;
 }
