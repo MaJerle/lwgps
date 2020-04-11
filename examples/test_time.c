@@ -62,7 +62,6 @@ run_tests() {
     RUN_TEST(INT_IS_EQUAL(hgps.year, 20));
     RUN_TEST(FLT_IS_EQUAL(hgps.utc_tow, 158834.00));
     RUN_TEST(INT_IS_EQUAL(hgps.utc_wk, 2098));
-    printf("leap_sec %d\n", hgps.leap_sec);
     RUN_TEST(INT_IS_EQUAL(hgps.leap_sec, 18));
     RUN_TEST(INT_IS_EQUAL(hgps.clk_bias, 536057));
     RUN_TEST(FLT_IS_EQUAL(hgps.clk_drift, 257.043));

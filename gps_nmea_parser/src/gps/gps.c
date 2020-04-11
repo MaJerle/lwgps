@@ -36,14 +36,6 @@
 #include <stdlib.h>
 #include "gps/gps.h"
 
-#if DEBUG
-#ifndef DEBUG_PRINTF
-#include <stdio.h>
-#define DEBUG_PRINTF(MESSAGE, ...) \
-    printf(MESSAGE, ##__VA_ARGS__)
-#endif
-#endif /* DEBUG */
-
 #define FLT(x)              ((gps_float_t)(x))
 #define D2R(x)              FLT(FLT(x) * FLT(0.01745329251994)) /*!< Degrees to radians */
 #define R2D(x)              FLT(FLT(x) * FLT(57.29577951308232))/*!< Radians to degrees */
@@ -350,10 +342,6 @@ static uint8_t
 check_crc(gps_t* gh) {
     uint8_t crc;
     crc = (uint8_t)((CHTN(gh->p.term_str[0]) & 0x0F) << 0x04) | (CHTN(gh->p.term_str[1]) & 0x0F);   /* Convert received CRC from string (hex) to number */
-#if DEBUG
-    if (gh->p.crc_calc != crc)
-        DEBUG_PRINTF("computed CRC 0x%02x != expected CRC 0x%02x\n", gh->p.crc_calc, crc);
-#endif /* DEBUG */
     return gh->p.crc_calc == crc;               /* They must match! */
 }
 
