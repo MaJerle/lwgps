@@ -43,7 +43,12 @@ extern "C" {
 #endif /* __cplusplus */
 
 /**
- * \addtogroup      GPS_NMEA
+ * \defgroup        GPS_NMEA API functions
+ * \brief           Platform independent GPS NMEA parser
+ * \{
+ */
+
+/**
  * \defgroup        GPS_NMEA_CONFIG Configuration
  * \brief           Default configuration setup
  * \{
@@ -161,12 +166,6 @@ extern "C" {
 
 /**
  * \}
- */
-
-/**
- * \defgroup        GPS_NMEA API functions
- * \brief           Platform independent GPS NMEA parser
- * \{
  */
 
 /**
