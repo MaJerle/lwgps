@@ -43,11 +43,11 @@
 
 #define CRC_ADD(_gh, ch)    (_gh)->p.crc_calc ^= (uint8_t)(ch)
 #define TERM_ADD(_gh, ch)   do {    \
-    if ((_gh)->p.term_pos < (sizeof((_gh)->p.term_str) - 1)) {  \
-        (_gh)->p.term_str[(_gh)->p.term_pos++] = (ch);  \
-        (_gh)->p.term_str[(_gh)->p.term_pos] = 0;   \
-    }                               \
-} while (0)
+        if ((_gh)->p.term_pos < (sizeof((_gh)->p.term_str) - 1)) {  \
+            (_gh)->p.term_str[(_gh)->p.term_pos++] = (ch);  \
+            (_gh)->p.term_str[(_gh)->p.term_pos] = 0;   \
+        }                               \
+    } while (0)
 #define TERM_NEXT(_gh)      do { (_gh)->p.term_str[((_gh)->p.term_pos = 0)] = 0; (_gh)->p.term_num++; } while (0)
 
 #define CIN(x)              ((x) >= '0' && (x) <= '9')
@@ -194,7 +194,8 @@ parse_term(gps_t* gh) {
             case 11:                            /* Altitude above ellipsoid */
                 gh->p.data.gga.geo_sep = parse_float_number(gh, NULL);
                 break;
-            default: break;
+            default:
+                break;
         }
 #endif /* GPS_CFG_STATEMENT_GPGGA */
 #if GPS_CFG_STATEMENT_GPGSA
@@ -239,11 +240,20 @@ parse_term(gps_t* gh) {
                     if (index < sizeof(gh->sats_in_view_desc) / sizeof(gh->sats_in_view_desc[0])) {
                         value = (uint16_t)parse_number(gh, NULL);   /* Parse number as integer */
                         switch (term_num % 4) {
-                            case 0: gh->sats_in_view_desc[index].num = value; break;
-                            case 1: gh->sats_in_view_desc[index].elevation = value; break;
-                            case 2: gh->sats_in_view_desc[index].azimuth = value; break;
-                            case 3: gh->sats_in_view_desc[index].snr = value; break;
-                            default: break;
+                            case 0:
+                                gh->sats_in_view_desc[index].num = value;
+                                break;
+                            case 1:
+                                gh->sats_in_view_desc[index].elevation = value;
+                                break;
+                            case 2:
+                                gh->sats_in_view_desc[index].azimuth = value;
+                                break;
+                            case 3:
+                                gh->sats_in_view_desc[index].snr = value;
+                                break;
+                            default:
+                                break;
                         }
                     }
                 }
@@ -276,7 +286,8 @@ parse_term(gps_t* gh) {
                     gh->p.data.rmc.variation = -gh->p.data.rmc.variation;
                 }
                 break;
-            default: break;
+            default:
+                break;
         }
 #endif /* GPS_CFG_STATEMENT_GPRMC */
 #if GPS_CFG_STATEMENT_PUBX
@@ -309,11 +320,11 @@ parse_term(gps_t* gh) {
                  */
                 if (gh->p.term_str[2] == 'D' || gh->p.term_str[2] == '\0') {
                     gh->p.data.time.leap_sec = 10 * CTN(gh->p.term_str[0])
-                                                + CTN(gh->p.term_str[1]);
+                                               + CTN(gh->p.term_str[1]);
                 } else {
                     gh->p.data.time.leap_sec = 100 * CTN(gh->p.term_str[0])
-                                                + 10 * CTN(gh->p.term_str[1])
-                                                + CTN(gh->p.term_str[2]);
+                                               + 10 * CTN(gh->p.term_str[1])
+                                               + CTN(gh->p.term_str[2]);
                 }
                 break;
             case 7:                             /* Process clock bias */
@@ -325,7 +336,8 @@ parse_term(gps_t* gh) {
             case 9:                             /* Process time pulse granularity */
                 gh->p.data.time.tp_gran = parse_number(gh, NULL);
                 break;
-            default: break;
+            default:
+                break;
         }
 #endif /* GPS_CFG_STATEMENT_PUBX_TIME */
 #endif /* GPS_CFG_STATEMENT_PUBX */
@@ -553,24 +565,40 @@ gps_distance_bearing(gps_float_t las, gps_float_t los, gps_float_t lae, gps_floa
 gps_float_t
 gps_to_speed(gps_float_t sik, gps_speed_t ts) {
     switch (ts) {
-        case gps_speed_kps:     return FLT(sik * FLT(0.000514));
-        case gps_speed_kph:     return FLT(sik * FLT(1.852));
-        case gps_speed_mps:     return FLT(sik * FLT(0.5144));
-        case gps_speed_mpm:     return FLT(sik * FLT(30.87));
+        case gps_speed_kps:
+            return FLT(sik * FLT(0.000514));
+        case gps_speed_kph:
+            return FLT(sik * FLT(1.852));
+        case gps_speed_mps:
+            return FLT(sik * FLT(0.5144));
+        case gps_speed_mpm:
+            return FLT(sik * FLT(30.87));
 
-        case gps_speed_mips:    return FLT(sik * FLT(0.0003197));
-        case gps_speed_mph:     return FLT(sik * FLT(1.151));
-        case gps_speed_fps:     return FLT(sik * FLT(1.688));
-        case gps_speed_fpm:     return FLT(sik * FLT(101.3));
+        case gps_speed_mips:
+            return FLT(sik * FLT(0.0003197));
+        case gps_speed_mph:
+            return FLT(sik * FLT(1.151));
+        case gps_speed_fps:
+            return FLT(sik * FLT(1.688));
+        case gps_speed_fpm:
+            return FLT(sik * FLT(101.3));
 
-        case gps_speed_mpk:     return FLT(sik * FLT(32.4));
-        case gps_speed_spk:     return FLT(sik * FLT(1944.0));
-        case gps_speed_sp100m:  return FLT(sik * FLT(194.4));
-        case gps_speed_mipm:    return FLT(sik * FLT(52.14));
-        case gps_speed_spm:     return FLT(sik * FLT(3128.0));
-        case gps_speed_sp100y:  return FLT(sik * FLT(177.7));
+        case gps_speed_mpk:
+            return FLT(sik * FLT(32.4));
+        case gps_speed_spk:
+            return FLT(sik * FLT(1944.0));
+        case gps_speed_sp100m:
+            return FLT(sik * FLT(194.4));
+        case gps_speed_mipm:
+            return FLT(sik * FLT(52.14));
+        case gps_speed_spm:
+            return FLT(sik * FLT(3128.0));
+        case gps_speed_sp100y:
+            return FLT(sik * FLT(177.7));
 
-        case gps_speed_smph:    return FLT(sik * FLT(1.0));
-        default: return 0;
+        case gps_speed_smph:
+            return FLT(sik * FLT(1.0));
+        default:
+            return 0;
     }
 }
