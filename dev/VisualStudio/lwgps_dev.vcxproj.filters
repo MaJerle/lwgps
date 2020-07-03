@@ -5,13 +5,13 @@
       <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
       <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
     </Filter>
-    <Filter Include="Source Files\GPS">
+    <Filter Include="Source Files\LwGPS">
       <UniqueIdentifier>{d2afbed4-545f-40e7-bf68-d835c5948bcc}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\lwgps\src\lwgps\lwgps.c">
-      <Filter>Source Files\GPS</Filter>
+      <Filter>Source Files\LwGPS</Filter>
     </ClCompile>
     <ClCompile Include="main.c">
       <Filter>Source Files</Filter>

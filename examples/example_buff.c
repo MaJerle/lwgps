@@ -1,12 +1,12 @@
 #include "lwgps/lwgps.h"
-#include "ringbuff/ringbuff.h"
+#include "lwrb/lwrb.h"
 #include <string.h>
 
 /* GPS handle */
 lwgps_t hgps;
 
 /* GPS buffer */
-ringbuff_t hgps_buff;
+lwrb_t hgps_buff;
 uint8_t hgps_buff_data[12];
 
 /**
@@ -40,7 +40,7 @@ main() {
     gps_init(&hgps);
 
     /* Create buffer for received data */
-    ringbuff_init(&hgps_buff, hgps_buff_data, sizeof(hgps_buff_data));
+    lwrb_init(&hgps_buff, hgps_buff_data, sizeof(hgps_buff_data));
 
     while (1) {
         /* Add new character to buffer */
@@ -49,9 +49,9 @@ main() {
 
         /* Process all input data */
         /* Read from buffer byte-by-byte and call processing function */
-        if (gps_buff_get_full(&hgps_buff)) {    /* Check if anything in buffer now */
-            while (gps_buff_read(&hgps_buff, &rx, 1) == 1) {
-                gps_process(&hgps, &rx, 1);     /* Process byte-by-byte */
+        if (lwrb_get_full(&hgps_buff)) {        /* Check if anything in buffer now */
+            while (lwrb_read(&hgps_buff, &rx, 1) == 1) {
+                lwgps_process(&hgps, &rx, 1);   /* Process byte-by-byte */
             }
         } else {
             /* Print all data after successful processing */
@@ -75,7 +75,7 @@ uart_irqhandler(void) {
     /* Only write to received buffer and process later */
     if (write_ptr < strlen(gps_rx_data)) {
         /* Write to buffer only */
-        gps_buff_write(&hgps_buff, &gps_rx_data[write_ptr], 1);
+        lwrb_write(&hgps_buff, &gps_rx_data[write_ptr], 1);
         ++write_ptr;
     }
 }

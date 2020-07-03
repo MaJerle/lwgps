@@ -2,9 +2,9 @@
  * This example tests the callback functionality of gps_process()
  * when the LWGPS_CFG_STATUS flag is set.
  */
-#include "lwgps/lwgps.h"
 #include <string.h>
 #include <stdio.h>
+#include "lwgps/lwgps.h"
 
 #if !LWGPS_CFG_STATUS
 #error "this test must be compiled with -DLWGPS_CFG_STATUS=1"
@@ -68,10 +68,10 @@ callback(lwgps_statement_t res) {
 int
 main() {
     /* Init GPS */
-    gps_init(&hgps);
+    lwgps_init(&hgps);
 
     /* Process all input data */
-    gps_process(&hgps, gps_rx_data, strlen(gps_rx_data), callback);
+    lwgps_process(&hgps, gps_rx_data, strlen(gps_rx_data), callback);
 
     return err_cnt;
 }
