@@ -2,13 +2,13 @@
  * This example uses direct processing function,
  * to process dummy NMEA data from GPS receiver
  */
-#include "gps/gps.h"
 #include <string.h>
 #include <stdio.h>
+#include "lwgps/lwgps.h"
 #include "test_common.h"
 
-/* GPS handle  */
-gps_t hgps;
+/* GPS handle */
+lwgps_t hgps;
 
 /**
  * \brief           Dummy data from GPS receiver
@@ -27,10 +27,10 @@ gps_rx_data[] = ""
  */
 void
 run_tests() {
-    gps_init(&hgps);                            /* Init GPS */
+    lwgps_init(&hgps);                          /* Init GPS */
 
     /* Process all input data */
-    gps_process(&hgps, gps_rx_data, strlen(gps_rx_data));
+    lwgps_process(&hgps, gps_rx_data, strlen(gps_rx_data));
 
     /* Run the test */
     RUN_TEST(!INT_IS_EQUAL(hgps.is_valid, 0));

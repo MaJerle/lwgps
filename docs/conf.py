@@ -22,7 +22,7 @@ import subprocess, os
 subprocess.call('doxygen doxyfile.doxy', shell=True)
 # -- Project information -----------------------------------------------------
 
-project = 'GPS NMEA Parser'
+project = 'LwGPS'
 copyright = '2020, Tilen MAJERLE'
 author = 'Tilen MAJERLE'
 
@@ -38,7 +38,7 @@ for line in res.split("\n"):
         git_branch = line[1:].strip()
 
 # Decision for display version
-try: 
+try:
     if git_branch.index('develop') >= 0:
         version = "latest-develop"
 except Exception:
@@ -89,7 +89,7 @@ html_theme_options = {
     'display_version': True,
     'prev_next_buttons_location': 'bottom',
     'style_external_links': False,
-    
+
     'logo_only': False,
 
     # Toc options
@@ -100,8 +100,8 @@ html_theme_options = {
     'titles_only': False
 }
 html_logo = 'static/images/logo_tm.png'
-github_url = 'https://github.com/MaJerle/gps-nmea-parser'
-html_baseurl = 'https://docs.majerle.eu/projects/gps-nmea-parser/'
+github_url = 'https://github.com/MaJerle/lwgps'
+html_baseurl = 'https://docs.majerle.eu/projects/lwgps/'
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
@@ -123,7 +123,7 @@ master_doc = 'index'
 #
 #
 breathe_projects = {
-	"gps_nmea_parser": "_build/xml/"
+	"lwgps": "_build/xml/"
 }
-breathe_default_project = "gps_nmea_parser"
+breathe_default_project = "lwgps"
 breathe_default_members = ('members', 'undoc-members')

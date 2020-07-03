@@ -21,20 +21,20 @@ test: $(TARGETS)
 
 CFLAGS += -Wall \
 	  -DDEBUG=1 \
-	-I../gps_nmea_parser/src/include \
+	-I../lwgps/src/include \
 	-I./
 
 example.exe: example.c
 
-example_stat.exe: CFLAGS += -DGPS_CFG_STATUS=1
+example_stat.exe: CFLAGS += -DLWGPS_CFG_STATUS=1
 example_stat.exe: example_stat.c
 
-test_code.exe: ../gps_nmea_parser/src/gps/gps.c test_code.c ../dev/VisualStudio/main.c
+test_code.exe: ../lwgps/src/lwgps/lwgps.c test_code.c ../dev/VisualStudio/main.c
 
 test_time.exe: CFLAGS += \
-	  -DGPS_CFG_STATEMENT_PUBX=1 \
-	  -DGPS_CFG_STATEMENT_PUBX_TIME=1
-test_time.exe: ../gps_nmea_parser/src/gps/gps.c test_time.c ../dev/VisualStudio/main.c
+	  -DLWGPS_CFG_STATEMENT_PUBX=1 \
+	  -DLWGPS_CFG_STATEMENT_PUBX_TIME=1
+test_time.exe: ../lwgps/src/lwgps/lwgps.c test_time.c ../dev/VisualStudio/main.c
 
-$(TARGETS) : ../gps_nmea_parser/src/gps/gps.c
+$(TARGETS) : ../lwgps/src/lwgps/lwgps.c
 	$(CC) -o $@ $(CFLAGS) $^

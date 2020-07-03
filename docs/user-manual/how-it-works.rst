@@ -12,15 +12,15 @@ GPS NMEA Parser parses raw data formatted as NMEA 0183 statements from GPS recei
 
 .. tip::
 	By changing different configuration options, it is possible to disable some statements.
-	Check :ref:`api_gps_config` for more information.
+	Check :ref:`api_lwgps_config` for more information.
 
-Application must assure to properly receive data from GPS receiver. 
+Application must assure to properly receive data from GPS receiver.
 Usually GPS receivers communicate with host embedded system with UART protocol and output directly formatted NMEA 0183 statements.
 
 .. note::
 	Application must take care of properly receive data from GPS.
 
-Application must use ``gps_process`` function for data processing. Function will:
+Application must use :cpp:func:`lwgps_process` function for data processing. Function will:
 
 * Detect statement type, such as *GPGGA* or *GPGSV*
 * Parse all the terms of specific statement
@@ -29,7 +29,7 @@ Application must use ``gps_process`` function for data processing. Function will
 Programmer's model is as following:
 
 * Application receives data from GPS receiver
-* Application sends data to ``gps_process`` function
+* Application sends data to :cpp:func:`lwgps_process` function
 * Application uses processed data to display altitude, latitude, longitude, and other parameters
 
 Check :ref:`examples` for typical example

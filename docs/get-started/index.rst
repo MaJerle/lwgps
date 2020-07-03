@@ -8,15 +8,15 @@ Getting started
 Download library
 ^^^^^^^^^^^^^^^^
 
-Library is primarly hosted on `Github <https://github.com/MaJerle/gps-nmea-parser>`_.
+Library is primarly hosted on `Github <https://github.com/MaJerle/lwgps>`_.
 
-* Download latest release from `releases area <https://github.com/MaJerle/gps-nmea-parser/releases>`_ on Github
+* Download latest release from `releases area <https://github.com/MaJerle/lwgps/releases>`_ on Github
 * Clone `develop` branch for latest development
 
 Download from releases
 **********************
 
-All releases are available on Github `releases area <https://github.com/MaJerle/gps-nmea-parser/releases>`_.
+All releases are available on Github `releases area <https://github.com/MaJerle/lwgps/releases>`_.
 
 Clone from Github
 *****************
@@ -28,9 +28,9 @@ First-time clone
 * Open console and navigate to path in the system to clone repository to. Use command ``cd your_path``
 * Clone repository with one of available ``3`` options
 
-  * Run ``git clone --recurse-submodules https://github.com/MaJerle/gps-nmea-parser`` command to clone entire repository, including submodules
-  * Run ``git clone --recurse-submodules --branch develop https://github.com/MaJerle/gps-nmea-parser`` to clone `development` branch, including submodules
-  * Run ``git clone --recurse-submodules --branch master https://github.com/MaJerle/gps-nmea-parser`` to clone `latest stable` branch, including submodules
+  * Run ``git clone --recurse-submodules https://github.com/MaJerle/lwgps`` command to clone entire repository, including submodules
+  * Run ``git clone --recurse-submodules --branch develop https://github.com/MaJerle/lwgps`` to clone `development` branch, including submodules
+  * Run ``git clone --recurse-submodules --branch master https://github.com/MaJerle/lwgps`` to clone `latest stable` branch, including submodules
 
 * Navigate to ``examples`` directory and run favourite example
 
@@ -50,9 +50,9 @@ Add library to project
 
 At this point it is assumed that you have successfully download library, either cloned it or from releases page.
 
-* Copy ``gps_nmea_parser`` folder to your project
-* Add ``gps_nmea_parser/src/include`` folder to `include path` of your toolchain
-* Add source files from ``gps_nmea_parser/src/`` folder to toolchain build
+* Copy ``lwgps`` folder to your project
+* Add ``lwgps/src/include`` folder to `include path` of your toolchain
+* Add source files from ``lwgps/src/`` folder to toolchain build
 * Build the project
 
 Minimal example code

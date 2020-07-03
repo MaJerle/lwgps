@@ -1,17 +1,17 @@
 /**
- * This example tests the callback functionality of gps_process()
- * when the GPS_CFG_STATUS flag is set.
+ * This example tests the callback functionality of lwgps_process()
+ * when the LWGPS_CFG_STATUS flag is set.
  */
-#include "gps/gps.h"
 #include <string.h>
 #include <stdio.h>
+#include "lwgps/lwgps.h"
 
-#if ! GPS_CFG_STATUS
-#error "this test must be compiled with -DGPS_CFG_STATUS=1"
-#endif /* ! GPS_CFG_STATUS */
+#if !LWGPS_CFG_STATUS
+#error "this test must be compiled with -DLWGPS_CFG_STATUS=1"
+#endif /* !LWGPS_CFG_STATUS */
 
-/* GPS handle  */
-gps_t hgps;
+/* GPS handle */
+lwgps_t hgps;
 
 /**
  * \brief           Dummy data from GPS receiver
@@ -33,7 +33,7 @@ gps_rx_data[] = ""
                 "$GPRMC,183731,A,3907.482,N,12102.436,W,000.0,360.0,080301,015.5,E*67\r\n"
                 "$GPRMB,A,,,,,,,,,,,,V*71\r\n";
 
-const gps_statement_t expected[] = {
+const lwgps_statement_t expected[] = {
     STAT_RMC,
     STAT_UNKNOWN,
     STAT_GGA,
@@ -53,7 +53,7 @@ const gps_statement_t expected[] = {
 static int err_cnt;
 
 void
-callback(gps_statement_t res) {
+callback(lwgps_statement_t res) {
     static int i;
 
     if (res != expected[i]) {
@@ -68,10 +68,10 @@ callback(gps_statement_t res) {
 int
 main() {
     /* Init GPS */
-    gps_init(&hgps);
+    lwgps_init(&hgps);
 
     /* Process all input data */
-    gps_process(&hgps, gps_rx_data, strlen(gps_rx_data), callback);
+    lwgps_process(&hgps, gps_rx_data, strlen(gps_rx_data), callback);
 
     return err_cnt;
 }

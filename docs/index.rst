@@ -1,14 +1,14 @@
-GPS NMEA Parser |version| documentation
-=======================================
+LwGPS |version| documentation
+=============================
 
 Welcome to the documentation for version |version|.
 
-GPS NMEA Parser is lightweight, platform independent library to parse NMEA statements from GPS receivers. It is highly optimized for embedded systems.
+LwGPS is lightweight, platform independent library to parse NMEA statements from GPS receivers. It is highly optimized for embedded systems.
 
 .. rst-class:: center
 .. rst-class:: index_links
 
-    :ref:`download_library` · :ref:`getting_started` · `Open Github <https://github.com/MaJerle/gps-nmea-parser>`_
+    :ref:`download_library` · :ref:`getting_started` · `Open Github <https://github.com/MaJerle/lwgps>`_
 
 Features
 ^^^^^^^^

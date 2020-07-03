@@ -4,15 +4,15 @@
  */
 #include <string.h>
 #include <stdio.h>
-#include "gps/gps.h"
+#include "lwgps/lwgps.h"
 #include "test_common.h"
 
-#if ! GPS_CFG_STATEMENT_PUBX_TIME
-#error "this test must be compiled with -DGPS_CFG_STATEMENT_PUBX_TIME=1"
-#endif /* ! GPS_CFG_STATEMENT_PUBX_TIME */
+#if !LWGPS_CFG_STATEMENT_PUBX_TIME
+#error "this test must be compiled with -DLWGPS_CFG_STATEMENT_PUBX_TIME=1"
+#endif /* !LWGPS_CFG_STATEMENT_PUBX_TIME */
 
-/* GPS handle  */
-gps_t hgps;
+/* GPS handle */
+lwgps_t hgps;
 
 /**
  * \brief           Dummy data from GPS receiver
@@ -33,10 +33,10 @@ gps_rx_data_B[] = ""
  */
 void
 run_tests() {
-    gps_init(&hgps);                            /* Init GPS */
+    lwgps_init(&hgps);
 
     /* Process and test block A */
-    gps_process(&hgps, gps_rx_data_A, strlen(gps_rx_data_A));
+    lwgps_process(&hgps, gps_rx_data_A, strlen(gps_rx_data_A));
 
     RUN_TEST(INT_IS_EQUAL(hgps.hours, 7));
     RUN_TEST(INT_IS_EQUAL(hgps.minutes, 37));
@@ -52,7 +52,7 @@ run_tests() {
     RUN_TEST(INT_IS_EQUAL(hgps.tp_gran, 43));
 
     /* Process and test block B */
-    gps_process(&hgps, gps_rx_data_B, strlen(gps_rx_data_B));
+    lwgps_process(&hgps, gps_rx_data_B, strlen(gps_rx_data_B));
 
     RUN_TEST(INT_IS_EQUAL(hgps.hours, 20));
     RUN_TEST(INT_IS_EQUAL(hgps.minutes, 7));
