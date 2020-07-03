@@ -100,8 +100,8 @@ html_theme_options = {
     'titles_only': False
 }
 html_logo = 'static/images/logo_tm.png'
-github_url = 'https://github.com/MaJerle/gps-nmea-parser'
-html_baseurl = 'https://docs.majerle.eu/projects/gps-nmea-parser/'
+github_url = 'https://github.com/MaJerle/lwgps'
+html_baseurl = 'https://docs.majerle.eu/projects/lwgps/'
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
