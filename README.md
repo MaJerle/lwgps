@@ -1,4 +1,4 @@
-# Lightweiht GPS NMEA parser
+# Lightweight GPS NMEA parser
 
 Platform independent GPS NMEA parser for embedded systems.
 
