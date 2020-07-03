@@ -32,10 +32,10 @@ gps_rx_data[] = ""
 int
 main() {
     /* Init GPS */
-    gps_init(&hgps);
+    lwgps_init(&hgps);
 
     /* Process all input data */
-    gps_process(&hgps, gps_rx_data, strlen(gps_rx_data));
+    lwgps_process(&hgps, gps_rx_data, strlen(gps_rx_data));
 
     /* Print messages */
     printf("Valid status: %d\r\n", hgps.is_valid);

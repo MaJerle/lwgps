@@ -37,7 +37,7 @@ main() {
     uint8_t rx;
 
     /* Init GPS */
-    gps_init(&hgps);
+    lwgps_init(&hgps);
 
     /* Create buffer for received data */
     lwrb_init(&hgps_buff, hgps_buff_data, sizeof(hgps_buff_data));

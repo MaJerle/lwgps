@@ -1,5 +1,5 @@
 /**
- * This example tests the callback functionality of gps_process()
+ * This example tests the callback functionality of lwgps_process()
  * when the LWGPS_CFG_STATUS flag is set.
  */
 #include <string.h>

@@ -66,7 +66,7 @@ extern "C" {
 
 /**
  * \brief           Enables `1` or disables `0` status reporting callback
- *                  by gps_process()
+ *                  by \ref lwgps_process
  *
  * \note            This is an extension, so not enabled by default.
  */
