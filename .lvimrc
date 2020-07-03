@@ -1,0 +1,5 @@
+" tree-specific vimrc to comply with project coding style
+" see https://github.com/MaJerle/c-code-style
+if &ft == "c" || &ft == "cpp"
+    setlocal shiftwidth=4 tabstop=4 softtabstop=4 expandtab autoindent cc=80 foldmethod=indent
+endif
