@@ -29,7 +29,7 @@
  * This file is part of LwGPS - Lightweight GPS NMEA parser library.
  *
  * Author:          Tilen MAJERLE <tilen@majerle.eu>
- * Version:         v1.1.0
+ * Version:         v2.0.0
  */
 #include <math.h>
 #include <string.h>
@@ -315,7 +315,7 @@ prv_parse_term(lwgps_t* gh) {
                 gh->p.data.time.utc_wk = prv_parse_number(gh, NULL);
                 break;
             case 6:                             /* Process UTC leap seconds */
-                /* 
+                /*
 				 * Accomodate a 2- or 3-digit leap second count
                  * a trailing 'D' means this is the firmware's default value.
                  */
