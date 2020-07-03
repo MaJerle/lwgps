@@ -4,15 +4,15 @@
  */
 #include <string.h>
 #include <stdio.h>
-#include "gps/gps.h"
+#include "lwgps/lwgps.h"
 #include "test_common.h"
 
-#if ! GPS_CFG_STATEMENT_PUBX_TIME
-#error "this test must be compiled with -DGPS_CFG_STATEMENT_PUBX_TIME=1"
-#endif /* ! GPS_CFG_STATEMENT_PUBX_TIME */
+#if !LWGPS_CFG_STATEMENT_PUBX_TIME
+#error "this test must be compiled with -DLWGPS_CFG_STATEMENT_PUBX_TIME=1"
+#endif /* !LWGPS_CFG_STATEMENT_PUBX_TIME */
 
-/* GPS handle  */
-gps_t hgps;
+/* GPS handle */
+lwgps_t hgps;
 
 /**
  * \brief           Dummy data from GPS receiver

@@ -123,7 +123,7 @@ master_doc = 'index'
 #
 #
 breathe_projects = {
-	"gps_nmea_parser": "_build/xml/"
+	"lwgps": "_build/xml/"
 }
-breathe_default_project = "gps_nmea_parser"
+breathe_default_project = "lwgps"
 breathe_default_members = ('members', 'undoc-members')

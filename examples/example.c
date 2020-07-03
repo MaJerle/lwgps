@@ -2,12 +2,12 @@
  * This example uses direct processing function
  * to process dummy NMEA data from GPS receiver
  */
-#include "gps/gps.h"
+#include "lwgps/lwgps.h"
 #include <string.h>
 #include <stdio.h>
 
-/* GPS handle  */
-gps_t hgps;
+/* GPS handle */
+lwgps_t hgps;
 
 /**
  * \brief           Dummy data from GPS receiver

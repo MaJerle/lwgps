@@ -1,10 +1,10 @@
 #include "stdafx.h"
-#include "gps/gps.h"
+#include "lwgps/lwgps.h"
 #include "ringbuff/ringbuff.h"
 #include <string.h>
 
-/* GPS handle  */
-gps_t hgps;
+/* GPS handle */
+lwgps_t hgps;
 
 /* GPS buffer */
 ringbuff_t hgps_buff;

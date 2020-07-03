@@ -10,7 +10,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\GPS_NMEA_Parser\src\gps\gps.c">
+    <ClCompile Include="..\..\lwgps\src\lwgps\lwgps.c">
       <Filter>Source Files\GPS</Filter>
     </ClCompile>
     <ClCompile Include="main.c">

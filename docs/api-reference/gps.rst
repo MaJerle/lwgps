@@ -3,4 +3,4 @@
 GPS NMEA Parser
 ===============
 
-.. doxygengroup:: GPS_NMEA
+.. doxygengroup:: LWGPS

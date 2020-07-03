@@ -1,17 +1,17 @@
 /**
  * This example tests the callback functionality of gps_process()
- * when the GPS_CFG_STATUS flag is set.
+ * when the LWGPS_CFG_STATUS flag is set.
  */
-#include "gps/gps.h"
+#include "lwgps/lwgps.h"
 #include <string.h>
 #include <stdio.h>
 
-#if ! GPS_CFG_STATUS
-#error "this test must be compiled with -DGPS_CFG_STATUS=1"
-#endif /* ! GPS_CFG_STATUS */
+#if !LWGPS_CFG_STATUS
+#error "this test must be compiled with -DLWGPS_CFG_STATUS=1"
+#endif /* !LWGPS_CFG_STATUS */
 
-/* GPS handle  */
-gps_t hgps;
+/* GPS handle */
+lwgps_t hgps;
 
 /**
  * \brief           Dummy data from GPS receiver

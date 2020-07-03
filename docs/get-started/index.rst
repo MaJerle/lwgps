@@ -50,9 +50,9 @@ Add library to project
 
 At this point it is assumed that you have successfully download library, either cloned it or from releases page.
 
-* Copy ``gps_nmea_parser`` folder to your project
-* Add ``gps_nmea_parser/src/include`` folder to `include path` of your toolchain
-* Add source files from ``gps_nmea_parser/src/`` folder to toolchain build
+* Copy ``lwgps`` folder to your project
+* Add ``lwgps/src/include`` folder to `include path` of your toolchain
+* Add source files from ``lwgps/src/`` folder to toolchain build
 * Build the project
 
 Minimal example code
