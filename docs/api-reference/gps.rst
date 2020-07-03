@@ -1,4 +1,4 @@
-.. _api_gps:
+.. _api_lwgps:
 
 GPS NMEA Parser
 ===============
