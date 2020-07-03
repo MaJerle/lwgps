@@ -1,8 +1,8 @@
-# GPS NMEA 0183 Parser
+# Lightweiht GPS NMEA parser
 
 Platform independent GPS NMEA parser for embedded systems.
 
-<h3>Read first: <a href="http://docs.majerle.eu/projects/gps-nmea-parser/">Documentation</a></h3>
+<h3>Read first: <a href="http://docs.majerle.eu/projects/lwgps/">Documentation</a></h3>
 
 ## Features
 
