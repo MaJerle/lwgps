@@ -1,4 +1,3 @@
-#include "stdafx.h"
 #include "lwgps/lwgps.h"
 #include "ringbuff/ringbuff.h"
 #include <string.h>

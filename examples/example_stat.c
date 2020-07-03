@@ -33,7 +33,7 @@ gps_rx_data[] = ""
                 "$GPRMC,183731,A,3907.482,N,12102.436,W,000.0,360.0,080301,015.5,E*67\r\n"
                 "$GPRMB,A,,,,,,,,,,,,V*71\r\n";
 
-const gps_statement_t expected[] = {
+const lwgps_statement_t expected[] = {
     STAT_RMC,
     STAT_UNKNOWN,
     STAT_GGA,
@@ -53,7 +53,7 @@ const gps_statement_t expected[] = {
 static int err_cnt;
 
 void
-callback(gps_statement_t res) {
+callback(lwgps_statement_t res) {
     static int i;
 
     if (res != expected[i]) {

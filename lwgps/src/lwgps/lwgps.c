@@ -564,40 +564,40 @@ lwgps_distance_bearing(lwgps_float_t las, lwgps_float_t los, lwgps_float_t lae, 
  * \return          Speed calculated from knots
  */
 lwgps_float_t
-lwgps_to_speed(lwgps_float_t sik, gps_speed_t ts) {
+lwgps_to_speed(lwgps_float_t sik, lwgps_speed_t ts) {
     switch (ts) {
-        case gps_speed_kps:
+        case lwgps_speed_kps:
             return FLT(sik * FLT(0.000514));
-        case gps_speed_kph:
+        case lwgps_speed_kph:
             return FLT(sik * FLT(1.852));
-        case gps_speed_mps:
+        case lwgps_speed_mps:
             return FLT(sik * FLT(0.5144));
-        case gps_speed_mpm:
+        case lwgps_speed_mpm:
             return FLT(sik * FLT(30.87));
 
-        case gps_speed_mips:
+        case lwgps_speed_mips:
             return FLT(sik * FLT(0.0003197));
-        case gps_speed_mph:
+        case lwgps_speed_mph:
             return FLT(sik * FLT(1.151));
-        case gps_speed_fps:
+        case lwgps_speed_fps:
             return FLT(sik * FLT(1.688));
-        case gps_speed_fpm:
+        case lwgps_speed_fpm:
             return FLT(sik * FLT(101.3));
 
-        case gps_speed_mpk:
+        case lwgps_speed_mpk:
             return FLT(sik * FLT(32.4));
-        case gps_speed_spk:
+        case lwgps_speed_spk:
             return FLT(sik * FLT(1944.0));
-        case gps_speed_sp100m:
+        case lwgps_speed_sp100m:
             return FLT(sik * FLT(194.4));
-        case gps_speed_mipm:
+        case lwgps_speed_mipm:
             return FLT(sik * FLT(52.14));
-        case gps_speed_spm:
+        case lwgps_speed_spm:
             return FLT(sik * FLT(3128.0));
-        case gps_speed_sp100y:
+        case lwgps_speed_sp100y:
             return FLT(sik * FLT(177.7));
 
-        case gps_speed_smph:
+        case lwgps_speed_smph:
             return FLT(sik * FLT(1.0));
         default:
             return 0;

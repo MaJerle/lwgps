@@ -1,4 +1,4 @@
-.. _api_gps_config:
+.. _api_lwgps_config:
 
 GPS Configuration
 =================
