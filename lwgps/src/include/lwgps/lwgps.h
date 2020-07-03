@@ -233,7 +233,7 @@ typedef struct {
     uint8_t sats_in_view;                       /*!< Number of satellites in view */
 #if LWGPS_CFG_STATEMENT_GPGSV_SAT_DET || __DOXYGEN__
     lwgps_sat_t sats_in_view_desc[12];
-#endif
+#endif /* LWGPS_CFG_STATEMENT_GPGSV_SAT_DET || __DOXYGEN__ */
 #endif /* LWGPS_CFG_STATEMENT_GPGSV || __DOXYGEN__ */
 
 #if LWGPS_CFG_STATEMENT_GPRMC || __DOXYGEN__
