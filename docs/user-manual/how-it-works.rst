@@ -3,7 +3,7 @@
 How it works
 ============
 
-GPS NMEA Parser parses raw data formatted as NMEA 0183 statements from GPS receivers. It supports up to ``4`` different statements:
+LwGPS parses raw data formatted as NMEA 0183 statements from GPS receivers. It supports up to ``4`` different statements:
 
 * ``GPGGA`` or ``GNGGA``: GPS fix data
 * ``GPGSA`` or ``GNGSA``: GPS active satellites and dillusion of position
