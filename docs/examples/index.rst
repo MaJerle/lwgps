@@ -3,7 +3,7 @@
 Examples and demos
 ==================
 
-There are ``2`` very basic examples provided with the library.
+There are several basic examples provided with the library.
 
 Parse block of data
 ^^^^^^^^^^^^^^^^^^^
@@ -34,7 +34,9 @@ Data are later processed outside interrupt context.
 Distance and bearing
 ^^^^^^^^^^^^^^^^^^^^
 
-Library provides calculation of distance and bearing between `2` coordinates on earth.
+Library provides calculation of distance and bearing between ``2`` coordinates on earth.
+This is useful if used with autonomnous devices to understand in which direction
+device has to move to reach end point while knowing start coordinate.
 
 .. literalinclude:: ../../examples/example_dist_bear.c
     :language: c
