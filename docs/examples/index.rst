@@ -31,5 +31,15 @@ Data are later processed outside interrupt context.
     :linenos:
     :caption: Example of buffer
 
+Distance and bearing
+^^^^^^^^^^^^^^^^^^^^
+
+Library provides calculation of distance and bearing between `2` coordinates on earth.
+
+.. literalinclude:: ../../examples/example_dist_bear.c
+    :language: c
+    :linenos:
+    :caption: Distance and bearing calculation
+
 .. toctree::
 	:maxdepth: 2

@@ -69,10 +69,10 @@ prv_parse_number(lwgps_t* gh, const char* t) {
     if (t == NULL) {
         t = gh->p.term_str;
     }
-    for (; t != NULL && *t == ' '; t++) {}      /* Strip leading spaces */
+    for (; t != NULL && *t == ' '; ++t) {}      /* Strip leading spaces */
 
-    minus = (*t == '-' ? (t++, 1) : 0);
-    for (; t != NULL && CIN(*t); t++) {
+    minus = (*t == '-' ? (++t, 1) : 0);
+    for (; t != NULL && CIN(*t); ++t) {
         res = 10 * res + CTN(*t);
     }
     return minus ? -res : res;
@@ -91,7 +91,7 @@ prv_parse_float_number(lwgps_t* gh, const char* t) {
     if (t == NULL) {
         t = gh->p.term_str;
     }
-    for (; t != NULL && *t == ' '; t++) {}      /* Strip leading spaces */
+    for (; t != NULL && *t == ' '; ++t) {}      /* Strip leading spaces */
 
 #if LWGPS_CFG_DOUBLE
     res = strtod(t, NULL);                      /* Parse string to double */
@@ -514,7 +514,7 @@ lwgps_distance_bearing(lwgps_float_t las, lwgps_float_t los, lwgps_float_t lae, 
     if (d != NULL) {
         /*
          * a = sin(df / 2)^2 + cos(las) * cos(lae) * sin(dfi / 2)^2
-         * *d = RADIUS * 2 * atan(a / (1 - a)) * 1000 (for meters)
+         * *d = RADIUS * 2 * atan(sqrt(a) / sqrt(1 - a)) * 1000 (for meters)
          */
 #if LWGPS_CFG_DOUBLE
         a = FLT(sin(df * 0.5) * sin(df * 0.5) + sin(dfi * 0.5) * sin(dfi * 0.5) * cos(las) * cos(lae));
