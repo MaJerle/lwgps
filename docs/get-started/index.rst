@@ -53,7 +53,27 @@ At this point it is assumed that you have successfully download library, either 
 * Copy ``lwgps`` folder to your project
 * Add ``lwgps/src/include`` folder to `include path` of your toolchain
 * Add source files from ``lwgps/src/`` folder to toolchain build
+* Copy ``lwgps/src/include/lwgps/lwgps_opts_template.h`` to project folder and rename it to ``lwgps_opts.h``
 * Build the project
+
+Configuration file
+^^^^^^^^^^^^^^^^^^
+
+Library comes with template config file, which can be modified according to needs.
+This file shall be named ``lwgps_opts.h`` and its default template looks like the one below.
+
+.. note::
+    Default configuration template file location: ``lwgps/src/include/lwgps/lwgps_opts_template.h``.
+    File must be renamed to ``lwgps_opts.h`` first and then copied to the project directory (or simply renamed in-place) where compiler
+    include paths have access to it by using ``#include "lwgps_opts.h"``.
+
+.. tip::
+    Check :ref:`api_lwgps_opt` section for possible configuration settings
+
+.. literalinclude:: ../../lwgps/src/include/lwgps/lwgps_opts_template.h
+    :language: c
+    :linenos:
+    :caption: Template options file
 
 Minimal example code
 ^^^^^^^^^^^^^^^^^^^^

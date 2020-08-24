@@ -12,7 +12,7 @@ LwGPS parses raw data formatted as NMEA 0183 statements from GPS receivers. It s
 
 .. tip::
 	By changing different configuration options, it is possible to disable some statements.
-	Check :ref:`api_lwgps_config` for more information.
+	Check :ref:`api_lwgps_opt` for more information.
 
 Application must assure to properly receive data from GPS receiver.
 Usually GPS receivers communicate with host embedded system with UART protocol and output directly formatted NMEA 0183 statements.
