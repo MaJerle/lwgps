@@ -37,7 +37,7 @@
 /* Include application options */
 #ifndef LWGPS_IGNORE_USER_OPTS
 #include "lwgps_opts.h"
-#endif /* LWPRINTF_IGNORE_USER_OPTS */
+#endif /* LWGPS_IGNORE_USER_OPTS */
 
 #ifdef __cplusplus
 extern "C" {
