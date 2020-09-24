@@ -39,7 +39,7 @@
 #define FLT(x)              ((lwgps_float_t)(x))
 #define D2R(x)              FLT(FLT(x) * FLT(0.01745329251994)) /*!< Degrees to radians */
 #define R2D(x)              FLT(FLT(x) * FLT(57.29577951308232))/*!< Radians to degrees */
-#define EARTH_RADIUS        FLT(6371.0) /*!< Earth radius in units of kilometers */
+#define EARTH_RADIUS        FLT(6371.0)         /*!< Earth radius in units of kilometers */
 
 #define CRC_ADD(_gh, ch)    (_gh)->p.crc_calc ^= (uint8_t)(ch)
 #define TERM_ADD(_gh, ch)   do {    \
@@ -452,11 +452,11 @@ lwgps_process(lwgps_t* gh, const void* data, size_t len) {
             memset(&gh->p, 0x00, sizeof(gh->p));/* Reset private memory */
             TERM_ADD(gh, *d);                   /* Add character to term */
         } else if (*d == ',') {                 /* Term separator character */
-            prv_parse_term(gh);                     /* Parse term we have currently in memory */
+            prv_parse_term(gh);                 /* Parse term we have currently in memory */
             CRC_ADD(gh, *d);                    /* Add character to CRC computation */
             TERM_NEXT(gh);                      /* Start with next term */
         } else if (*d == '*') {                 /* Start indicates end of data for CRC computation */
-            prv_parse_term(gh);                     /* Parse term we have currently in memory */
+            prv_parse_term(gh);                 /* Parse term we have currently in memory */
             gh->p.star = 1;                     /* STAR detected */
             TERM_NEXT(gh);                      /* Start with next term */
         } else if (*d == '\r') {
