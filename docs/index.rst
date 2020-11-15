@@ -8,7 +8,7 @@ LwGPS is lightweight, platform independent library to parse NMEA statements from
 .. rst-class:: center
 .. rst-class:: index_links
 
-    :ref:`download_library` · :ref:`getting_started` · `Open Github <https://github.com/MaJerle/lwgps>`_
+    :ref:`download_library` :ref:`getting_started` `Open Github <https://github.com/MaJerle/lwgps>`_
 
 Features
 ^^^^^^^^

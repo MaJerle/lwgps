@@ -3,7 +3,7 @@
 How it works
 ============
 
-GPS NMEA Parser parses raw data formatted as NMEA 0183 statements from GPS receivers. It supports up to ``4`` different statements:
+LwGPS parses raw data formatted as NMEA 0183 statements from GPS receivers. It supports up to ``4`` different statements:
 
 * ``GPGGA`` or ``GNGGA``: GPS fix data
 * ``GPGSA`` or ``GNGSA``: GPS active satellites and dillusion of position
@@ -12,7 +12,7 @@ GPS NMEA Parser parses raw data formatted as NMEA 0183 statements from GPS recei
 
 .. tip::
 	By changing different configuration options, it is possible to disable some statements.
-	Check :ref:`api_lwgps_config` for more information.
+	Check :ref:`api_lwgps_opt` for more information.
 
 Application must assure to properly receive data from GPS receiver.
 Usually GPS receivers communicate with host embedded system with UART protocol and output directly formatted NMEA 0183 statements.

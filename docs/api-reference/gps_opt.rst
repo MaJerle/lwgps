@@ -1,9 +1,12 @@
-.. _api_lwgps_config:
+.. _api_lwgps_opt:
 
-GPS Configuration
-=================
+Configuration
+=============
 
 This is the default configuration of the middleware.
-When any of the settings shall be modified, it shall be done in library header file, ``lwgps/src/include/lwgps/lwgps.h``
+When any of the settings shall be modified, it shall be done in dedicated application config ``lwgps_opts.h`` file.
 
-.. doxygengroup:: LWGPS_CONFIG
+.. note::
+	Check :ref:`getting_started` to create configuration file.
+
+.. doxygengroup:: LWGPS_OPT

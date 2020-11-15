@@ -1,6 +1,6 @@
 .. _api_lwgps:
 
-GPS NMEA Parser
-===============
+LwGPS
+=====
 
 .. doxygengroup:: LWGPS

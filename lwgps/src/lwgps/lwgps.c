@@ -29,7 +29,7 @@
  * This file is part of LwGPS - Lightweight GPS NMEA parser library.
  *
  * Author:          Tilen MAJERLE <tilen@majerle.eu>
- * Version:         v2.0.0
+ * Version:         v2.1.0
  */
 #include <math.h>
 #include <string.h>
@@ -39,16 +39,16 @@
 #define FLT(x)              ((lwgps_float_t)(x))
 #define D2R(x)              FLT(FLT(x) * FLT(0.01745329251994)) /*!< Degrees to radians */
 #define R2D(x)              FLT(FLT(x) * FLT(57.29577951308232))/*!< Radians to degrees */
-#define EARTH_RADIUS        FLT(6371.0) /*!< Earth radius in units of kilometers */
+#define EARTH_RADIUS        FLT(6371.0)         /*!< Earth radius in units of kilometers */
 
 #define CRC_ADD(_gh, ch)    (_gh)->p.crc_calc ^= (uint8_t)(ch)
 #define TERM_ADD(_gh, ch)   do {    \
         if ((_gh)->p.term_pos < (sizeof((_gh)->p.term_str) - 1)) {  \
-            (_gh)->p.term_str[(_gh)->p.term_pos++] = (ch);  \
-            (_gh)->p.term_str[(_gh)->p.term_pos] = 0;   \
+            (_gh)->p.term_str[(_gh)->p.term_pos] = (ch);\
+            (_gh)->p.term_str[++(_gh)->p.term_pos] = 0; \
         }                               \
     } while (0)
-#define TERM_NEXT(_gh)      do { (_gh)->p.term_str[((_gh)->p.term_pos = 0)] = 0; (_gh)->p.term_num++; } while (0)
+#define TERM_NEXT(_gh)      do { (_gh)->p.term_str[((_gh)->p.term_pos = 0)] = 0; ++(_gh)->p.term_num; } while (0)
 
 #define CIN(x)              ((x) >= '0' && (x) <= '9')
 #define CIHN(x)             (((x) >= '0' && (x) <= '9') || ((x) >= 'a' && (x) <= 'f') || ((x) >= 'A' && (x) <= 'F'))
@@ -69,10 +69,10 @@ prv_parse_number(lwgps_t* gh, const char* t) {
     if (t == NULL) {
         t = gh->p.term_str;
     }
-    for (; t != NULL && *t == ' '; t++) {}      /* Strip leading spaces */
+    for (; t != NULL && *t == ' '; ++t) {}      /* Strip leading spaces */
 
-    minus = (*t == '-' ? (t++, 1) : 0);
-    for (; t != NULL && CIN(*t); t++) {
+    minus = (*t == '-' ? (++t, 1) : 0);
+    for (; t != NULL && CIN(*t); ++t) {
         res = 10 * res + CTN(*t);
     }
     return minus ? -res : res;
@@ -91,7 +91,7 @@ prv_parse_float_number(lwgps_t* gh, const char* t) {
     if (t == NULL) {
         t = gh->p.term_str;
     }
-    for (; t != NULL && *t == ' '; t++) {}      /* Strip leading spaces */
+    for (; t != NULL && *t == ' '; ++t) {}      /* Strip leading spaces */
 
 #if LWGPS_CFG_DOUBLE
     res = strtod(t, NULL);                      /* Parse string to double */
@@ -113,7 +113,7 @@ static lwgps_float_t
 prv_parse_lat_long(lwgps_t* gh) {
     lwgps_float_t ll, deg, min;
 
-    ll = prv_parse_float_number(gh, NULL);          /* Parse value as double */
+    ll = prv_parse_float_number(gh, NULL);      /* Parse value as double */
     deg = FLT((int)((int)ll / 100));            /* Get absolute degrees value, interested in integer part only */
     min = ll - (deg * FLT(100));                /* Get remaining part from full number, minutes */
     ll = deg + (min / FLT(60.0));               /* Calculate latitude/longitude */
@@ -236,10 +236,10 @@ prv_parse_term(lwgps_t* gh) {
                     uint8_t index, term_num = gh->p.term_num - 4;   /* Normalize term number from 4-19 to 0-15 */
                     uint16_t value;
 
-                    index = 4 * (gh->p.data.gsv.stat_num - 1) + term_num / 4;   /* Get array index */
+                    index = ((gh->p.data.gsv.stat_num - 1) << 0x02) + (term_num >> 2);  /* Get array index */
                     if (index < sizeof(gh->sats_in_view_desc) / sizeof(gh->sats_in_view_desc[0])) {
                         value = (uint16_t)prv_parse_number(gh, NULL);   /* Parse number as integer */
-                        switch (term_num % 4) {
+                        switch (term_num & 0x03) {
                             case 0:
                                 gh->sats_in_view_desc[index].num = value;
                                 break;
@@ -435,7 +435,8 @@ lwgps_init(lwgps_t* gh) {
  * \param[in]       gh: GPS handle structure
  * \param[in]       data: Received data
  * \param[in]       len: Number of bytes to process
- * \param[in]       evt_fn: Event function to notify application layer
+ * \param[in]       evt_fn: Event function to notify application layer.
+ *                      This parameter is available only if \ref LWGPS_CFG_STATUS is enabled
  * \return          `1` on success, `0` otherwise
  */
 uint8_t
@@ -451,11 +452,11 @@ lwgps_process(lwgps_t* gh, const void* data, size_t len) {
             memset(&gh->p, 0x00, sizeof(gh->p));/* Reset private memory */
             TERM_ADD(gh, *d);                   /* Add character to term */
         } else if (*d == ',') {                 /* Term separator character */
-            prv_parse_term(gh);                     /* Parse term we have currently in memory */
+            prv_parse_term(gh);                 /* Parse term we have currently in memory */
             CRC_ADD(gh, *d);                    /* Add character to CRC computation */
             TERM_NEXT(gh);                      /* Start with next term */
         } else if (*d == '*') {                 /* Start indicates end of data for CRC computation */
-            prv_parse_term(gh);                     /* Parse term we have currently in memory */
+            prv_parse_term(gh);                 /* Parse term we have currently in memory */
             gh->p.star = 1;                     /* STAR detected */
             TERM_NEXT(gh);                      /* Start with next term */
         } else if (*d == '\r') {
@@ -514,7 +515,7 @@ lwgps_distance_bearing(lwgps_float_t las, lwgps_float_t los, lwgps_float_t lae, 
     if (d != NULL) {
         /*
          * a = sin(df / 2)^2 + cos(las) * cos(lae) * sin(dfi / 2)^2
-         * *d = RADIUS * 2 * atan(a / (1 - a)) * 1000 (for meters)
+         * *d = RADIUS * 2 * atan(sqrt(a) / sqrt(1 - a)) * 1000 (for meters)
          */
 #if LWGPS_CFG_DOUBLE
         a = FLT(sin(df * 0.5) * sin(df * 0.5) + sin(dfi * 0.5) * sin(dfi * 0.5) * cos(las) * cos(lae));
