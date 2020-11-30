@@ -34,6 +34,9 @@
 #ifndef LWGPS_HDR_OPT_H
 #define LWGPS_HDR_OPT_H
 
+/* Uncomment to ignore user options (or set macro in compiler flags) */
+/* #define LWGPS_IGNORE_USER_OPTS */
+
 /* Include application options */
 #ifndef LWGPS_IGNORE_USER_OPTS
 #include "lwgps_opts.h"
