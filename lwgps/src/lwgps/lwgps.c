@@ -162,9 +162,11 @@ prv_parse_term(lwgps_t* gh) {
     } else if (gh->p.stat == STAT_GGA) {        /* Process GPGGA statement */
         switch (gh->p.term_num) {
             case 1:                             /* Process UTC time */
-                gh->p.data.gga.hours = 10 * CTN(gh->p.term_str[0]) + CTN(gh->p.term_str[1]);
-                gh->p.data.gga.minutes = 10 * CTN(gh->p.term_str[2]) + CTN(gh->p.term_str[3]);
-                gh->p.data.gga.seconds = 10 * CTN(gh->p.term_str[4]) + CTN(gh->p.term_str[5]);
+                if (gh->p.term_pos == 6) {
+                    gh->p.data.gga.hours = 10 * CTN(gh->p.term_str[0]) + CTN(gh->p.term_str[1]);
+                    gh->p.data.gga.minutes = 10 * CTN(gh->p.term_str[2]) + CTN(gh->p.term_str[3]);
+                    gh->p.data.gga.seconds = 10 * CTN(gh->p.term_str[4]) + CTN(gh->p.term_str[5]);
+                }
                 break;
             case 2:                             /* Latitude */
                 gh->p.data.gga.latitude = prv_parse_lat_long(gh);   /* Parse latitude */
@@ -274,9 +276,11 @@ prv_parse_term(lwgps_t* gh) {
                 gh->p.data.rmc.course = prv_parse_float_number(gh, NULL);
                 break;
             case 9:                             /* Process date */
-                gh->p.data.rmc.date = (uint8_t)(10 * CTN(gh->p.term_str[0]) + CTN(gh->p.term_str[1]));
-                gh->p.data.rmc.month = (uint8_t)(10 * CTN(gh->p.term_str[2]) + CTN(gh->p.term_str[3]));
-                gh->p.data.rmc.year = (uint8_t)(10 * CTN(gh->p.term_str[4]) + CTN(gh->p.term_str[5]));
+                if (gh->p.term_pos == 6) {
+                    gh->p.data.rmc.date = (uint8_t)(10 * CTN(gh->p.term_str[0]) + CTN(gh->p.term_str[1]));
+                    gh->p.data.rmc.month = (uint8_t)(10 * CTN(gh->p.term_str[2]) + CTN(gh->p.term_str[3]));
+                    gh->p.data.rmc.year = (uint8_t)(10 * CTN(gh->p.term_str[4]) + CTN(gh->p.term_str[5]));
+                }
                 break;
             case 10:                            /* Process magnetic variation */
                 gh->p.data.rmc.variation = prv_parse_float_number(gh, NULL);
