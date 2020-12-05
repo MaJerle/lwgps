@@ -5,6 +5,9 @@ Welcome to the documentation for version |version|.
 
 LwGPS is lightweight, platform independent library to parse NMEA statements from GPS receivers. It is highly optimized for embedded systems.
 
+.. image:: static/images/logo.svg
+    :align: center
+
 .. rst-class:: center
 .. rst-class:: index_links
 
