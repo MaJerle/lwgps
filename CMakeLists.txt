@@ -2,10 +2,11 @@
 # Lightweight GPS (lwgps) CMake support
 ################################################################################
 # The lwgps library can be configured with a lwgps_opts.h file.
-# If such a file is used, the user should set LWGPS_CONFIG_PATH
-# so that is is included properly.
+# If such a file is used, the user should set the LWGPS_CONFIG_PATH path variable where
+# the configuration file is located so that is is included properly.
+# 
 # Other than that, only two steps are necessary to compile and link against LWGPS:
-# 1. Use add_subdirectory to add the LWGPS folder
+# 1. Use add_subdirectory to add the lwgps folder
 # 2. Link against lwgps with target_link_libraries
 ################################################################################
 cmake_minimum_required(VERSION 3.13)
