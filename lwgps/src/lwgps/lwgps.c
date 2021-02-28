@@ -41,7 +41,11 @@
 #define R2D(x)              FLT(FLT(x) * FLT(57.29577951308232))/*!< Radians to degrees */
 #define EARTH_RADIUS        FLT(6371.0)         /*!< Earth radius in units of kilometers */
 
+#if LWGPS_CFG_CRC
 #define CRC_ADD(_gh, ch)    (_gh)->p.crc_calc ^= (uint8_t)(ch)
+#else
+#define CRC_ADD(_gh, ch)
+#endif /* LWGPS_CFG_CRC */
 #define TERM_ADD(_gh, ch)   do {    \
         if ((_gh)->p.term_pos < (sizeof((_gh)->p.term_str) - 1)) {  \
             (_gh)->p.term_str[(_gh)->p.term_pos] = (ch);\
@@ -346,6 +350,7 @@ prv_parse_term(lwgps_t* gh) {
     return 1;
 }
 
+#if LWGPS_CFG_CRC
 /**
  * \brief           Compare calculated CRC with received CRC
  * \param[in]       gh: GPS handle
@@ -357,6 +362,9 @@ prv_check_crc(lwgps_t* gh) {
     crc = (uint8_t)((CHTN(gh->p.term_str[0]) & 0x0F) << 0x04) | (CHTN(gh->p.term_str[1]) & 0x0F);   /* Convert received CRC from string (hex) to number */
     return gh->p.crc_calc == crc;               /* They must match! */
 }
+#else
+#define prv_check_crc(_gh)              (1)
+#endif /* LWGPS_CFG_CRC */
 
 /**
  * \brief           Copy temporary memory to user memory

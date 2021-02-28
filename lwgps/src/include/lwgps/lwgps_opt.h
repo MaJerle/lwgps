@@ -158,6 +158,15 @@ extern "C" {
 #define LWGPS_CFG_STATEMENT_PUBX_TIME       0
 #endif
 
+/**
+ * \brief           Enables `1` or disables `0` CRC calculation and check
+ *
+ * \note            When not enabled, CRC check is ignored
+ */
+#ifndef LWGPS_CFG_CRC
+#define LWGPS_CFG_CRC                       1
+#endif
+
 /* Guard against accidental parser breakage */
 #if LWGPS_CFG_STATEMENT_PUBX_TIME && !LWGPS_CFG_STATEMENT_PUBX
 #error LWGPS_CFG_STATEMENT_PUBX must be enabled when enabling LWGPS_CFG_STATEMENT_PUBX_TIME

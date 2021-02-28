@@ -159,7 +159,9 @@ typedef struct {
 
         uint8_t star;                           /*!< Star detected flag */
 
+#if LWGPS_CFG_CRC
         uint8_t crc_calc;                       /*!< Calculated CRC string */
+#endif /* LWGPS_CFG_CRC */
 
         union {
             uint8_t dummy;                      /*!< Dummy byte */
