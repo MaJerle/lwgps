@@ -36,3 +36,4 @@ endif()
 target_include_directories(${LIB_LWGPS_NAME} PRIVATE
     ${LWGPS_CONFIG_PATH_ABSOLUTE}
 )
+
