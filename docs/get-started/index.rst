@@ -45,8 +45,9 @@ Update cloned to latest version
 	This is preferred option to use when you want to evaluate library and run prepared examples.
 	Repository consists of multiple submodules which can be automatically downloaded when cloning and pulling changes from root repository.
 
-Add library to project
-^^^^^^^^^^^^^^^^^^^^^^
+
+Add library to project - Generic
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 At this point it is assumed that you have successfully download library, either cloned it or from releases page.
 
@@ -55,6 +56,19 @@ At this point it is assumed that you have successfully download library, either 
 * Add source files from ``lwgps/src/`` folder to toolchain build
 * Copy ``lwgps/src/include/lwgps/lwgps_opts_template.h`` to project folder and rename it to ``lwgps_opts.h``
 * Build the project
+
+Add library to project - CMake
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Including the library with CMake is very easy.
+
+* Add the ``lwgps`` folder with ``add_subdirectory``
+* Copy ``lwgps/src/include/lwgps/lwgps_opts_template.h`` to the project folder and rename it
+  to ``lwgps_opts.h``
+* Set the ``LWGPS_CONFIG_PATH`` path variable containing the ``lwgps_opts.h`` file
+  in the project ``CMakeLists.txt``
+* Link your project against the ``lwgps`` library with ``target_link_libraries``
+* The include directory should be set automatically by CMake
 
 Configuration file
 ^^^^^^^^^^^^^^^^^^
