@@ -11,10 +11,9 @@
 ################################################################################
 cmake_minimum_required(VERSION 3.13)
 
-set(LWGPS_LIB_NAME LwGPS)
-set(LWGPS_LIB_TARGET ${LIB_LWGPS_NAME}::${LIB_LWGPS_NAME})
-if(NOT (TARGET ${LWGPS_LIB_TARGET}))
-    add_library(${LWGPS_LIB_TARGET} INTERFACE IMPORTED)
-    target_sources(${LWGPS_LIB_TARGET} INTERFACE "lwgps/src/lwgps/lwgps.c")
-    target_include_directories(${LWGPS_LIB_TARGET} INTERFACE "lwgps/src/include/lwgps")
+set(LWGPS_LIB_NAME lwgps)
+if(NOT (TARGET ${LWGPS_LIB_NAME}))
+    add_library(${LWGPS_LIB_NAME} INTERFACE)
+    target_sources(${LWGPS_LIB_NAME} INTERFACE "lwgps/src/lwgps/lwgps.c")
+    target_include_directories(${LWGPS_LIB_NAME} INTERFACE "lwgps/src/include")
 endif()
