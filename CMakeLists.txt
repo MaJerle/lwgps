@@ -11,29 +11,10 @@
 ################################################################################
 cmake_minimum_required(VERSION 3.13)
 
-set(LIB_LWGPS_NAME lwgps)
-
-add_library(${LIB_LWGPS_NAME})
-
-add_subdirectory(${LIB_LWGPS_NAME})
-add_subdirectory(examples)
-
-# The project CMakeLists can set a LWGPS_CONFIG_PATH path including the lwgps_opts.h file
-# and add it.
-if(NOT LWGPS_CONFIG_PATH)
-    message(STATUS "Lightweight GPS configuration path not set.")
+set(LWGPS_LIB_NAME LwGPS)
+set(LWGPS_LIB_TARGET ${LIB_LWGPS_NAME}::${LIB_LWGPS_NAME})
+if(NOT (TARGET ${LWGPS_LIB_TARGET}))
+    add_library(${LWGPS_LIB_TARGET} INTERFACE IMPORTED)
+    target_sources(${LWGPS_LIB_TARGET} INTERFACE "lwgps/src/lwgps/lwgps.c")
+    target_include_directories(${LWGPS_LIB_TARGET} INTERFACE "lwgps/src/include/lwgps")
 endif()
-
-# Extract the absolute path of the provided configuration path
-if(IS_ABSOLUTE ${LWGPS_CONFIG_PATH})
-    set(LWGPS_CONFIG_PATH_ABSOLUTE ${LWGPS_CONFIG_PATH})
-else()
-    get_filename_component(LWGPS_CONFIG_PATH_ABSOLUTE
-        ${LWGPS_CONFIG_PATH} REALPATH BASE_DIR ${CMAKE_SOURCE_DIR}
-    )
-endif()
-
-target_include_directories(${LIB_LWGPS_NAME} PRIVATE
-    ${LWGPS_CONFIG_PATH_ABSOLUTE}
-)
-
