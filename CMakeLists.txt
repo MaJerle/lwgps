@@ -1,14 +1,14 @@
 cmake_minimum_required(VERSION 3.0.0)
 
 # Setup project
-project(LwLibPROJECT VERSION 2.0.1)
+project(LwLibPROJECT)
 
 # -------------------------------------------------
 # This CMakeLists.txt is used only if it is a top-level file.
 # Purpose of it is to be able to compile project in standalone way only
 #
 # When library sources are to be included in another project
-# user shall use /lwmem/CMakeLists.txt instead
+# user shall use /lwgps/CMakeLists.txt instead
 if (NOT PROJECT_IS_TOP_LEVEL)
     message(FATAL_ERROR "This CMakeLists.txt can only be used as top-level. Use /lwgps/CMakeLists.txt for library include purpose")
 endif()
