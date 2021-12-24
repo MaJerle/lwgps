@@ -1,19 +1,35 @@
-################################################################################
-# Lightweight GPS (lwgps) CMake support
-################################################################################
-# The lwgps library can be configured with a lwgps_opts.h file.
-# If such a file is used, the user should have the path containing this file
-# in the target include directories in an upper CMakeLists.txt
-# 
-# Other than that, only two steps are necessary to compile and link against LWGPS:
-# 1. Use add_subdirectory to add the lwgps folder
-# 2. Link against lwgps with target_link_libraries
-################################################################################
-cmake_minimum_required(VERSION 3.13)
+cmake_minimum_required(VERSION 3.0.0)
 
-set(LWGPS_LIB_NAME lwgps)
-if(NOT (TARGET ${LWGPS_LIB_NAME}))
-    add_library(${LWGPS_LIB_NAME} INTERFACE)
-    target_sources(${LWGPS_LIB_NAME} INTERFACE "lwgps/src/lwgps/lwgps.c")
-    target_include_directories(${LWGPS_LIB_NAME} INTERFACE "lwgps/src/include")
+# Setup project
+project(LwGPS VERSION 2.0.1)
+
+# ------------------------
+# Configuration used if cmake uses this as
+# top-level project CMakeLists.txt file
+# This is normally used for development purpose only
+if (PROJECT_IS_TOP_LEVEL)
+    add_executable(${PROJECT_NAME})
+
+    # Add key executable block
+    target_sources(${PROJECT_NAME} PUBLIC
+        ${CMAKE_CURRENT_LIST_DIR}/dev/VisualStudio/main.c
+        ${CMAKE_CURRENT_LIST_DIR}/examples/test_code.c
+        )
+
+    target_include_directories(${PROJECT_NAME} PUBLIC
+        ${CMAKE_CURRENT_LIST_DIR}/dev/VisualStudio
+        )
+
+    target_compile_definitions(${PROJECT_NAME} PUBLIC
+        WIN32
+        _DEBUG
+        CONSOLE
+        LWGPS_DEV
+        )
+
+    # Add subdir with lwgps and link to project
+    add_subdirectory("lwgps" lwgps)
+    target_link_libraries(${PROJECT_NAME} lwgps)
+else()
+    message("LWGPS: For library link, use CMakeLists.txt in /lwgps directory")
 endif()
