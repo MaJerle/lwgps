@@ -10,13 +10,13 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\lwgps\src\lwgps\lwgps.c">
+    <ClCompile Include="..\lwgps\src\lwgps\lwgps.c">
       <Filter>Source Files\LwGPS</Filter>
     </ClCompile>
     <ClCompile Include="main.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\examples\test_code.c">
+    <ClCompile Include="..\examples\test_code.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
