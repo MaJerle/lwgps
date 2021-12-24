@@ -1,5 +1,9 @@
 # Changelog
 
+## Develop
+
+- Split CMakeLists.txt files between library and executable
+
 ## v2.1.0
 
 - Add configuration settings to be consistend with other LwXX libraries
