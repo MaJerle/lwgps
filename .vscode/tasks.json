@@ -46,7 +46,7 @@
         {
             "type": "shell",
             "label": "Run application",
-            "command": "${workspaceFolder}\\build\\LwGPS.exe",
+            "command": "${workspaceFolder}\\build\\LwLibPROJECT.exe",
             "args": [],
             "problemMatcher": [],
         },
