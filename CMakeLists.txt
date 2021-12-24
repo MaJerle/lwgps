@@ -1,19 +1,40 @@
-################################################################################
-# Lightweight GPS (lwgps) CMake support
-################################################################################
-# The lwgps library can be configured with a lwgps_opts.h file.
-# If such a file is used, the user should have the path containing this file
-# in the target include directories in an upper CMakeLists.txt
-# 
-# Other than that, only two steps are necessary to compile and link against LWGPS:
-# 1. Use add_subdirectory to add the lwgps folder
-# 2. Link against lwgps with target_link_libraries
-################################################################################
-cmake_minimum_required(VERSION 3.13)
+cmake_minimum_required(VERSION 3.0.0)
 
-set(LWGPS_LIB_NAME lwgps)
-if(NOT (TARGET ${LWGPS_LIB_NAME}))
-    add_library(${LWGPS_LIB_NAME} INTERFACE)
-    target_sources(${LWGPS_LIB_NAME} INTERFACE "lwgps/src/lwgps/lwgps.c")
-    target_include_directories(${LWGPS_LIB_NAME} INTERFACE "lwgps/src/include")
+# Setup project
+project(LwLibPROJECT)
+
+# -------------------------------------------------
+# This CMakeLists.txt is used only if it is a top-level file.
+# Purpose of it is to be able to compile project in standalone way only
+#
+# When library sources are to be included in another project
+# user shall use /lwgps/CMakeLists.txt instead
+if (NOT PROJECT_IS_TOP_LEVEL)
+    message(FATAL_ERROR "This CMakeLists.txt can only be used as top-level. Use /lwgps/CMakeLists.txt for library include purpose")
 endif()
+
+# Set as executable
+add_executable(${PROJECT_NAME})
+
+# Add key executable block
+target_sources(${PROJECT_NAME} PUBLIC
+    ${CMAKE_CURRENT_LIST_DIR}/dev/VisualStudio/main.c
+    ${CMAKE_CURRENT_LIST_DIR}/examples/test_code.c
+    )
+
+# Add key include paths
+target_include_directories(${PROJECT_NAME} PUBLIC
+    ${CMAKE_CURRENT_LIST_DIR}/dev/VisualStudio
+    )
+
+# Compilation definition information
+target_compile_definitions(${PROJECT_NAME} PUBLIC
+    WIN32
+    _DEBUG
+    CONSOLE
+    LWGPS_DEV
+    )
+
+# Add subdir with lwgps and link to project
+add_subdirectory("lwgps" lwgps)
+target_link_libraries(${PROJECT_NAME} lwgps)
