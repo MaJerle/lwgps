@@ -59,7 +59,7 @@ extern "C" {
  *                  `double` is used as variable type when enabled, `float` when disabled.
  */
 #ifndef LWGPS_CFG_DOUBLE
-#define LWGPS_CFG_DOUBLE                    1
+#define LWGPS_CFG_DOUBLE 1
 #endif
 
 /**
@@ -69,7 +69,7 @@ extern "C" {
  * \note            This is an extension, so not enabled by default.
  */
 #ifndef LWGPS_CFG_STATUS
-#define LWGPS_CFG_STATUS                    0
+#define LWGPS_CFG_STATUS 0
 #endif
 
 /**
@@ -80,7 +80,7 @@ extern "C" {
  *                      - Number of satellites in use, fix (no fix, GPS, DGPS), UTC time
  */
 #ifndef LWGPS_CFG_STATEMENT_GPGGA
-#define LWGPS_CFG_STATEMENT_GPGGA           1
+#define LWGPS_CFG_STATEMENT_GPGGA 1
 #endif
 
 /**
@@ -92,7 +92,7 @@ extern "C" {
  *                      - IDs of satellites in use
  */
 #ifndef LWGPS_CFG_STATEMENT_GPGSA
-#define LWGPS_CFG_STATEMENT_GPGSA           1
+#define LWGPS_CFG_STATEMENT_GPGSA 1
 #endif
 
 /**
@@ -105,7 +105,7 @@ extern "C" {
  *                      - UTC date
  */
 #ifndef LWGPS_CFG_STATEMENT_GPRMC
-#define LWGPS_CFG_STATEMENT_GPRMC           1
+#define LWGPS_CFG_STATEMENT_GPRMC 1
 #endif
 
 /**
@@ -116,7 +116,7 @@ extern "C" {
  *                      - Optional details of each satellite in view. See \ref LWGPS_CFG_STATEMENT_GPGSV_SAT_DET
  */
 #ifndef LWGPS_CFG_STATEMENT_GPGSV
-#define LWGPS_CFG_STATEMENT_GPGSV           1
+#define LWGPS_CFG_STATEMENT_GPGSV 1
 #endif
 
 /**
@@ -126,7 +126,7 @@ extern "C" {
  * \note            When this feature is disabled, only number of "satellites in view" is parsed
  */
 #ifndef LWGPS_CFG_STATEMENT_GPGSV_SAT_DET
-#define LWGPS_CFG_STATEMENT_GPGSV_SAT_DET   0
+#define LWGPS_CFG_STATEMENT_GPGSV_SAT_DET 0
 #endif
 
 /**
@@ -137,7 +137,7 @@ extern "C" {
  *                  so disabled by default.
  */
 #ifndef LWGPS_CFG_STATEMENT_PUBX
-#define LWGPS_CFG_STATEMENT_PUBX            0
+#define LWGPS_CFG_STATEMENT_PUBX 0
 #endif
 
 /**
@@ -155,7 +155,7 @@ extern "C" {
  *                  This configure option requires LWGPS_CFG_STATEMENT_PUBX
  */
 #ifndef LWGPS_CFG_STATEMENT_PUBX_TIME
-#define LWGPS_CFG_STATEMENT_PUBX_TIME       0
+#define LWGPS_CFG_STATEMENT_PUBX_TIME 0
 #endif
 
 /**
@@ -164,7 +164,7 @@ extern "C" {
  * \note            When not enabled, CRC check is ignored
  */
 #ifndef LWGPS_CFG_CRC
-#define LWGPS_CFG_CRC                       1
+#define LWGPS_CFG_CRC 1
 #endif
 
 /* Guard against accidental parser breakage */
