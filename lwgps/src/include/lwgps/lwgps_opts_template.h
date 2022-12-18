@@ -31,8 +31,8 @@
  * Author:          Tilen MAJERLE <tilen@majerle.eu>
  * Version:         v2.1.0
  */
-#ifndef LWGPS_HDR_OPTS_H
-#define LWGPS_HDR_OPTS_H
+#ifndef LWGPS_OPTS_HDR_H
+#define LWGPS_OPTS_HDR_H
 
 /* Rename this file to "lwgps_opts.h" for your application */
 
@@ -41,4 +41,4 @@
  * copy & replace here settings you want to change values
  */
 
-#endif /* LWGPS_HDR_OPTS_H */
+#endif /* LWGPS_OPTS_HDR_H */

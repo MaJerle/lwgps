@@ -31,8 +31,8 @@
  * Author:          Tilen MAJERLE <tilen@majerle.eu>
  * Version:         $2.1.0$
  */
-#ifndef LWGPS_HDR_OPT_H
-#define LWGPS_HDR_OPT_H
+#ifndef LWGPS_OPT_HDR_H
+#define LWGPS_OPT_HDR_H
 
 /* Uncomment to ignore user options (or set macro in compiler flags) */
 /* #define LWGPS_IGNORE_USER_OPTS */
@@ -180,4 +180,4 @@ extern "C" {
 }
 #endif /* __cplusplus */
 
-#endif /* LWGPS_HDR_OPT_H */
+#endif /* LWGPS_OPT_HDR_H */
