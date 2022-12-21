@@ -31,10 +31,12 @@
  * Author:          Tilen MAJERLE <tilen@majerle.eu>
  * Version:         v2.1.0
  */
-#include <math.h>
 #include <stdlib.h>
 #include <string.h>
 #include "lwgps/lwgps.h"
+#if LWESP_CFG_DISTANCE_BEARING
+#include <math.h>
+#endif
 
 #define FLT(x)       ((lwgps_float_t)(x))
 #define D2R(x)       FLT(FLT(x) * FLT(0.01745329251994))  /*!< Degrees to radians */
@@ -98,20 +100,31 @@ prv_parse_number(lwgps_t* gh, const char* t) {
  */
 static lwgps_float_t
 prv_parse_float_number(lwgps_t* gh, const char* t) {
-    lwgps_float_t res;
+    lwgps_float_t value = (lwgps_float_t)0, power = (lwgps_float_t)1;
+    int sign = 1;
 
     if (t == NULL) {
         t = gh->p.term_str;
     }
     for (; t != NULL && *t == ' '; ++t) {} /* Strip leading spaces */
 
-#if LWGPS_CFG_DOUBLE
-    res = strtod(t, NULL); /* Parse string to double */
-#else                      /* LWGPS_CFG_DOUBLE */
-    res = strtof(t, NULL); /* Parse string to float */
-#endif                     /* !LWGPS_CFG_DOUBLE */
-
-    return FLT(res); /* Return casted value, based on float size */
+    if (*t == '-') { /* Check sign */
+        sign = -1;
+        ++t;
+    }
+    while (CIN(*t)) { /* Convert main part */
+        value = value * (lwgps_float_t)10 + CTN(*t);
+        ++t;
+    }
+    if (*t == '.') { /* Skip the dot character */
+        ++t;
+    }
+    while (CIN(*t)) { /* Get the power */
+        value = value * (lwgps_float_t)10 + CTN(*t);
+        power *= 10.0;
+        ++t;
+    }
+    return sign * value / power;
 }
 
 /**
@@ -496,6 +509,8 @@ lwgps_process(lwgps_t* gh, const void* data, size_t len) {
     return 1;
 }
 
+#if LWESP_CFG_DISTANCE_BEARING || __DOXYGEN__
+
 /**
  * \brief           Calculate distance and bearing between `2` latitude and longitude coordinates
  * \param[in]       las: Latitude start coordinate, in units of degrees
@@ -573,6 +588,8 @@ lwgps_distance_bearing(lwgps_float_t las, lwgps_float_t los, lwgps_float_t lae, 
     }
     return 1;
 }
+
+#endif /* LWESP_CFG_DISTANCE_BEARING || __DOXYGEN__ */
 
 /**
  * \brief           Convert NMEA GPS speed (in knots = nautical mile per hour) to different speed format

@@ -167,6 +167,15 @@ extern "C" {
 #define LWGPS_CFG_CRC 1
 #endif
 
+/**
+ * \brief           Enables `1` or disables `0` distance and bearing calculation
+ *
+ * \note            When not enabled, corresponding function is disabled
+ */
+#ifndef LWESP_CFG_DISTANCE_BEARING
+#define LWESP_CFG_DISTANCE_BEARING  1
+#endif
+
 /* Guard against accidental parser breakage */
 #if LWGPS_CFG_STATEMENT_PUBX_TIME && !LWGPS_CFG_STATEMENT_PUBX
 #error LWGPS_CFG_STATEMENT_PUBX must be enabled when enabling LWGPS_CFG_STATEMENT_PUBX_TIME
