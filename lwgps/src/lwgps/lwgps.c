@@ -121,7 +121,7 @@ prv_parse_float_number(lwgps_t* gh, const char* t) {
     }
     while (CIN(*t)) { /* Get the power */
         value = value * (lwgps_float_t)10 + CTN(*t);
-        power *= 10.0;
+        power *= (lwgps_float_t)10.0;
         ++t;
     }
     return sign * value / power;
