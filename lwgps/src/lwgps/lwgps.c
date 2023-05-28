@@ -207,37 +207,20 @@ prv_parse_term(lwgps_t* gh) {
                     gh->p.data.gga.longitude = -gh->p.data.gga.longitude;
                 }
                 break;
-            case 6: /* Fix status */
-                gh->p.data.gga.fix = (uint8_t)prv_parse_number(gh, NULL);
-                break;
-            case 7: /* Satellites in use */
-                gh->p.data.gga.sats_in_use = (uint8_t)prv_parse_number(gh, NULL);
-                break;
-            case 9: /* Altitude */
-                gh->p.data.gga.altitude = prv_parse_float_number(gh, NULL);
-                break;
-            case 11: /* Altitude above ellipsoid */
-                gh->p.data.gga.geo_sep = prv_parse_float_number(gh, NULL);
-                break;
-            default:
-                break;
+            case 6: /* Fix status */ gh->p.data.gga.fix = (uint8_t)prv_parse_number(gh, NULL); break;
+            case 7: /* Satellites in use */ gh->p.data.gga.sats_in_use = (uint8_t)prv_parse_number(gh, NULL); break;
+            case 9: /* Altitude */ gh->p.data.gga.altitude = prv_parse_float_number(gh, NULL); break;
+            case 11: /* Altitude above ellipsoid */ gh->p.data.gga.geo_sep = prv_parse_float_number(gh, NULL); break;
+            default: break;
         }
 #endif /* LWGPS_CFG_STATEMENT_GPGGA */
 #if LWGPS_CFG_STATEMENT_GPGSA
     } else if (gh->p.stat == STAT_GSA) { /* Process GPGSA statement */
         switch (gh->p.term_num) {
-            case 2: /* Process fix mode */
-                gh->p.data.gsa.fix_mode = (uint8_t)prv_parse_number(gh, NULL);
-                break;
-            case 15: /* Process PDOP */
-                gh->p.data.gsa.dop_p = prv_parse_float_number(gh, NULL);
-                break;
-            case 16: /* Process HDOP */
-                gh->p.data.gsa.dop_h = prv_parse_float_number(gh, NULL);
-                break;
-            case 17: /* Process VDOP */
-                gh->p.data.gsa.dop_v = prv_parse_float_number(gh, NULL);
-                break;
+            case 2: /* Process fix mode */ gh->p.data.gsa.fix_mode = (uint8_t)prv_parse_number(gh, NULL); break;
+            case 15: /* Process PDOP */ gh->p.data.gsa.dop_p = prv_parse_float_number(gh, NULL); break;
+            case 16: /* Process HDOP */ gh->p.data.gsa.dop_h = prv_parse_float_number(gh, NULL); break;
+            case 17: /* Process VDOP */ gh->p.data.gsa.dop_v = prv_parse_float_number(gh, NULL); break;
             default:
                 /* Parse satellite IDs */
                 if (gh->p.term_num >= 3 && gh->p.term_num <= 14) {
@@ -265,20 +248,11 @@ prv_parse_term(lwgps_t* gh) {
                     if (index < sizeof(gh->sats_in_view_desc) / sizeof(gh->sats_in_view_desc[0])) {
                         value = (uint16_t)prv_parse_number(gh, NULL); /* Parse number as integer */
                         switch (term_num & 0x03) {
-                            case 0:
-                                gh->sats_in_view_desc[index].num = value;
-                                break;
-                            case 1:
-                                gh->sats_in_view_desc[index].elevation = value;
-                                break;
-                            case 2:
-                                gh->sats_in_view_desc[index].azimuth = value;
-                                break;
-                            case 3:
-                                gh->sats_in_view_desc[index].snr = value;
-                                break;
-                            default:
-                                break;
+                            case 0: gh->sats_in_view_desc[index].num = value; break;
+                            case 1: gh->sats_in_view_desc[index].elevation = value; break;
+                            case 2: gh->sats_in_view_desc[index].azimuth = value; break;
+                            case 3: gh->sats_in_view_desc[index].snr = value; break;
+                            default: break;
                         }
                     }
                 }
@@ -289,15 +263,9 @@ prv_parse_term(lwgps_t* gh) {
 #if LWGPS_CFG_STATEMENT_GPRMC
     } else if (gh->p.stat == STAT_RMC) { /* Process GPRMC statement */
         switch (gh->p.term_num) {
-            case 2: /* Process valid status */
-                gh->p.data.rmc.is_valid = (gh->p.term_str[0] == 'A');
-                break;
-            case 7: /* Process ground speed in knots */
-                gh->p.data.rmc.speed = prv_parse_float_number(gh, NULL);
-                break;
-            case 8: /* Process true ground coarse */
-                gh->p.data.rmc.course = prv_parse_float_number(gh, NULL);
-                break;
+            case 2: /* Process valid status */ gh->p.data.rmc.is_valid = (gh->p.term_str[0] == 'A'); break;
+            case 7: /* Process ground speed in knots */ gh->p.data.rmc.speed = prv_parse_float_number(gh, NULL); break;
+            case 8: /* Process true ground coarse */ gh->p.data.rmc.course = prv_parse_float_number(gh, NULL); break;
             case 9: /* Process date */
                 gh->p.data.rmc.date = (uint8_t)(10 * CTN(gh->p.term_str[0]) + CTN(gh->p.term_str[1]));
                 gh->p.data.rmc.month = (uint8_t)(10 * CTN(gh->p.term_str[2]) + CTN(gh->p.term_str[3]));
@@ -311,8 +279,7 @@ prv_parse_term(lwgps_t* gh) {
                     gh->p.data.rmc.variation = -gh->p.data.rmc.variation;
                 }
                 break;
-            default:
-                break;
+            default: break;
         }
 #endif /* LWGPS_CFG_STATEMENT_GPRMC */
 #if LWGPS_CFG_STATEMENT_PUBX
@@ -333,12 +300,8 @@ prv_parse_term(lwgps_t* gh) {
                 gh->p.data.time.month = 10 * CTN(gh->p.term_str[2]) + CTN(gh->p.term_str[3]);
                 gh->p.data.time.year = 10 * CTN(gh->p.term_str[4]) + CTN(gh->p.term_str[5]);
                 break;
-            case 4: /* Process UTC TimeOfWeek */
-                gh->p.data.time.utc_tow = prv_parse_float_number(gh, NULL);
-                break;
-            case 5: /* Process UTC WeekNumber */
-                gh->p.data.time.utc_wk = prv_parse_number(gh, NULL);
-                break;
+            case 4: /* Process UTC TimeOfWeek */ gh->p.data.time.utc_tow = prv_parse_float_number(gh, NULL); break;
+            case 5: /* Process UTC WeekNumber */ gh->p.data.time.utc_wk = prv_parse_number(gh, NULL); break;
             case 6: /* Process UTC leap seconds */
                 /*
 				 * Accomodate a 2- or 3-digit leap second count
@@ -351,17 +314,10 @@ prv_parse_term(lwgps_t* gh) {
                         100 * CTN(gh->p.term_str[0]) + 10 * CTN(gh->p.term_str[1]) + CTN(gh->p.term_str[2]);
                 }
                 break;
-            case 7: /* Process clock bias */
-                gh->p.data.time.clk_bias = prv_parse_number(gh, NULL);
-                break;
-            case 8: /* Process clock drift */
-                gh->p.data.time.clk_drift = prv_parse_float_number(gh, NULL);
-                break;
-            case 9: /* Process time pulse granularity */
-                gh->p.data.time.tp_gran = prv_parse_number(gh, NULL);
-                break;
-            default:
-                break;
+            case 7: /* Process clock bias */ gh->p.data.time.clk_bias = prv_parse_number(gh, NULL); break;
+            case 8: /* Process clock drift */ gh->p.data.time.clk_drift = prv_parse_float_number(gh, NULL); break;
+            case 9: /* Process time pulse granularity */ gh->p.data.time.tp_gran = prv_parse_number(gh, NULL); break;
+            default: break;
         }
 #endif /* LWGPS_CFG_STATEMENT_PUBX_TIME */
 #endif /* LWGPS_CFG_STATEMENT_PUBX */
@@ -600,40 +556,24 @@ lwgps_distance_bearing(lwgps_float_t las, lwgps_float_t los, lwgps_float_t lae, 
 lwgps_float_t
 lwgps_to_speed(lwgps_float_t sik, lwgps_speed_t ts) {
     switch (ts) {
-        case lwgps_speed_kps:
-            return FLT(sik * FLT(0.000514));
-        case lwgps_speed_kph:
-            return FLT(sik * FLT(1.852));
-        case lwgps_speed_mps:
-            return FLT(sik * FLT(0.5144));
-        case lwgps_speed_mpm:
-            return FLT(sik * FLT(30.87));
+        case lwgps_speed_kps: return FLT(sik * FLT(0.000514));
+        case lwgps_speed_kph: return FLT(sik * FLT(1.852));
+        case lwgps_speed_mps: return FLT(sik * FLT(0.5144));
+        case lwgps_speed_mpm: return FLT(sik * FLT(30.87));
 
-        case lwgps_speed_mips:
-            return FLT(sik * FLT(0.0003197));
-        case lwgps_speed_mph:
-            return FLT(sik * FLT(1.151));
-        case lwgps_speed_fps:
-            return FLT(sik * FLT(1.688));
-        case lwgps_speed_fpm:
-            return FLT(sik * FLT(101.3));
+        case lwgps_speed_mips: return FLT(sik * FLT(0.0003197));
+        case lwgps_speed_mph: return FLT(sik * FLT(1.151));
+        case lwgps_speed_fps: return FLT(sik * FLT(1.688));
+        case lwgps_speed_fpm: return FLT(sik * FLT(101.3));
 
-        case lwgps_speed_mpk:
-            return FLT(sik * FLT(32.4));
-        case lwgps_speed_spk:
-            return FLT(sik * FLT(1944.0));
-        case lwgps_speed_sp100m:
-            return FLT(sik * FLT(194.4));
-        case lwgps_speed_mipm:
-            return FLT(sik * FLT(52.14));
-        case lwgps_speed_spm:
-            return FLT(sik * FLT(3128.0));
-        case lwgps_speed_sp100y:
-            return FLT(sik * FLT(177.7));
+        case lwgps_speed_mpk: return FLT(sik * FLT(32.4));
+        case lwgps_speed_spk: return FLT(sik * FLT(1944.0));
+        case lwgps_speed_sp100m: return FLT(sik * FLT(194.4));
+        case lwgps_speed_mipm: return FLT(sik * FLT(52.14));
+        case lwgps_speed_spm: return FLT(sik * FLT(3128.0));
+        case lwgps_speed_sp100y: return FLT(sik * FLT(177.7));
 
-        case lwgps_speed_smph:
-            return FLT(sik * FLT(1.0));
-        default:
-            return 0;
+        case lwgps_speed_smph: return FLT(sik * FLT(1.0));
+        default: return 0;
     }
 }
