@@ -9,4 +9,5 @@ User manual
     how-it-works
     float-double
     thread-safety
+    nmea-update-packet
     tests
