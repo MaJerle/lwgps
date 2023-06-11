@@ -556,24 +556,21 @@ lwgps_distance_bearing(lwgps_float_t las, lwgps_float_t los, lwgps_float_t lae, 
 lwgps_float_t
 lwgps_to_speed(lwgps_float_t sik, lwgps_speed_t ts) {
     switch (ts) {
-        case lwgps_speed_kps: return FLT(sik * FLT(0.000514));
-        case lwgps_speed_kph: return FLT(sik * FLT(1.852));
-        case lwgps_speed_mps: return FLT(sik * FLT(0.5144));
-        case lwgps_speed_mpm: return FLT(sik * FLT(30.87));
-
-        case lwgps_speed_mips: return FLT(sik * FLT(0.0003197));
-        case lwgps_speed_mph: return FLT(sik * FLT(1.151));
-        case lwgps_speed_fps: return FLT(sik * FLT(1.688));
-        case lwgps_speed_fpm: return FLT(sik * FLT(101.3));
-
-        case lwgps_speed_mpk: return FLT(sik * FLT(32.4));
-        case lwgps_speed_spk: return FLT(sik * FLT(1944.0));
-        case lwgps_speed_sp100m: return FLT(sik * FLT(194.4));
-        case lwgps_speed_mipm: return FLT(sik * FLT(52.14));
-        case lwgps_speed_spm: return FLT(sik * FLT(3128.0));
-        case lwgps_speed_sp100y: return FLT(sik * FLT(177.7));
-
-        case lwgps_speed_smph: return FLT(sik * FLT(1.0));
+        case LWGPS_SPEED_KPS: return FLT(sik * FLT(0.000514));
+        case LWGPS_SPEED_KPH: return FLT(sik * FLT(1.852));
+        case LWGPS_SPEED_MPS: return FLT(sik * FLT(0.5144));
+        case LWGPS_SPEED_MPM: return FLT(sik * FLT(30.87));
+        case LWGPS_SPEED_MIPS: return FLT(sik * FLT(0.0003197));
+        case LWGPS_SPEED_MPH: return FLT(sik * FLT(1.151));
+        case LWGPS_SPEED_FPS: return FLT(sik * FLT(1.688));
+        case LWGPS_SPEED_FPM: return FLT(sik * FLT(101.3));
+        case LWGPS_SPEED_MPK: return FLT(sik * FLT(32.4));
+        case LWGPS_SPEED_SPK: return FLT(sik * FLT(1944.0));
+        case LWGPS_SPEED_SP100M: return FLT(sik * FLT(194.4));
+        case LWGPS_SPEED_MIPM: return FLT(sik * FLT(52.14));
+        case LWGPS_SPEED_SPM: return FLT(sik * FLT(3128.0));
+        case LWGPS_SPEED_SP100Y: return FLT(sik * FLT(177.7));
+        case LWGPS_SPEED_SMPH: return FLT(sik * FLT(1.0));
         default: return 0;
     }
 }

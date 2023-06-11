@@ -230,28 +230,44 @@ typedef struct {
  */
 typedef enum {
     /* Metric values */
-    lwgps_speed_kps, /*!< Kilometers per second */
-    lwgps_speed_kph, /*!< Kilometers per hour */
-    lwgps_speed_mps, /*!< Meters per second */
-    lwgps_speed_mpm, /*!< Meters per minute */
+    LWGPS_SPEED_KPS, /*!< Kilometers per second */
+    LWGPS_SPEED_KPH, /*!< Kilometers per hour */
+    LWGPS_SPEED_MPS, /*!< Meters per second */
+    LWGPS_SPEED_MPM, /*!< Meters per minute */
 
     /* Imperial values */
-    lwgps_speed_mips, /*!< Miles per second */
-    lwgps_speed_mph,  /*!< Miles per hour */
-    lwgps_speed_fps,  /*!< Foots per second */
-    lwgps_speed_fpm,  /*!< Foots per minute */
+    LWGPS_SPEED_MIPS, /*!< Miles per second */
+    LWGPS_SPEED_MPH,  /*!< Miles per hour */
+    LWGPS_SPEED_FPS,  /*!< Foots per second */
+    LWGPS_SPEED_FPM,  /*!< Foots per minute */
 
     /* Optimized for runners/joggers */
-    lwgps_speed_mpk,    /*!< Minutes per kilometer */
-    lwgps_speed_spk,    /*!< Seconds per kilometer */
-    lwgps_speed_sp100m, /*!< Seconds per 100 meters */
-    lwgps_speed_mipm,   /*!< Minutes per mile */
-    lwgps_speed_spm,    /*!< Seconds per mile */
-    lwgps_speed_sp100y, /*!< Seconds per 100 yards */
+    LWGPS_SPEED_MPK,    /*!< Minutes per kilometer */
+    LWGPS_SPEED_SPK,    /*!< Seconds per kilometer */
+    LWGPS_SPEED_SP100M, /*!< Seconds per 100 meters */
+    LWGPS_SPEED_MIPM,   /*!< Minutes per mile */
+    LWGPS_SPEED_SPM,    /*!< Seconds per mile */
+    LWGPS_SPEED_SP100Y, /*!< Seconds per 100 yards */
 
     /* Nautical values */
-    lwgps_speed_smph, /*!< Sea miles per hour */
+    LWGPS_SPEED_SMPH, /*!< Sea miles per hour */
 } lwgps_speed_t;
+
+#define lwgps_speed_kps    LWGPS_SPEED_KPS    /*!< Backward compatibility. \deprecated Use \ref lwgps_speed_t instead */
+#define lwgps_speed_kph    LWGPS_SPEED_KPH    /*!< Backward compatibility. \deprecated Use \ref lwgps_speed_t instead */
+#define lwgps_speed_mps    LWGPS_SPEED_MPS    /*!< Backward compatibility. \deprecated Use \ref lwgps_speed_t instead */
+#define lwgps_speed_mpm    LWGPS_SPEED_MPM    /*!< Backward compatibility. \deprecated Use \ref lwgps_speed_t instead */
+#define lwgps_speed_mips   LWGPS_SPEED_MIPS   /*!< Backward compatibility. \deprecated Use \ref lwgps_speed_t instead */
+#define lwgps_speed_mph    LWGPS_SPEED_MPH    /*!< Backward compatibility. \deprecated Use \ref lwgps_speed_t instead */
+#define lwgps_speed_fps    LWGPS_SPEED_FPS    /*!< Backward compatibility. \deprecated Use \ref lwgps_speed_t instead */
+#define lwgps_speed_fpm    LWGPS_SPEED_FPM    /*!< Backward compatibility. \deprecated Use \ref lwgps_speed_t instead */
+#define lwgps_speed_mpk    LWGPS_SPEED_MPK    /*!< Backward compatibility. \deprecated Use \ref lwgps_speed_t instead */
+#define lwgps_speed_spk    LWGPS_SPEED_SPK    /*!< Backward compatibility. \deprecated Use \ref lwgps_speed_t instead */
+#define lwgps_speed_sp100m LWGPS_SPEED_SP100M /*!< Backward compatibility. \deprecated Use \ref lwgps_speed_t instead */
+#define lwgps_speed_mipm   LWGPS_SPEED_MIPM   /*!< Backward compatibility. \deprecated Use \ref lwgps_speed_t instead */
+#define lwgps_speed_spm    LWGPS_SPEED_SPM    /*!< Backward compatibility. \deprecated Use \ref lwgps_speed_t instead */
+#define lwgps_speed_sp100y LWGPS_SPEED_SP100Y /*!< Backward compatibility. \deprecated Use \ref lwgps_speed_t instead */
+#define lwgps_speed_smph   LWGPS_SPEED_SMPH   /*!< Backward compatibility. \deprecated Use \ref lwgps_speed_t instead */
 
 /**
  * \brief           Signature for caller-suplied callback function from gps_process
