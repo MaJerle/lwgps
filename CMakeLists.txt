@@ -11,7 +11,7 @@ else()
 
     # Add key executable block
     target_sources(${PROJECT_NAME} PUBLIC
-        ${CMAKE_CURRENT_LIST_DIR}/dev/main.c
+        ${CMAKE_CURRENT_LIST_DIR}/dev/main.cpp
         ${CMAKE_CURRENT_LIST_DIR}/examples/test_code.c
     )
 

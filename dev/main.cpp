@@ -6,9 +6,12 @@
 #include <stdio.h>
 #include <math.h>
 #include "lwgps/lwgps.h"
+#include "lwgps/lwgps.hpp"
 
 /* External function */
-extern void run_tests();
+extern "C" void run_tests();
+
+Lwgps::Lwgps gps;
 
 int
 main() {
