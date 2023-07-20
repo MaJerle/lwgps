@@ -6,7 +6,7 @@ Platform independent GPS NMEA parser for embedded systems.
 
 ## Features
 
-* Written in ANSI C99
+* Written in C (C11)
 * Platform independent, easy to use
 * Built-in support for 4 GPS statements
     * ``GPGGA`` or ``GNGGA``: GPS fix data
