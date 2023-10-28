@@ -29,7 +29,7 @@
  * This file is part of LwGPS - Lightweight GPS NMEA parser library.
  *
  * Author:          Tilen MAJERLE <tilen@majerle.eu>
- * Version:         $2.1.0$
+ * Version:         $2.2.0$
  */
 #ifndef LWGPS_OPT_HDR_H
 #define LWGPS_OPT_HDR_H

@@ -29,7 +29,7 @@
  * This file is part of LwGPS - Lightweight GPS NMEA parser library.
  *
  * Author:          Tilen MAJERLE <tilen@majerle.eu>
- * Version:         v2.1.0
+ * Version:         v2.2.0
  */
 #ifndef LWGPS_HDR_HPP
 #define LWGPS_HDR_HPP
@@ -41,6 +41,10 @@ class Lwgps {
   private:
     lwgps_t m_hgps;
 
+#if LWGPS_CFG_STATUS || __DOXYGEN__
+    lwgps_process_fn m_procfn;
+#endif /* LWGPS_CFG_STATUS || __DOXYGEN__ */
+
   public:
     Lwgps(const Lwgps& other) = delete;            /* No copy constructor */
     Lwgps& operator=(const Lwgps& other) = delete; /* No copy assignment */
@@ -49,6 +53,67 @@ class Lwgps {
 
     Lwgps() { /* Constructor */
         lwgps_init(&m_hgps);
+#if LWGPS_CFG_STATUS
+        m_procfn = nullptr;
+#endif /* LWGPS_CFG_STATUS */
+    }
+
+#if LWGPS_CFG_STATUS || __DOXYGEN__
+    /**
+     * \brief           Set processing callback function
+     * 
+     * \param           procfn 
+     */
+    void
+    set_process_fn(lwgps_process_fn procfn) {
+        this->m_procfn = procfn;
+    }
+#endif /* LWGPS_CFG_STATUS || __DOXYGEN__ */
+
+    /**
+     * \brief           Process NMEA data from GPS receiver
+     * \param[in]       data: Received data
+     * \param[in]       len: Number of bytes to process
+     * \return          `1` on success, `0` otherwise
+     */
+    uint8_t
+    process(const void* data, size_t len) {
+        return lwgps_process(&m_hgps, data, len
+#if LWGPS_CFG_STATUS
+                             ,
+                             m_procfn
+#endif /* LWGPS_CFG_STATUS */
+        );
+    }
+
+#if LWESP_CFG_DISTANCE_BEARING || __DOXYGEN__
+
+    /**
+     * \brief           Calculate distance and bearing between `2` latitude and longitude coordinates
+     * \param[in]       las: Latitude start coordinate, in units of degrees
+     * \param[in]       los: Longitude start coordinate, in units of degrees
+     * \param[in]       lae: Latitude end coordinate, in units of degrees
+     * \param[in]       loe: Longitude end coordinate, in units of degrees
+     * \param[out]      d: Pointer to output distance in units of meters
+     * \param[out]      b: Pointer to output bearing between start and end coordinate in relation to north in units of degrees
+     * \return          `1` on success, `0` otherwise
+     */
+    static uint8_t
+    distance_bearing(lwgps_float_t las, lwgps_float_t los, lwgps_float_t lae, lwgps_float_t loe, lwgps_float_t* d,
+                     lwgps_float_t* b) {
+        return lwgps_distance_bearing(las, los, lae, loe, d, b);
+    }
+#endif /* LWESP_CFG_DISTANCE_BEARING || __DOXYGEN__ */
+
+    /**
+     * \brief           Convert NMEA GPS speed (in knots = nautical mile per hour) to different speed format
+     * \param[in]       sik: Speed in knots, received from GPS NMEA statement
+     * \param[in]       ts: Target speed to convert to from knots
+     * \return          Speed calculated from knots
+     */
+    static lwgps_float_t
+    to_speed(lwgps_float_t sik, lwgps_speed_t ts) {
+        return lwgps_to_speed(sik, ts);
     }
 
     ~Lwgps() { /* Destructor */

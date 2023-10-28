@@ -2,10 +2,13 @@
 
 ## Develop
 
-- Split CMakeLists.txt files between library and executable
-- Change license year to 2022
+## v2.2.0
+
+- Split `CMakeLists.txt` files between library and executable
+- Change license year to `2023`
 - Add `.clang-format` draft
 - Deprecate lowercase `lwgps_speed_xxx` enumeration. Temporary implement macro to keep backward compatibility. Will be removed in next major release
+- Improve `C++` port
 
 ## v2.1.0
 

@@ -2,8 +2,8 @@
  * This example uses direct processing function,
  * to process dummy NMEA data from GPS receiver
  */
-#include <string.h>
 #include <stdio.h>
+#include <string.h>
 #include "lwgps/lwgps.h"
 #include "test_common.h"
 
