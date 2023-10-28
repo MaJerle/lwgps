@@ -4,7 +4,7 @@
  */
 
 /*
- * Copyright (c) 2020 Tilen MAJERLE
+ * Copyright (c) 2023 Tilen MAJERLE
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -29,10 +29,13 @@
  * This file is part of LwGPS - Lightweight GPS NMEA parser library.
  *
  * Author:          Tilen MAJERLE <tilen@majerle.eu>
- * Version:         $2.1.0$
+ * Version:         $2.2.0$
  */
-#ifndef LWGPS_HDR_OPT_H
-#define LWGPS_HDR_OPT_H
+#ifndef LWGPS_OPT_HDR_H
+#define LWGPS_OPT_HDR_H
+
+/* Uncomment to ignore user options (or set macro in compiler flags) */
+/* #define LWGPS_IGNORE_USER_OPTS */
 
 /* Include application options */
 #ifndef LWGPS_IGNORE_USER_OPTS
@@ -56,7 +59,7 @@ extern "C" {
  *                  `double` is used as variable type when enabled, `float` when disabled.
  */
 #ifndef LWGPS_CFG_DOUBLE
-#define LWGPS_CFG_DOUBLE                    1
+#define LWGPS_CFG_DOUBLE 1
 #endif
 
 /**
@@ -66,7 +69,7 @@ extern "C" {
  * \note            This is an extension, so not enabled by default.
  */
 #ifndef LWGPS_CFG_STATUS
-#define LWGPS_CFG_STATUS                    0
+#define LWGPS_CFG_STATUS 0
 #endif
 
 /**
@@ -77,7 +80,7 @@ extern "C" {
  *                      - Number of satellites in use, fix (no fix, GPS, DGPS), UTC time
  */
 #ifndef LWGPS_CFG_STATEMENT_GPGGA
-#define LWGPS_CFG_STATEMENT_GPGGA           1
+#define LWGPS_CFG_STATEMENT_GPGGA 1
 #endif
 
 /**
@@ -89,7 +92,7 @@ extern "C" {
  *                      - IDs of satellites in use
  */
 #ifndef LWGPS_CFG_STATEMENT_GPGSA
-#define LWGPS_CFG_STATEMENT_GPGSA           1
+#define LWGPS_CFG_STATEMENT_GPGSA 1
 #endif
 
 /**
@@ -102,7 +105,7 @@ extern "C" {
  *                      - UTC date
  */
 #ifndef LWGPS_CFG_STATEMENT_GPRMC
-#define LWGPS_CFG_STATEMENT_GPRMC           1
+#define LWGPS_CFG_STATEMENT_GPRMC 1
 #endif
 
 /**
@@ -113,7 +116,7 @@ extern "C" {
  *                      - Optional details of each satellite in view. See \ref LWGPS_CFG_STATEMENT_GPGSV_SAT_DET
  */
 #ifndef LWGPS_CFG_STATEMENT_GPGSV
-#define LWGPS_CFG_STATEMENT_GPGSV           1
+#define LWGPS_CFG_STATEMENT_GPGSV 1
 #endif
 
 /**
@@ -123,7 +126,7 @@ extern "C" {
  * \note            When this feature is disabled, only number of "satellites in view" is parsed
  */
 #ifndef LWGPS_CFG_STATEMENT_GPGSV_SAT_DET
-#define LWGPS_CFG_STATEMENT_GPGSV_SAT_DET   0
+#define LWGPS_CFG_STATEMENT_GPGSV_SAT_DET 0
 #endif
 
 /**
@@ -134,7 +137,7 @@ extern "C" {
  *                  so disabled by default.
  */
 #ifndef LWGPS_CFG_STATEMENT_PUBX
-#define LWGPS_CFG_STATEMENT_PUBX            0
+#define LWGPS_CFG_STATEMENT_PUBX 0
 #endif
 
 /**
@@ -152,7 +155,25 @@ extern "C" {
  *                  This configure option requires LWGPS_CFG_STATEMENT_PUBX
  */
 #ifndef LWGPS_CFG_STATEMENT_PUBX_TIME
-#define LWGPS_CFG_STATEMENT_PUBX_TIME       0
+#define LWGPS_CFG_STATEMENT_PUBX_TIME 0
+#endif
+
+/**
+ * \brief           Enables `1` or disables `0` CRC calculation and check
+ *
+ * \note            When not enabled, CRC check is ignored
+ */
+#ifndef LWGPS_CFG_CRC
+#define LWGPS_CFG_CRC 1
+#endif
+
+/**
+ * \brief           Enables `1` or disables `0` distance and bearing calculation
+ *
+ * \note            When not enabled, corresponding function is disabled
+ */
+#ifndef LWESP_CFG_DISTANCE_BEARING
+#define LWESP_CFG_DISTANCE_BEARING 1
 #endif
 
 /* Guard against accidental parser breakage */
@@ -168,4 +189,4 @@ extern "C" {
 }
 #endif /* __cplusplus */
 
-#endif /* LWGPS_HDR_OPT_H */
+#endif /* LWGPS_OPT_HDR_H */

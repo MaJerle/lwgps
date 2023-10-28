@@ -10,3 +10,4 @@ When any of the settings shall be modified, it shall be done in dedicated applic
 	Check :ref:`getting_started` to create configuration file.
 
 .. doxygengroup:: LWGPS_OPT
+	:inner:

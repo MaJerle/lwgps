@@ -4,7 +4,7 @@
  */
 
 /*
- * Copyright (c) 2020 Tilen MAJERLE
+ * Copyright (c) 2023 Tilen MAJERLE
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -29,31 +29,45 @@
  * This file is part of LwGPS - Lightweight GPS NMEA parser library.
  *
  * Author:          Tilen MAJERLE <tilen@majerle.eu>
- * Version:         v2.1.0
+ * Version:         v2.2.0
  */
-#include <math.h>
-#include <string.h>
 #include <stdlib.h>
+#include <string.h>
 #include "lwgps/lwgps.h"
+#if LWESP_CFG_DISTANCE_BEARING
+#include <math.h>
+#endif
 
-#define FLT(x)              ((lwgps_float_t)(x))
-#define D2R(x)              FLT(FLT(x) * FLT(0.01745329251994)) /*!< Degrees to radians */
-#define R2D(x)              FLT(FLT(x) * FLT(57.29577951308232))/*!< Radians to degrees */
-#define EARTH_RADIUS        FLT(6371.0)         /*!< Earth radius in units of kilometers */
+#define FLT(x)       ((lwgps_float_t)(x))
+#define D2R(x)       FLT(FLT(x) * FLT(0.01745329251994))  /*!< Degrees to radians */
+#define R2D(x)       FLT(FLT(x) * FLT(57.29577951308232)) /*!< Radians to degrees */
+#define EARTH_RADIUS FLT(6371.0)                          /*!< Earth radius in units of kilometers */
 
-#define CRC_ADD(_gh, ch)    (_gh)->p.crc_calc ^= (uint8_t)(ch)
-#define TERM_ADD(_gh, ch)   do {    \
-        if ((_gh)->p.term_pos < (sizeof((_gh)->p.term_str) - 1)) {  \
-            (_gh)->p.term_str[(_gh)->p.term_pos] = (ch);\
-            (_gh)->p.term_str[++(_gh)->p.term_pos] = 0; \
-        }                               \
+#if LWGPS_CFG_CRC
+#define CRC_ADD(_gh, ch) (_gh)->p.crc_calc ^= (uint8_t)(ch)
+#else
+#define CRC_ADD(_gh, ch)
+#endif /* LWGPS_CFG_CRC */
+#define TERM_ADD(_gh, ch)                                                                                              \
+    do {                                                                                                               \
+        if ((_gh)->p.term_pos < (sizeof((_gh)->p.term_str) - 1)) {                                                     \
+            (_gh)->p.term_str[(_gh)->p.term_pos] = (ch);                                                               \
+            (_gh)->p.term_str[++(_gh)->p.term_pos] = 0;                                                                \
+        }                                                                                                              \
     } while (0)
-#define TERM_NEXT(_gh)      do { (_gh)->p.term_str[((_gh)->p.term_pos = 0)] = 0; ++(_gh)->p.term_num; } while (0)
+#define TERM_NEXT(_gh)                                                                                                 \
+    do {                                                                                                               \
+        (_gh)->p.term_str[((_gh)->p.term_pos = 0)] = 0;                                                                \
+        ++(_gh)->p.term_num;                                                                                           \
+    } while (0)
 
-#define CIN(x)              ((x) >= '0' && (x) <= '9')
-#define CIHN(x)             (((x) >= '0' && (x) <= '9') || ((x) >= 'a' && (x) <= 'f') || ((x) >= 'A' && (x) <= 'F'))
-#define CTN(x)              ((x) - '0')
-#define CHTN(x)             (((x) >= '0' && (x) <= '9') ? ((x) - '0') : (((x) >= 'a' && (x) <= 'z') ? ((x) - 'a' + 10) : (((x) >= 'A' && (x) <= 'Z') ? ((x) - 'A' + 10) : 0)))
+#define CIN(x)  ((x) >= '0' && (x) <= '9')
+#define CIHN(x) (((x) >= '0' && (x) <= '9') || ((x) >= 'a' && (x) <= 'f') || ((x) >= 'A' && (x) <= 'F'))
+#define CTN(x)  ((x) - '0')
+#define CHTN(x)                                                                                                        \
+    (((x) >= '0' && (x) <= '9')                                                                                        \
+         ? ((x) - '0')                                                                                                 \
+         : (((x) >= 'a' && (x) <= 'z') ? ((x) - 'a' + 10) : (((x) >= 'A' && (x) <= 'Z') ? ((x) - 'A' + 10) : 0)))
 
 /**
  * \brief           Parse number as integer
@@ -69,7 +83,7 @@ prv_parse_number(lwgps_t* gh, const char* t) {
     if (t == NULL) {
         t = gh->p.term_str;
     }
-    for (; t != NULL && *t == ' '; ++t) {}      /* Strip leading spaces */
+    for (; t != NULL && *t == ' '; ++t) {} /* Strip leading spaces */
 
     minus = (*t == '-' ? (++t, 1) : 0);
     for (; t != NULL && CIN(*t); ++t) {
@@ -86,20 +100,31 @@ prv_parse_number(lwgps_t* gh, const char* t) {
  */
 static lwgps_float_t
 prv_parse_float_number(lwgps_t* gh, const char* t) {
-    lwgps_float_t res;
+    lwgps_float_t value = (lwgps_float_t)0, power = (lwgps_float_t)1;
+    int sign = 1;
 
     if (t == NULL) {
         t = gh->p.term_str;
     }
-    for (; t != NULL && *t == ' '; ++t) {}      /* Strip leading spaces */
+    for (; t != NULL && *t == ' '; ++t) {} /* Strip leading spaces */
 
-#if LWGPS_CFG_DOUBLE
-    res = strtod(t, NULL);                      /* Parse string to double */
-#else /* LWGPS_CFG_DOUBLE */
-    res = strtof(t, NULL);                      /* Parse string to float */
-#endif /* !LWGPS_CFG_DOUBLE */
-
-    return FLT(res);                            /* Return casted value, based on float size */
+    if (*t == '-') { /* Check sign */
+        sign = -1;
+        ++t;
+    }
+    while (CIN(*t)) { /* Convert main part */
+        value = value * (lwgps_float_t)10 + CTN(*t);
+        ++t;
+    }
+    if (*t == '.') { /* Skip the dot character */
+        ++t;
+    }
+    while (CIN(*t)) { /* Get the power */
+        value = value * (lwgps_float_t)10 + CTN(*t);
+        power *= (lwgps_float_t)10.0;
+        ++t;
+    }
+    return sign * value / power;
 }
 
 /**
@@ -113,10 +138,10 @@ static lwgps_float_t
 prv_parse_lat_long(lwgps_t* gh) {
     lwgps_float_t ll, deg, min;
 
-    ll = prv_parse_float_number(gh, NULL);      /* Parse value as double */
-    deg = FLT((int)((int)ll / 100));            /* Get absolute degrees value, interested in integer part only */
-    min = ll - (deg * FLT(100));                /* Get remaining part from full number, minutes */
-    ll = deg + (min / FLT(60.0));               /* Calculate latitude/longitude */
+    ll = prv_parse_float_number(gh, NULL); /* Parse value as double */
+    deg = FLT((int)((int)ll / 100));       /* Get absolute degrees value, interested in integer part only */
+    min = ll - (deg * FLT(100));           /* Get remaining part from full number, minutes */
+    ll = deg + (min / FLT(60.0));          /* Calculate latitude/longitude */
 
     return ll;
 }
@@ -128,7 +153,7 @@ prv_parse_lat_long(lwgps_t* gh) {
  */
 static uint8_t
 prv_parse_term(lwgps_t* gh) {
-    if (gh->p.term_num == 0) {                  /* Check string type */
+    if (gh->p.term_num == 0) { /* Check string type */
         if (0) {
 #if LWGPS_CFG_STATEMENT_GPGGA
         } else if (!strncmp(gh->p.term_str, "$GPGGA", 6) || !strncmp(gh->p.term_str, "$GNGGA", 6)) {
@@ -151,7 +176,7 @@ prv_parse_term(lwgps_t* gh) {
             gh->p.stat = STAT_UBX;
 #endif /* LWGPS_CFG_STATEMENT_PUBX */
         } else {
-            gh->p.stat = STAT_UNKNOWN;          /* Invalid statement for library */
+            gh->p.stat = STAT_UNKNOWN; /* Invalid statement for library */
         }
         return 1;
     }
@@ -159,60 +184,43 @@ prv_parse_term(lwgps_t* gh) {
     /* Start parsing terms */
     if (gh->p.stat == STAT_UNKNOWN) {
 #if LWGPS_CFG_STATEMENT_GPGGA
-    } else if (gh->p.stat == STAT_GGA) {        /* Process GPGGA statement */
+    } else if (gh->p.stat == STAT_GGA) { /* Process GPGGA statement */
         switch (gh->p.term_num) {
-            case 1:                             /* Process UTC time */
+            case 1: /* Process UTC time */
                 gh->p.data.gga.hours = 10 * CTN(gh->p.term_str[0]) + CTN(gh->p.term_str[1]);
                 gh->p.data.gga.minutes = 10 * CTN(gh->p.term_str[2]) + CTN(gh->p.term_str[3]);
                 gh->p.data.gga.seconds = 10 * CTN(gh->p.term_str[4]) + CTN(gh->p.term_str[5]);
                 break;
-            case 2:                             /* Latitude */
-                gh->p.data.gga.latitude = prv_parse_lat_long(gh);   /* Parse latitude */
+            case 2:                                               /* Latitude */
+                gh->p.data.gga.latitude = prv_parse_lat_long(gh); /* Parse latitude */
                 break;
-            case 3:                             /* Latitude north/south information */
+            case 3: /* Latitude north/south information */
                 if (gh->p.term_str[0] == 'S' || gh->p.term_str[0] == 's') {
                     gh->p.data.gga.latitude = -gh->p.data.gga.latitude;
                 }
                 break;
-            case 4:                             /* Longitude */
-                gh->p.data.gga.longitude = prv_parse_lat_long(gh);  /* Parse longitude */
+            case 4:                                                /* Longitude */
+                gh->p.data.gga.longitude = prv_parse_lat_long(gh); /* Parse longitude */
                 break;
-            case 5:                             /* Longitude east/west information */
+            case 5: /* Longitude east/west information */
                 if (gh->p.term_str[0] == 'W' || gh->p.term_str[0] == 'w') {
                     gh->p.data.gga.longitude = -gh->p.data.gga.longitude;
                 }
                 break;
-            case 6:                             /* Fix status */
-                gh->p.data.gga.fix = (uint8_t)prv_parse_number(gh, NULL);
-                break;
-            case 7:                             /* Satellites in use */
-                gh->p.data.gga.sats_in_use = (uint8_t)prv_parse_number(gh, NULL);
-                break;
-            case 9:                             /* Altitude */
-                gh->p.data.gga.altitude = prv_parse_float_number(gh, NULL);
-                break;
-            case 11:                            /* Altitude above ellipsoid */
-                gh->p.data.gga.geo_sep = prv_parse_float_number(gh, NULL);
-                break;
-            default:
-                break;
+            case 6: /* Fix status */ gh->p.data.gga.fix = (uint8_t)prv_parse_number(gh, NULL); break;
+            case 7: /* Satellites in use */ gh->p.data.gga.sats_in_use = (uint8_t)prv_parse_number(gh, NULL); break;
+            case 9: /* Altitude */ gh->p.data.gga.altitude = prv_parse_float_number(gh, NULL); break;
+            case 11: /* Altitude above ellipsoid */ gh->p.data.gga.geo_sep = prv_parse_float_number(gh, NULL); break;
+            default: break;
         }
 #endif /* LWGPS_CFG_STATEMENT_GPGGA */
 #if LWGPS_CFG_STATEMENT_GPGSA
-    } else if (gh->p.stat == STAT_GSA) {        /* Process GPGSA statement */
+    } else if (gh->p.stat == STAT_GSA) { /* Process GPGSA statement */
         switch (gh->p.term_num) {
-            case 2:                             /* Process fix mode */
-                gh->p.data.gsa.fix_mode = (uint8_t)prv_parse_number(gh, NULL);
-                break;
-            case 15:                            /* Process PDOP */
-                gh->p.data.gsa.dop_p = prv_parse_float_number(gh, NULL);
-                break;
-            case 16:                            /* Process HDOP */
-                gh->p.data.gsa.dop_h = prv_parse_float_number(gh, NULL);
-                break;
-            case 17:                            /* Process VDOP */
-                gh->p.data.gsa.dop_v = prv_parse_float_number(gh, NULL);
-                break;
+            case 2: /* Process fix mode */ gh->p.data.gsa.fix_mode = (uint8_t)prv_parse_number(gh, NULL); break;
+            case 15: /* Process PDOP */ gh->p.data.gsa.dop_p = prv_parse_float_number(gh, NULL); break;
+            case 16: /* Process HDOP */ gh->p.data.gsa.dop_h = prv_parse_float_number(gh, NULL); break;
+            case 17: /* Process VDOP */ gh->p.data.gsa.dop_v = prv_parse_float_number(gh, NULL); break;
             default:
                 /* Parse satellite IDs */
                 if (gh->p.term_num >= 3 && gh->p.term_num <= 14) {
@@ -222,38 +230,29 @@ prv_parse_term(lwgps_t* gh) {
         }
 #endif /* LWGPS_CFG_STATEMENT_GPGSA */
 #if LWGPS_CFG_STATEMENT_GPGSV
-    } else if (gh->p.stat == STAT_GSV) {        /* Process GPGSV statement */
+    } else if (gh->p.stat == STAT_GSV) { /* Process GPGSV statement */
         switch (gh->p.term_num) {
-            case 2:                             /* Current GPGSV statement number */
+            case 2: /* Current GPGSV statement number */
                 gh->p.data.gsv.stat_num = (uint8_t)prv_parse_number(gh, NULL);
                 break;
-            case 3:                             /* Process satellites in view */
+            case 3: /* Process satellites in view */
                 gh->p.data.gsv.sats_in_view = (uint8_t)prv_parse_number(gh, NULL);
                 break;
             default:
 #if LWGPS_CFG_STATEMENT_GPGSV_SAT_DET
-                if (gh->p.term_num >= 4 && gh->p.term_num <= 19) {  /* Check current term number */
-                    uint8_t index, term_num = gh->p.term_num - 4;   /* Normalize term number from 4-19 to 0-15 */
+                if (gh->p.term_num >= 4 && gh->p.term_num <= 19) { /* Check current term number */
+                    uint8_t index, term_num = gh->p.term_num - 4;  /* Normalize term number from 4-19 to 0-15 */
                     uint16_t value;
 
-                    index = ((gh->p.data.gsv.stat_num - 1) << 0x02) + (term_num >> 2);  /* Get array index */
+                    index = ((gh->p.data.gsv.stat_num - 1) << 0x02) + (term_num >> 2); /* Get array index */
                     if (index < sizeof(gh->sats_in_view_desc) / sizeof(gh->sats_in_view_desc[0])) {
-                        value = (uint16_t)prv_parse_number(gh, NULL);   /* Parse number as integer */
+                        value = (uint16_t)prv_parse_number(gh, NULL); /* Parse number as integer */
                         switch (term_num & 0x03) {
-                            case 0:
-                                gh->sats_in_view_desc[index].num = value;
-                                break;
-                            case 1:
-                                gh->sats_in_view_desc[index].elevation = value;
-                                break;
-                            case 2:
-                                gh->sats_in_view_desc[index].azimuth = value;
-                                break;
-                            case 3:
-                                gh->sats_in_view_desc[index].snr = value;
-                                break;
-                            default:
-                                break;
+                            case 0: gh->sats_in_view_desc[index].num = value; break;
+                            case 1: gh->sats_in_view_desc[index].elevation = value; break;
+                            case 2: gh->sats_in_view_desc[index].azimuth = value; break;
+                            case 3: gh->sats_in_view_desc[index].snr = value; break;
+                            default: break;
                         }
                     }
                 }
@@ -262,83 +261,63 @@ prv_parse_term(lwgps_t* gh) {
         }
 #endif /* LWGPS_CFG_STATEMENT_GPGSV */
 #if LWGPS_CFG_STATEMENT_GPRMC
-    } else if (gh->p.stat == STAT_RMC) {        /* Process GPRMC statement */
+    } else if (gh->p.stat == STAT_RMC) { /* Process GPRMC statement */
         switch (gh->p.term_num) {
-            case 2:                             /* Process valid status */
-                gh->p.data.rmc.is_valid = (gh->p.term_str[0] == 'A');
-                break;
-            case 7:                             /* Process ground speed in knots */
-                gh->p.data.rmc.speed = prv_parse_float_number(gh, NULL);
-                break;
-            case 8:                             /* Process true ground coarse */
-                gh->p.data.rmc.course = prv_parse_float_number(gh, NULL);
-                break;
-            case 9:                             /* Process date */
+            case 2: /* Process valid status */ gh->p.data.rmc.is_valid = (gh->p.term_str[0] == 'A'); break;
+            case 7: /* Process ground speed in knots */ gh->p.data.rmc.speed = prv_parse_float_number(gh, NULL); break;
+            case 8: /* Process true ground coarse */ gh->p.data.rmc.course = prv_parse_float_number(gh, NULL); break;
+            case 9: /* Process date */
                 gh->p.data.rmc.date = (uint8_t)(10 * CTN(gh->p.term_str[0]) + CTN(gh->p.term_str[1]));
                 gh->p.data.rmc.month = (uint8_t)(10 * CTN(gh->p.term_str[2]) + CTN(gh->p.term_str[3]));
                 gh->p.data.rmc.year = (uint8_t)(10 * CTN(gh->p.term_str[4]) + CTN(gh->p.term_str[5]));
                 break;
-            case 10:                            /* Process magnetic variation */
+            case 10: /* Process magnetic variation */
                 gh->p.data.rmc.variation = prv_parse_float_number(gh, NULL);
                 break;
-            case 11:                            /* Process magnetic variation east/west */
+            case 11: /* Process magnetic variation east/west */
                 if (gh->p.term_str[0] == 'W' || gh->p.term_str[0] == 'w') {
                     gh->p.data.rmc.variation = -gh->p.data.rmc.variation;
                 }
                 break;
-            default:
-                break;
+            default: break;
         }
 #endif /* LWGPS_CFG_STATEMENT_GPRMC */
 #if LWGPS_CFG_STATEMENT_PUBX
-    } else if (gh->p.stat == STAT_UBX) {        /* Disambiguate generic PUBX statement */
+    } else if (gh->p.stat == STAT_UBX) { /* Disambiguate generic PUBX statement */
         if (gh->p.term_str[0] == '0' && gh->p.term_str[1] == '4') {
             gh->p.stat = STAT_UBX_TIME;
         }
 #if LWGPS_CFG_STATEMENT_PUBX_TIME
-    } else if (gh->p.stat == STAT_UBX_TIME) {   /* Process PUBX (uBlox) TIME statement */
+    } else if (gh->p.stat == STAT_UBX_TIME) { /* Process PUBX (uBlox) TIME statement */
         switch (gh->p.term_num) {
-            case 2:                             /* Process UTC time; ignore fractions of seconds */
+            case 2: /* Process UTC time; ignore fractions of seconds */
                 gh->p.data.time.hours = 10 * CTN(gh->p.term_str[0]) + CTN(gh->p.term_str[1]);
                 gh->p.data.time.minutes = 10 * CTN(gh->p.term_str[2]) + CTN(gh->p.term_str[3]);
                 gh->p.data.time.seconds = 10 * CTN(gh->p.term_str[4]) + CTN(gh->p.term_str[5]);
                 break;
-            case 3:                             /* Process UTC date */
+            case 3: /* Process UTC date */
                 gh->p.data.time.date = 10 * CTN(gh->p.term_str[0]) + CTN(gh->p.term_str[1]);
                 gh->p.data.time.month = 10 * CTN(gh->p.term_str[2]) + CTN(gh->p.term_str[3]);
                 gh->p.data.time.year = 10 * CTN(gh->p.term_str[4]) + CTN(gh->p.term_str[5]);
                 break;
-            case 4:                             /* Process UTC TimeOfWeek */
-                gh->p.data.time.utc_tow = prv_parse_float_number(gh, NULL);
-                break;
-            case 5:                             /* Process UTC WeekNumber */
-                gh->p.data.time.utc_wk = prv_parse_number(gh, NULL);
-                break;
-            case 6:                             /* Process UTC leap seconds */
+            case 4: /* Process UTC TimeOfWeek */ gh->p.data.time.utc_tow = prv_parse_float_number(gh, NULL); break;
+            case 5: /* Process UTC WeekNumber */ gh->p.data.time.utc_wk = prv_parse_number(gh, NULL); break;
+            case 6: /* Process UTC leap seconds */
                 /*
 				 * Accomodate a 2- or 3-digit leap second count
                  * a trailing 'D' means this is the firmware's default value.
                  */
                 if (gh->p.term_str[2] == 'D' || gh->p.term_str[2] == '\0') {
-                    gh->p.data.time.leap_sec = 10 * CTN(gh->p.term_str[0])
-                                               + CTN(gh->p.term_str[1]);
+                    gh->p.data.time.leap_sec = 10 * CTN(gh->p.term_str[0]) + CTN(gh->p.term_str[1]);
                 } else {
-                    gh->p.data.time.leap_sec = 100 * CTN(gh->p.term_str[0])
-                                               + 10 * CTN(gh->p.term_str[1])
-                                               + CTN(gh->p.term_str[2]);
+                    gh->p.data.time.leap_sec =
+                        100 * CTN(gh->p.term_str[0]) + 10 * CTN(gh->p.term_str[1]) + CTN(gh->p.term_str[2]);
                 }
                 break;
-            case 7:                             /* Process clock bias */
-                gh->p.data.time.clk_bias = prv_parse_number(gh, NULL);
-                break;
-            case 8:                             /* Process clock drift */
-                gh->p.data.time.clk_drift = prv_parse_float_number(gh, NULL);
-                break;
-            case 9:                             /* Process time pulse granularity */
-                gh->p.data.time.tp_gran = prv_parse_number(gh, NULL);
-                break;
-            default:
-                break;
+            case 7: /* Process clock bias */ gh->p.data.time.clk_bias = prv_parse_number(gh, NULL); break;
+            case 8: /* Process clock drift */ gh->p.data.time.clk_drift = prv_parse_float_number(gh, NULL); break;
+            case 9: /* Process time pulse granularity */ gh->p.data.time.tp_gran = prv_parse_number(gh, NULL); break;
+            default: break;
         }
 #endif /* LWGPS_CFG_STATEMENT_PUBX_TIME */
 #endif /* LWGPS_CFG_STATEMENT_PUBX */
@@ -346,6 +325,7 @@ prv_parse_term(lwgps_t* gh) {
     return 1;
 }
 
+#if LWGPS_CFG_CRC
 /**
  * \brief           Compare calculated CRC with received CRC
  * \param[in]       gh: GPS handle
@@ -354,9 +334,13 @@ prv_parse_term(lwgps_t* gh) {
 static uint8_t
 prv_check_crc(lwgps_t* gh) {
     uint8_t crc;
-    crc = (uint8_t)((CHTN(gh->p.term_str[0]) & 0x0F) << 0x04) | (CHTN(gh->p.term_str[1]) & 0x0F);   /* Convert received CRC from string (hex) to number */
-    return gh->p.crc_calc == crc;               /* They must match! */
+    crc = (uint8_t)((CHTN(gh->p.term_str[0]) & 0x0F) << 0x04)
+          | (CHTN(gh->p.term_str[1]) & 0x0F); /* Convert received CRC from string (hex) to number */
+    return gh->p.crc_calc == crc;             /* They must match! */
 }
+#else
+#define prv_check_crc(_gh) (1)
+#endif /* LWGPS_CFG_CRC */
 
 /**
  * \brief           Copy temporary memory to user memory
@@ -426,7 +410,7 @@ prv_copy_from_tmp_memory(lwgps_t* gh) {
  */
 uint8_t
 lwgps_init(lwgps_t* gh) {
-    memset(gh, 0x00, sizeof(*gh));              /* Reset structure */
+    memset(gh, 0x00, sizeof(*gh)); /* Reset structure */
     return 1;
 }
 
@@ -442,27 +426,27 @@ lwgps_init(lwgps_t* gh) {
 uint8_t
 #if LWGPS_CFG_STATUS || __DOXYGEN__
 lwgps_process(lwgps_t* gh, const void* data, size_t len, lwgps_process_fn evt_fn) {
-#else /* LWGPS_CFG_STATUS */
+#else  /* LWGPS_CFG_STATUS */
 lwgps_process(lwgps_t* gh, const void* data, size_t len) {
 #endif /* !LWGPS_CFG_STATUS */
     const uint8_t* d = data;
 
-    for (; len > 0; ++d, --len) {               /* Process all bytes */
-        if (*d == '$') {                        /* Check for beginning of NMEA line */
-            memset(&gh->p, 0x00, sizeof(gh->p));/* Reset private memory */
-            TERM_ADD(gh, *d);                   /* Add character to term */
-        } else if (*d == ',') {                 /* Term separator character */
-            prv_parse_term(gh);                 /* Parse term we have currently in memory */
-            CRC_ADD(gh, *d);                    /* Add character to CRC computation */
-            TERM_NEXT(gh);                      /* Start with next term */
-        } else if (*d == '*') {                 /* Start indicates end of data for CRC computation */
-            prv_parse_term(gh);                 /* Parse term we have currently in memory */
-            gh->p.star = 1;                     /* STAR detected */
-            TERM_NEXT(gh);                      /* Start with next term */
+    for (; len > 0; ++d, --len) {                /* Process all bytes */
+        if (*d == '$') {                         /* Check for beginning of NMEA line */
+            memset(&gh->p, 0x00, sizeof(gh->p)); /* Reset private memory */
+            TERM_ADD(gh, *d);                    /* Add character to term */
+        } else if (*d == ',') {                  /* Term separator character */
+            prv_parse_term(gh);                  /* Parse term we have currently in memory */
+            CRC_ADD(gh, *d);                     /* Add character to CRC computation */
+            TERM_NEXT(gh);                       /* Start with next term */
+        } else if (*d == '*') {                  /* Start indicates end of data for CRC computation */
+            prv_parse_term(gh);                  /* Parse term we have currently in memory */
+            gh->p.star = 1;                      /* STAR detected */
+            TERM_NEXT(gh);                       /* Start with next term */
         } else if (*d == '\r') {
-            if (prv_check_crc(gh)) {            /* Check for CRC result */
+            if (prv_check_crc(gh)) { /* Check for CRC result */
                 /* CRC is OK, in theory we can copy data from statements to user data */
-                prv_copy_from_tmp_memory(gh);   /* Copy memory from temporary to user memory */
+                prv_copy_from_tmp_memory(gh); /* Copy memory from temporary to user memory */
 #if LWGPS_CFG_STATUS
                 if (evt_fn != NULL) {
                     evt_fn(gh->p.stat);
@@ -472,14 +456,16 @@ lwgps_process(lwgps_t* gh, const void* data, size_t len) {
 #endif /* LWGPS_CFG_STATUS */
             }
         } else {
-            if (!gh->p.star) {                  /* Add to CRC only if star not yet detected */
-                CRC_ADD(gh, *d);                /* Add to CRC */
+            if (!gh->p.star) {   /* Add to CRC only if star not yet detected */
+                CRC_ADD(gh, *d); /* Add to CRC */
             }
-            TERM_ADD(gh, *d);                   /* Add character to term */
+            TERM_ADD(gh, *d); /* Add character to term */
         }
     }
     return 1;
 }
+
+#if LWESP_CFG_DISTANCE_BEARING || __DOXYGEN__
 
 /**
  * \brief           Calculate distance and bearing between `2` latitude and longitude coordinates
@@ -492,7 +478,8 @@ lwgps_process(lwgps_t* gh, const void* data, size_t len) {
  * \return          `1` on success, `0` otherwise
  */
 uint8_t
-lwgps_distance_bearing(lwgps_float_t las, lwgps_float_t los, lwgps_float_t lae, lwgps_float_t loe, lwgps_float_t* d, lwgps_float_t* b) {
+lwgps_distance_bearing(lwgps_float_t las, lwgps_float_t los, lwgps_float_t lae, lwgps_float_t loe, lwgps_float_t* d,
+                       lwgps_float_t* b) {
     lwgps_float_t df, dfi, a;
 
     if (d == NULL && b == NULL) {
@@ -520,7 +507,7 @@ lwgps_distance_bearing(lwgps_float_t las, lwgps_float_t los, lwgps_float_t lae, 
 #if LWGPS_CFG_DOUBLE
         a = FLT(sin(df * 0.5) * sin(df * 0.5) + sin(dfi * 0.5) * sin(dfi * 0.5) * cos(las) * cos(lae));
         *d = FLT(EARTH_RADIUS * 2.0 * atan2(sqrt(a), sqrt(1.0 - a)) * 1000.0);
-#else /* LWGPS_CFG_DOUBLE */
+#else  /* LWGPS_CFG_DOUBLE */
         a = FLT(sinf(df * 0.5f) * sinf(df * 0.5f) + sinf(dfi * 0.5f) * sinf(dfi * 0.5f) * cosf(las) * cosf(lae));
         *d = FLT(EARTH_RADIUS * 2.0f * atan2f(sqrtf(a), sqrtf(1.0f - a)) * 1000.0f);
 #endif /* !LWGPS_CFG_DOUBLE */
@@ -544,19 +531,21 @@ lwgps_distance_bearing(lwgps_float_t las, lwgps_float_t los, lwgps_float_t lae, 
         df = FLT(sin(loe - los) * cos(lae));
         dfi = FLT(cos(las) * sin(lae) - sin(las) * cos(lae) * cos(loe - los));
 
-        *b = R2D(atan2(df, dfi));               /* Calculate bearing and convert to degrees */
-#else /* LWGPS_CFG_DOUBLE */
+        *b = R2D(atan2(df, dfi)); /* Calculate bearing and convert to degrees */
+#else                             /* LWGPS_CFG_DOUBLE */
         df = FLT(sinf(loe - los) * cosf(lae));
         dfi = FLT(cosf(las) * sinf(lae) - sinf(las) * cosf(lae) * cosf(loe - los));
 
-        *b = R2D(atan2f(df, dfi));              /* Calculate bearing and convert to degrees */
-#endif /* !LWGPS_CFG_DOUBLE */
-        if (*b < 0) {                           /* Check for negative angle */
-            *b += FLT(360);                     /* Make bearing always positive */
+        *b = R2D(atan2f(df, dfi)); /* Calculate bearing and convert to degrees */
+#endif                            /* !LWGPS_CFG_DOUBLE */
+        if (*b < 0) {             /* Check for negative angle */
+            *b += FLT(360);       /* Make bearing always positive */
         }
     }
     return 1;
 }
+
+#endif /* LWESP_CFG_DISTANCE_BEARING || __DOXYGEN__ */
 
 /**
  * \brief           Convert NMEA GPS speed (in knots = nautical mile per hour) to different speed format
@@ -567,40 +556,21 @@ lwgps_distance_bearing(lwgps_float_t las, lwgps_float_t los, lwgps_float_t lae, 
 lwgps_float_t
 lwgps_to_speed(lwgps_float_t sik, lwgps_speed_t ts) {
     switch (ts) {
-        case lwgps_speed_kps:
-            return FLT(sik * FLT(0.000514));
-        case lwgps_speed_kph:
-            return FLT(sik * FLT(1.852));
-        case lwgps_speed_mps:
-            return FLT(sik * FLT(0.5144));
-        case lwgps_speed_mpm:
-            return FLT(sik * FLT(30.87));
-
-        case lwgps_speed_mips:
-            return FLT(sik * FLT(0.0003197));
-        case lwgps_speed_mph:
-            return FLT(sik * FLT(1.151));
-        case lwgps_speed_fps:
-            return FLT(sik * FLT(1.688));
-        case lwgps_speed_fpm:
-            return FLT(sik * FLT(101.3));
-
-        case lwgps_speed_mpk:
-            return FLT(sik * FLT(32.4));
-        case lwgps_speed_spk:
-            return FLT(sik * FLT(1944.0));
-        case lwgps_speed_sp100m:
-            return FLT(sik * FLT(194.4));
-        case lwgps_speed_mipm:
-            return FLT(sik * FLT(52.14));
-        case lwgps_speed_spm:
-            return FLT(sik * FLT(3128.0));
-        case lwgps_speed_sp100y:
-            return FLT(sik * FLT(177.7));
-
-        case lwgps_speed_smph:
-            return FLT(sik * FLT(1.0));
-        default:
-            return 0;
+        case LWGPS_SPEED_KPS: return FLT(sik * FLT(0.000514));
+        case LWGPS_SPEED_KPH: return FLT(sik * FLT(1.852));
+        case LWGPS_SPEED_MPS: return FLT(sik * FLT(0.5144));
+        case LWGPS_SPEED_MPM: return FLT(sik * FLT(30.87));
+        case LWGPS_SPEED_MIPS: return FLT(sik * FLT(0.0003197));
+        case LWGPS_SPEED_MPH: return FLT(sik * FLT(1.151));
+        case LWGPS_SPEED_FPS: return FLT(sik * FLT(1.688));
+        case LWGPS_SPEED_FPM: return FLT(sik * FLT(101.3));
+        case LWGPS_SPEED_MPK: return FLT(sik * FLT(32.4));
+        case LWGPS_SPEED_SPK: return FLT(sik * FLT(1944.0));
+        case LWGPS_SPEED_SP100M: return FLT(sik * FLT(194.4));
+        case LWGPS_SPEED_MIPM: return FLT(sik * FLT(52.14));
+        case LWGPS_SPEED_SPM: return FLT(sik * FLT(3128.0));
+        case LWGPS_SPEED_SP100Y: return FLT(sik * FLT(177.7));
+        case LWGPS_SPEED_SMPH: return FLT(sik * FLT(1.0));
+        default: return 0;
     }
 }

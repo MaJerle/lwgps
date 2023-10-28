@@ -2,8 +2,8 @@
  * This example uses direct processing function,
  * to process dummy NMEA data from GPS receiver
  */
-#include <string.h>
 #include <stdio.h>
+#include <string.h>
 #include "lwgps/lwgps.h"
 #include "test_common.h"
 
@@ -13,21 +13,20 @@ lwgps_t hgps;
 /**
  * \brief           Dummy data from GPS receiver
  */
-const char
-gps_rx_data[] = ""
-                "$GPRMC,183729,A,3907.356,N,12102.482,W,000.0,360.0,080301,015.5,E*6F\r\n"
-                "$GPGGA,183730,3907.356,N,12102.482,W,1,05,1.6,646.4,M,-24.1,M,,*75\r\n"
-                "$GPGSA,A,3,02,,,07,,09,24,26,,,,,1.6,1.6,1.0*3D\r\n"
-                "$GPGSV,2,1,08,02,43,088,38,04,42,145,00,05,11,291,00,07,60,043,35*71\r\n"
-                "$GPGSV,2,2,08,08,02,145,00,09,46,303,47,24,16,178,32,26,18,231,43*77\r\n"
-                "";
+const char gps_rx_data[] = ""
+                           "$GPRMC,183729,A,3907.356,N,12102.482,W,000.0,360.0,080301,015.5,E*6F\r\n"
+                           "$GPGGA,183730,3907.356,N,12102.482,W,1,05,1.6,646.4,M,-24.1,M,,*75\r\n"
+                           "$GPGSA,A,3,02,,,07,,09,24,26,,,,,1.6,1.6,1.0*3D\r\n"
+                           "$GPGSV,2,1,08,02,43,088,38,04,42,145,00,05,11,291,00,07,60,043,35*71\r\n"
+                           "$GPGSV,2,2,08,08,02,145,00,09,46,303,47,24,16,178,32,26,18,231,43*77\r\n"
+                           "";
 
 /**
  * \brief           Run the test of raw input data
  */
 void
 run_tests() {
-    lwgps_init(&hgps);                          /* Init GPS */
+    lwgps_init(&hgps); /* Init GPS */
 
     /* Process all input data */
     lwgps_process(&hgps, gps_rx_data, strlen(gps_rx_data));

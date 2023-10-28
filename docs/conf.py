@@ -23,30 +23,46 @@ subprocess.call('doxygen doxyfile.doxy', shell=True)
 # -- Project information -----------------------------------------------------
 
 project = 'LwGPS'
-copyright = '2020, Tilen MAJERLE'
+copyright = '2023, Tilen MAJERLE'
 author = 'Tilen MAJERLE'
-
-# The full version, including alpha/beta/rc tags
-version = '2.1.0'
 
 # Try to get branch at which this is running
 # and try to determine which version to display in sphinx
+# Version is using git tag if on master/main or "latest-develop" if on develop branch
+version = ''
 git_branch = ''
+
+def cmd_exec_print(t):
+    print("cmd > ", t, "\n", os.popen(t).read().strip(), "\n")
+
+# Print demo data here
+cmd_exec_print('git branch')
+cmd_exec_print('git describe')
+cmd_exec_print('git describe --tags')
+cmd_exec_print('git describe --tags --abbrev=0')
+cmd_exec_print('git describe --tags --abbrev=1')
+
+# Get current branch
 res = os.popen('git branch').read().strip()
 for line in res.split("\n"):
     if line[0] == '*':
         git_branch = line[1:].strip()
 
 # Decision for display version
-try:
-    if git_branch.index('develop') >= 0:
-        version = "latest-develop"
-except Exception:
-    print("Exception for index check")
+git_branch = git_branch.replace('(HEAD detached at ', '').replace(')', '')
+if git_branch.find('master') >= 0 or git_branch.find('main') >= 0:
+    #version = os.popen('git describe --tags --abbrev=0').read().strip()
+    version = 'latest-stable'
+elif git_branch.find('develop-') >= 0 or git_branch.find('develop/') >= 0:
+    version = 'branch-' + git_branch
+elif git_branch == 'develop' or git_branch == 'origin/develop':
+    version = 'latest-develop'
+else:
+    version = os.popen('git describe --tags --abbrev=0').read().strip()
 
-# For debugging purpose
+# For debugging purpose only
 print("GIT BRANCH: " + git_branch)
-print("VERSION: " + version)
+print("PROJ VERSION: " + version)
 
 # -- General configuration ---------------------------------------------------
 
@@ -99,7 +115,7 @@ html_theme_options = {
     'includehidden': True,
     'titles_only': False
 }
-html_logo = 'static/images/logo_tm.png'
+html_logo = 'static/images/logo.svg'
 github_url = 'https://github.com/MaJerle/lwgps'
 html_baseurl = 'https://docs.majerle.eu/projects/lwgps/'
 
@@ -110,20 +126,19 @@ html_static_path = ['static']
 html_css_files = [
     'css/common.css',
     'css/custom.css',
+    'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css',
 ]
 html_js_files = [
-    'https://kit.fontawesome.com/3102794088.js'
+    ''
 ]
 
+# Master index file
 master_doc = 'index'
 
-#
-# Breathe configuration
-#
-#
-#
+# --- Breathe configuration -----------------------------------------------------
 breathe_projects = {
 	"lwgps": "_build/xml/"
 }
 breathe_default_project = "lwgps"
 breathe_default_members = ('members', 'undoc-members')
+breathe_show_enumvalue_initializer = True
