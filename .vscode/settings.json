@@ -4,7 +4,11 @@
         "lwevt_type.h": "c",
         "lwevt.h": "c",
         "string.h": "c",
-        "lwevt_opt.h": "c"
+        "lwevt_opt.h": "c",
+        "stdlib.h": "c",
+        "lwgps.h": "c",
+        "lwgps_opt.h": "c"
     },
-    "esbonio.sphinx.confDir": ""
+    "esbonio.sphinx.confDir": "",
+    "C_Cpp.codeAnalysis.clangTidy.useBuildPath": true
 }

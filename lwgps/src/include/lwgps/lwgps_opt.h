@@ -176,6 +176,24 @@ extern "C" {
 #define LWESP_CFG_DISTANCE_BEARING 1
 #endif
 
+/**
+ * \brief           Memory set function
+ * 
+ * \note            Function footprint is the same as \ref memset
+ */
+#ifndef LWGPS_MEMSET
+#define LWGPS_MEMSET(dst, val, len) memset((dst), (val), (len))
+#endif
+
+/**
+ * \brief           Memory copy function
+ * 
+ * \note            Function footprint is the same as \ref memcpy
+ */
+#ifndef LWGPS_MEMCPY
+#define LWGPS_MEMCPY(dst, src, len) memcpy((dst), (src), (len))
+#endif
+
 /* Guard against accidental parser breakage */
 #if LWGPS_CFG_STATEMENT_PUBX_TIME && !LWGPS_CFG_STATEMENT_PUBX
 #error LWGPS_CFG_STATEMENT_PUBX must be enabled when enabling LWGPS_CFG_STATEMENT_PUBX_TIME
