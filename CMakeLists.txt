@@ -36,6 +36,7 @@ else()
     )
 
     # Add subdir with lwgps and link to project
+    set(LWGPS_OPTS_DIR ${CMAKE_CURRENT_LIST_DIR}/dev)
     add_subdirectory(lwgps)
     target_link_libraries(${PROJECT_NAME} lwgps)
 endif()
