@@ -159,7 +159,7 @@ prv_parse_lat_long(lwgps_t* ghandle) {
     llong = prv_parse_float_number(ghandle, NULL); /* Parse value as double */
     deg = FLT((int)((int)llong / 100));            /* Get absolute degrees value, interested in integer part only */
     min = llong - (deg * FLT(100));                /* Get remaining part from full number, minutes */
-    llong = deg + (min / FLT(60.0));               /* Calculate latitude/longitude */
+    llong = deg + (min / FLT(60));                 /* Calculate latitude/longitude */
 
     return llong;
 }
