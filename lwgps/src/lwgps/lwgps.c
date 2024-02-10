@@ -74,6 +74,15 @@
  * \param[in]       ghandle: GPS handle
  * \param[in]       text: Text to parse. Set to `NULL` to parse current GPS term
  * \return          Parsed integer
+ * 
+ * \note            \ref result from this function is never used in the library
+ *                  to perform array access or even allocate any memory.
+ *                  Some reports have been triggered about *CWE-190*,
+ *                  which does not have negative effects in this particular use case.
+ * 
+ *                  Security attacks with invalid input data may trigger 
+ *                  overflow in the number, which will later be used wrongly in the application,
+ *                  but never inside the library itself.
  */
 static int32_t
 prv_parse_number(lwgps_t* ghandle, const char* text) {
@@ -97,6 +106,15 @@ prv_parse_number(lwgps_t* ghandle, const char* text) {
  * \param[in]       ghandle: GPS handle
  * \param[in]       text: Text to parse. Set to `NULL` to parse current GPS term
  * \return          Parsed double in \ref lwgps_float_t format
+ * 
+ * \note            \ref result from this function is never used in the library
+ *                  to perform array access or even allocate any memory.
+ *                  Some reports have been triggered about *CWE-190*,
+ *                  which does not have negative effects in this particular use case.
+ * 
+ *                  Security attacks with invalid input data may trigger 
+ *                  overflow in the number, which will later be used wrongly in the application,
+ *                  but never inside the library itself.
  */
 static lwgps_float_t
 prv_parse_float_number(lwgps_t* ghandle, const char* text) {
