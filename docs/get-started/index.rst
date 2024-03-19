@@ -89,8 +89,8 @@ and it should be copied (or simply renamed in-place) and named ``lwgps_opts.h``
     include paths have access to it by using ``#include "lwgps_opts.h"``.
 
 .. tip::
-    If you are using *CMake* build system, define the variable ``LWGPS_OPTS_DIR`` before adding library's directory to the *CMake* project.
-    Variable must set the output directory path. CMake will copy the template file there, and name it as required.
+    If you are using *CMake* build system, define the variable ``LWGPS_OPTS_FILE`` before adding library's directory to the *CMake* project.
+    Variable must contain the path to the user options file. If not provided, one will be generated in the build directory.
 
 Configuration options list is available available in the :ref:`api_lwgps_opt` section.
 If any option is about to be modified, it should be done in configuration file
