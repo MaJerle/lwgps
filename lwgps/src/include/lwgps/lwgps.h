@@ -98,6 +98,7 @@ typedef struct {
     uint8_t hours;           /*!< Hours in UTC */
     uint8_t minutes;         /*!< Minutes in UTC */
     uint8_t seconds;         /*!< Seconds in UTC */
+    lwgps_float_t dgps_age;  /*!< Age of DGPS correction data (in seconds) */
 #endif                       /* LWGPS_CFG_STATEMENT_GPGGA || __DOXYGEN__ */
 
 #if LWGPS_CFG_STATEMENT_GPGSA || __DOXYGEN__
@@ -176,6 +177,7 @@ typedef struct {
                 uint8_t hours;   /*!< Current UTC hours */
                 uint8_t minutes; /*!< Current UTC minutes */
                 uint8_t seconds; /*!< Current UTC seconds */
+                lwgps_float_t dgps_age; /*!< Age of DGPS correction data (in seconds) */
             } gga;               /*!< GPGGA message */
 #endif                           /* LWGPS_CFG_STATEMENT_GPGGA */
 #if LWGPS_CFG_STATEMENT_GPGSA

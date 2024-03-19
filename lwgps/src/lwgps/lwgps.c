@@ -233,6 +233,9 @@ prv_parse_term(lwgps_t* ghandle) {
             case 11: /* Altitude above ellipsoid */
                 ghandle->p.data.gga.geo_sep = prv_parse_float_number(ghandle, NULL);
                 break;
+            case 13: /* Age of differential GPS correction data */
+                ghandle->p.data.gga.dgps_age = prv_parse_float_number(ghandle, NULL);
+                break;
             default: break;
         }
 #endif /* LWGPS_CFG_STATEMENT_GPGGA */
@@ -394,6 +397,7 @@ prv_copy_from_tmp_memory(lwgps_t* ghandle) {
         ghandle->hours = ghandle->p.data.gga.hours;
         ghandle->minutes = ghandle->p.data.gga.minutes;
         ghandle->seconds = ghandle->p.data.gga.seconds;
+        ghandle->dgps_age = ghandle->p.data.gga.dgps_age;
 #endif /* LWGPS_CFG_STATEMENT_GPGGA */
 #if LWGPS_CFG_STATEMENT_GPGSA
     } else if (ghandle->p.stat == STAT_GSA) {
