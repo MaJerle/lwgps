@@ -2,6 +2,8 @@
 
 ## Develop
 
+- Add support for differential GPS last time
+
 ## v2.2.0
 
 - Split `CMakeLists.txt` files between library and executable
