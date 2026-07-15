@@ -30,6 +30,9 @@ const char gps_rx_data_A[] = ""
 const char gps_rx_data_B[] = ""
                              "$PUBX,04,200714.00,230320,158834.00,2098,18,536057,257.043,16*12\r\n"
                              "";
+const char gps_rx_data_C[] = ""
+                             "$PUBX,04,1,2,0,0,3,0,0,0*37\r\n"
+                             "";
 
 /**
  * \brief           Run the test of raw input data
@@ -69,6 +72,17 @@ test_run(void) {
     RUN_TEST(INT_IS_EQUAL(hgps.clk_bias, 536057));
     RUN_TEST(FLT_IS_EQUAL(hgps.clk_drift, 257.043));
     RUN_TEST(INT_IS_EQUAL(hgps.tp_gran, 16));
+
+    /* Process and test truncated time, date, and leap-second fields */
+    lwgps_process(&hgps, gps_rx_data_C, strlen(gps_rx_data_C));
+
+    RUN_TEST(INT_IS_EQUAL(hgps.hours, 0));
+    RUN_TEST(INT_IS_EQUAL(hgps.minutes, 0));
+    RUN_TEST(INT_IS_EQUAL(hgps.seconds, 0));
+    RUN_TEST(INT_IS_EQUAL(hgps.date, 0));
+    RUN_TEST(INT_IS_EQUAL(hgps.month, 0));
+    RUN_TEST(INT_IS_EQUAL(hgps.year, 0));
+    RUN_TEST(INT_IS_EQUAL(hgps.leap_sec, 0));
 
     return 0;
 }
