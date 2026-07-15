@@ -359,14 +359,26 @@ prv_parse_term(lwgps_t* ghandle) {
     } else if (ghandle->p.stat == STAT_UBX_TIME) { /* Process PUBX (uBlox) TIME statement */
         switch (ghandle->p.term_num) {
             case 2: /* Process UTC time; ignore fractions of seconds */
-                ghandle->p.data.time.hours = 10U * CTN(ghandle->p.term_str[0]) + CTN(ghandle->p.term_str[1]);
-                ghandle->p.data.time.minutes = 10U * CTN(ghandle->p.term_str[2]) + CTN(ghandle->p.term_str[3]);
-                ghandle->p.data.time.seconds = 10U * CTN(ghandle->p.term_str[4]) + CTN(ghandle->p.term_str[5]);
+                if (ghandle->p.term_pos >= 6) {
+                    ghandle->p.data.time.hours = 10U * CTN(ghandle->p.term_str[0]) + CTN(ghandle->p.term_str[1]);
+                    ghandle->p.data.time.minutes = 10U * CTN(ghandle->p.term_str[2]) + CTN(ghandle->p.term_str[3]);
+                    ghandle->p.data.time.seconds = 10U * CTN(ghandle->p.term_str[4]) + CTN(ghandle->p.term_str[5]);
+                } else {
+                    ghandle->p.data.time.hours = 0;
+                    ghandle->p.data.time.minutes = 0;
+                    ghandle->p.data.time.seconds = 0;
+                }
                 break;
             case 3: /* Process UTC date */
-                ghandle->p.data.time.date = 10U * CTN(ghandle->p.term_str[0]) + CTN(ghandle->p.term_str[1]);
-                ghandle->p.data.time.month = 10U * CTN(ghandle->p.term_str[2]) + CTN(ghandle->p.term_str[3]);
-                ghandle->p.data.time.year = 10U * CTN(ghandle->p.term_str[4]) + CTN(ghandle->p.term_str[5]);
+                if (ghandle->p.term_pos >= 6) {
+                    ghandle->p.data.time.date = 10U * CTN(ghandle->p.term_str[0]) + CTN(ghandle->p.term_str[1]);
+                    ghandle->p.data.time.month = 10U * CTN(ghandle->p.term_str[2]) + CTN(ghandle->p.term_str[3]);
+                    ghandle->p.data.time.year = 10U * CTN(ghandle->p.term_str[4]) + CTN(ghandle->p.term_str[5]);
+                } else {
+                    ghandle->p.data.time.date = 0;
+                    ghandle->p.data.time.month = 0;
+                    ghandle->p.data.time.year = 0;
+                }
                 break;
             case 4: /* Process UTC TimeOfWeek */
                 ghandle->p.data.time.utc_tow = prv_parse_float_number(ghandle, NULL);
@@ -377,7 +389,9 @@ prv_parse_term(lwgps_t* ghandle) {
 				 * Accomodate a 2- or 3-digit leap second count
                  * a trailing 'D' means this is the firmware's default value.
                  */
-                if (ghandle->p.term_str[2] == 'D' || ghandle->p.term_str[2] == '\0') {
+                if (ghandle->p.term_pos < 2) {
+                    ghandle->p.data.time.leap_sec = 0;
+                } else if (ghandle->p.term_str[2] == 'D' || ghandle->p.term_str[2] == '\0') {
                     ghandle->p.data.time.leap_sec = 10U * CTN(ghandle->p.term_str[0]) + CTN(ghandle->p.term_str[1]);
                 } else {
                     ghandle->p.data.time.leap_sec = 100U * CTN(ghandle->p.term_str[0])
