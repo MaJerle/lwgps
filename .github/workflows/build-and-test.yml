@@ -1,4 +1,4 @@
-name: Windows CMake Build & Test
+name: CMake Build & Test
 
 on:
   push:
@@ -11,17 +11,14 @@ on:
 
 jobs:
   build:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Install MinGW
-        run: |
-          choco install mingw --version=12.2.0 -y
-          echo "C:\ProgramData\chocolatey\lib\mingw\tools\install\mingw64\bin" >> $GITHUB_PATH
-          gcc --version
+      - name: Install Ninja
+        run: sudo apt-get update && sudo apt-get install -y ninja-build
 
       - name: Run Tests
         working-directory: tests
