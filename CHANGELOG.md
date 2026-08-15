@@ -2,6 +2,8 @@
 
 ## Develop
 
+## v2.4.0
+
 - Fix `LWESP_CFG_DISTANCE_BEARING` misnamed config option, renamed to `LWGPS_CFG_DISTANCE_BEARING`
 - Add `GCC-Debug` CMake preset for native builds
 - Guard `lwgps_distance_bearing` declaration with `LWGPS_CFG_DISTANCE_BEARING` to match its definition

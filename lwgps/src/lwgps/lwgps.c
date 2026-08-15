@@ -29,7 +29,7 @@
  * This file is part of LwGPS - Lightweight GPS NMEA parser library.
  *
  * Author:          Tilen MAJERLE <tilen@majerle.eu>
- * Version:         v2.3.0
+ * Version:         v2.4.0
  */
 #include <stdlib.h>
 #include <string.h>
@@ -173,26 +173,22 @@ prv_parse_term(lwgps_t* ghandle) {
     if (ghandle->p.term_num == 0) { /* Check string type */
         if (0) {
 #if LWGPS_CFG_STATEMENT_GPGGA
-        } else if (ghandle->p.term_str[0] == '$'
-                   && (ghandle->p.term_str[1] == 'G' || ghandle->p.term_str[1] == 'B')
+        } else if (ghandle->p.term_str[0] == '$' && (ghandle->p.term_str[1] == 'G' || ghandle->p.term_str[1] == 'B')
                    && !strncmp(&ghandle->p.term_str[3], "GGA", 3)) {
             ghandle->p.stat = STAT_GGA;
 #endif /* LWGPS_CFG_STATEMENT_GPGGA */
 #if LWGPS_CFG_STATEMENT_GPGSA
-        } else if (ghandle->p.term_str[0] == '$'
-                   && (ghandle->p.term_str[1] == 'G' || ghandle->p.term_str[1] == 'B')
+        } else if (ghandle->p.term_str[0] == '$' && (ghandle->p.term_str[1] == 'G' || ghandle->p.term_str[1] == 'B')
                    && !strncmp(&ghandle->p.term_str[3], "GSA", 3)) {
             ghandle->p.stat = STAT_GSA;
 #endif /* LWGPS_CFG_STATEMENT_GPGSA */
 #if LWGPS_CFG_STATEMENT_GPGSV
-        } else if (ghandle->p.term_str[0] == '$'
-                   && (ghandle->p.term_str[1] == 'G' || ghandle->p.term_str[1] == 'B')
+        } else if (ghandle->p.term_str[0] == '$' && (ghandle->p.term_str[1] == 'G' || ghandle->p.term_str[1] == 'B')
                    && !strncmp(&ghandle->p.term_str[3], "GSV", 3)) {
             ghandle->p.stat = STAT_GSV;
 #endif /* LWGPS_CFG_STATEMENT_GPGSV */
 #if LWGPS_CFG_STATEMENT_GPRMC
-        } else if (ghandle->p.term_str[0] == '$'
-                   && (ghandle->p.term_str[1] == 'G' || ghandle->p.term_str[1] == 'B')
+        } else if (ghandle->p.term_str[0] == '$' && (ghandle->p.term_str[1] == 'G' || ghandle->p.term_str[1] == 'B')
                    && !strncmp(&ghandle->p.term_str[3], "RMC", 3)) {
             ghandle->p.stat = STAT_RMC;
 #endif /* LWGPS_CFG_STATEMENT_GPRMC */

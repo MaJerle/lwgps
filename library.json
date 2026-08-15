@@ -1,6 +1,6 @@
 {
     "name": "LwGPS",
-    "version": "2.3.0",
+    "version": "2.4.0",
     "description": "Lightweight GPS NMEA statement parser for embedded systems",
     "keywords": "lwgps, global, position, satellite, glonass, gps, altitude, embedded, platform, independent",
     "repository": {
