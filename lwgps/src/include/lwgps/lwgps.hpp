@@ -86,7 +86,7 @@ class Lwgps {
         );
     }
 
-#if LWESP_CFG_DISTANCE_BEARING || __DOXYGEN__
+#if LWGPS_CFG_DISTANCE_BEARING || __DOXYGEN__
 
     /**
      * \brief           Calculate distance and bearing between `2` latitude and longitude coordinates
@@ -103,7 +103,7 @@ class Lwgps {
                      lwgps_float_t* b) {
         return lwgps_distance_bearing(las, los, lae, loe, d, b);
     }
-#endif /* LWESP_CFG_DISTANCE_BEARING || __DOXYGEN__ */
+#endif /* LWGPS_CFG_DISTANCE_BEARING || __DOXYGEN__ */
 
     /**
      * \brief           Convert NMEA GPS speed (in knots = nautical mile per hour) to different speed format

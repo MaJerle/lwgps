@@ -183,8 +183,8 @@ extern "C" {
  *
  * \note            When not enabled, corresponding function is disabled
  */
-#ifndef LWESP_CFG_DISTANCE_BEARING
-#define LWESP_CFG_DISTANCE_BEARING 1
+#ifndef LWGPS_CFG_DISTANCE_BEARING
+#define LWGPS_CFG_DISTANCE_BEARING 1
 #endif
 
 /**
