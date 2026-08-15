@@ -5,6 +5,7 @@
 - Fix `LWESP_CFG_DISTANCE_BEARING` misnamed config option, renamed to `LWGPS_CFG_DISTANCE_BEARING`
 - Add `GCC-Debug` CMake preset for native builds
 - Guard `lwgps_distance_bearing` declaration with `LWGPS_CFG_DISTANCE_BEARING` to match its definition
+- Fix GSV cycle boundary detection so a single corrupted non-GSV sentence can no longer leave stale satellite data from the previous epoch mixed into the next one
 
 ## v2.3.0
 

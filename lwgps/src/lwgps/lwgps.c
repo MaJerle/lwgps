@@ -203,6 +203,18 @@ prv_parse_term(lwgps_t* ghandle) {
         } else {
             ghandle->p.stat = STAT_UNKNOWN; /* Invalid statement for library */
         }
+#if LWGPS_CFG_STATEMENT_GPGSV
+        /*
+         * End GSV cycle as soon as any other statement type is recognized, even if
+         * this statement's checksum later turns out to be invalid. Detecting this
+         * here (rather than only after a checksum-verified copy) means a single
+         * corrupted non-GSV sentence can't leave the cycle stuck "active" and bleed
+         * a stale satellite offset into the next epoch.
+         */
+        if (ghandle->p.stat != STAT_GSV) {
+            ghandle->gsv_cycle_active = 0;
+        }
+#endif /* LWGPS_CFG_STATEMENT_GPGSV */
         return 1;
     }
 
@@ -440,12 +452,6 @@ prv_check_crc(lwgps_t* ghandle) {
  */
 static uint8_t
 prv_copy_from_tmp_memory(lwgps_t* ghandle) {
-#if LWGPS_CFG_STATEMENT_GPGSV
-    /* End GSV cycle when a non-GSV sentence completes */
-    if (ghandle->p.stat != STAT_GSV && ghandle->gsv_cycle_active) {
-        ghandle->gsv_cycle_active = 0;
-    }
-#endif /* LWGPS_CFG_STATEMENT_GPGSV */
     if (0) {
 #if LWGPS_CFG_STATEMENT_GPGGA
     } else if (ghandle->p.stat == STAT_GGA) {
