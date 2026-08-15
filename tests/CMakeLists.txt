@@ -4,11 +4,13 @@ cmake_minimum_required(VERSION 3.22)
 project(LwLibPROJECT)
 
 # Set default compile flags for GCC
-if(CMAKE_COMPILER_IS_GNUCXX)
+if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
     message(STATUS "GCC detected, adding compile flags")
-    set(CMAKE_C_FLAGS "${CMAKE_CXX_FLAGS} -pedantic -Wall -Wextra")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pedantic -Wall -Wextra")
-endif(CMAKE_COMPILER_IS_GNUCXX)
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Wpedantic")
+endif()
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wpedantic")
+endif()
 
 enable_testing()
 add_executable(${CMAKE_PROJECT_NAME})
