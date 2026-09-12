@@ -16,7 +16,7 @@ LwGPS is lightweight, platform independent library to parse NMEA statements from
 Features
 ^^^^^^^^
 
-* Written in C (C11), compatible with `stdint.h` for size data types
+* Written in C (C11), compatible with ``stdint.h`` data types
 * Platform independent, easy to use
 * Built-in support for 4 GPS statements
 

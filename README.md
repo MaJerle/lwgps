@@ -6,7 +6,7 @@ Platform independent all-constellation GNSS NMEA parser for embedded systems.
 
 ## Features
 
-* Written in C (C11), compatible with `stdint.h` for size data types
+* Written in C (C11), compatible with `stdint.h` data types
 * Platform independent, easy to use
 * Built-in support for all-constellation GNSS statements
     * ``GPGGA``, ``G*GGA`` or ``GNGGA``: GNSS fix data
