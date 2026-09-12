@@ -2,7 +2,7 @@
 
 Platform independent all-constellation GNSS NMEA parser for embedded systems.
 
-<h3>Read first: <a href="http://docs.majerle.eu/projects/lwgps/">Documentation</a></h3>
+[Open documentation](https://docs.majerle.eu/projects/lwgps/)
 
 ## Features
 
