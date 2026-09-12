@@ -4,7 +4,7 @@
  */
 
 /*
- * Copyright (c) 2024 Tilen MAJERLE
+ * Copyright (c) 2026 Tilen MAJERLE
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -74,13 +74,13 @@
  * \param[in]       ghandle: GPS handle
  * \param[in]       text: Text to parse. Set to `NULL` to parse current GPS term
  * \return          Parsed integer
- * 
+ *
  * \note            \ref result from this function is never used in the library
  *                  to perform array access or even allocate any memory.
  *                  Some reports have been triggered about *CWE-190*,
  *                  which does not have negative effects in this particular use case.
- * 
- *                  Security attacks with invalid input data may trigger 
+ *
+ *                  Security attacks with invalid input data may trigger
  *                  overflow in the number, which will later be used wrongly in the application,
  *                  but never inside the library itself.
  */
@@ -106,13 +106,13 @@ prv_parse_number(lwgps_t* ghandle, const char* text) {
  * \param[in]       ghandle: GPS handle
  * \param[in]       text: Text to parse. Set to `NULL` to parse current GPS term
  * \return          Parsed double in \ref lwgps_float_t format
- * 
+ *
  * \note            \ref result from this function is never used in the library
  *                  to perform array access or even allocate any memory.
  *                  Some reports have been triggered about *CWE-190*,
  *                  which does not have negative effects in this particular use case.
- * 
- *                  Security attacks with invalid input data may trigger 
+ *
+ *                  Security attacks with invalid input data may trigger
  *                  overflow in the number, which will later be used wrongly in the application,
  *                  but never inside the library itself.
  */
@@ -269,8 +269,8 @@ prv_parse_term(lwgps_t* ghandle) {
             default:
                 /* Parse satellite IDs */
                 if (ghandle->p.term_num >= 3 && ghandle->p.term_num <= 14) {
-                    ghandle->p.data.gsa.satellites_ids[ghandle->p.term_num - 3] =
-                        (uint8_t)prv_parse_number(ghandle, NULL);
+                    ghandle->p.data.gsa.satellites_ids[ghandle->p.term_num - 3] = (uint8_t)prv_parse_number(ghandle,
+                                                                                                            NULL);
                 }
                 break;
         }
@@ -336,12 +336,12 @@ prv_parse_term(lwgps_t* ghandle) {
                 break;
             case 9: /* Process date */
                 if (ghandle->p.term_pos >= 6) {
-                    ghandle->p.data.rmc.date =
-                        (uint8_t)(10U * CTN(ghandle->p.term_str[0]) + CTN(ghandle->p.term_str[1]));
-                    ghandle->p.data.rmc.month =
-                        (uint8_t)(10U * CTN(ghandle->p.term_str[2]) + CTN(ghandle->p.term_str[3]));
-                    ghandle->p.data.rmc.year =
-                        (uint8_t)(10U * CTN(ghandle->p.term_str[4]) + CTN(ghandle->p.term_str[5]));
+                    ghandle->p.data.rmc.date = (uint8_t)(10U * CTN(ghandle->p.term_str[0])
+                                                         + CTN(ghandle->p.term_str[1]));
+                    ghandle->p.data.rmc.month = (uint8_t)(10U * CTN(ghandle->p.term_str[2])
+                                                          + CTN(ghandle->p.term_str[3]));
+                    ghandle->p.data.rmc.year = (uint8_t)(10U * CTN(ghandle->p.term_str[4])
+                                                         + CTN(ghandle->p.term_str[5]));
                     ghandle->p.data.rmc.date_valid = 1;
                 } else {
                     ghandle->p.data.rmc.date_valid = 0;
@@ -394,7 +394,7 @@ prv_parse_term(lwgps_t* ghandle) {
             case 5: /* Process UTC WeekNumber */ ghandle->p.data.time.utc_wk = prv_parse_number(ghandle, NULL); break;
             case 6: /* Process UTC leap seconds */
                 /*
-				 * Accomodate a 2- or 3-digit leap second count
+                 * Accomodate a 2- or 3-digit leap second count
                  * a trailing 'D' means this is the firmware's default value.
                  */
                 if (ghandle->p.term_pos < 2) {
@@ -580,7 +580,8 @@ lwgps_process(lwgps_t* ghandle, const void* data, size_t len) {
  * \param[in]       lae: Latitude end coordinate, in units of degrees
  * \param[in]       loe: Longitude end coordinate, in units of degrees
  * \param[out]      d: Pointer to output distance in units of meters
- * \param[out]      b: Pointer to output bearing between start and end coordinate in relation to north in units of degrees
+ * \param[out]      b: Pointer to output bearing between start and end coordinate in relation to north in units of
+ * degrees
  * \return          `1` on success, `0` otherwise
  */
 uint8_t

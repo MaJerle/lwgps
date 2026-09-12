@@ -4,7 +4,7 @@
  */
 
 /*
- * Copyright (c) 2024 Tilen MAJERLE
+ * Copyright (c) 2026 Tilen MAJERLE
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -181,8 +181,8 @@ typedef struct {
                 uint8_t hours;   /*!< Current UTC hours */
                 uint8_t minutes; /*!< Current UTC minutes */
                 uint8_t seconds; /*!< Current UTC seconds */
-                uint8_t
-                    time_valid; /*!< Flag whether time data has been provided by GPS modem in a valid `6` digit format */
+                uint8_t time_valid;     /*!< Flag whether time data has been provided by GPS modem in a valid `6` digit
+                                           format */
                 lwgps_float_t dgps_age; /*!< Age of DGPS correction data (in seconds) */
             } gga;                      /*!< GPGGA message */
 #endif                                  /* LWGPS_CFG_STATEMENT_GPGGA */
@@ -206,12 +206,12 @@ typedef struct {
 #endif                                /* LWGPS_CFG_STATEMENT_GPGSV */
 #if LWGPS_CFG_STATEMENT_GPRMC
             struct {
-                uint8_t is_valid; /*!< Status whether GPS status is valid or not */
-                uint8_t date;     /*!< Current UTC date */
-                uint8_t month;    /*!< Current UTC month */
-                uint8_t year;     /*!< Current UTC year */
-                uint8_t
-                    date_valid; /*!< Flag whether time data has been provided by GPS modem in a valid `6` digit format */
+                uint8_t is_valid;        /*!< Status whether GPS status is valid or not */
+                uint8_t date;            /*!< Current UTC date */
+                uint8_t month;           /*!< Current UTC month */
+                uint8_t year;            /*!< Current UTC year */
+                uint8_t date_valid;      /*!< Flag whether time data has been provided by GPS modem in a valid `6` digit
+                                            format */
                 lwgps_float_t speed;     /*!< Current spead over the ground in knots */
                 lwgps_float_t course;    /*!< Current course over ground */
                 lwgps_float_t variation; /*!< Current magnetic variation in degrees */
@@ -276,10 +276,12 @@ typedef enum {
 #define lwgps_speed_fpm    LWGPS_SPEED_FPM    /*!< Backward compatibility. \deprecated Use \ref lwgps_speed_t instead */
 #define lwgps_speed_mpk    LWGPS_SPEED_MPK    /*!< Backward compatibility. \deprecated Use \ref lwgps_speed_t instead */
 #define lwgps_speed_spk    LWGPS_SPEED_SPK    /*!< Backward compatibility. \deprecated Use \ref lwgps_speed_t instead */
-#define lwgps_speed_sp100m LWGPS_SPEED_SP100M /*!< Backward compatibility. \deprecated Use \ref lwgps_speed_t instead */
+#define lwgps_speed_sp100m LWGPS_SPEED_SP100M /*!< Backward compatibility. \deprecated Use \ref lwgps_speed_t instead  \
+                                               */
 #define lwgps_speed_mipm   LWGPS_SPEED_MIPM   /*!< Backward compatibility. \deprecated Use \ref lwgps_speed_t instead */
 #define lwgps_speed_spm    LWGPS_SPEED_SPM    /*!< Backward compatibility. \deprecated Use \ref lwgps_speed_t instead */
-#define lwgps_speed_sp100y LWGPS_SPEED_SP100Y /*!< Backward compatibility. \deprecated Use \ref lwgps_speed_t instead */
+#define lwgps_speed_sp100y LWGPS_SPEED_SP100Y /*!< Backward compatibility. \deprecated Use \ref lwgps_speed_t instead  \
+                                               */
 #define lwgps_speed_smph   LWGPS_SPEED_SMPH   /*!< Backward compatibility. \deprecated Use \ref lwgps_speed_t instead */
 
 /**

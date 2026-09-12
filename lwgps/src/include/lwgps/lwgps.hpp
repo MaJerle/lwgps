@@ -4,7 +4,7 @@
  */
 
 /*
- * Copyright (c) 2023 Tilen MAJERLE
+ * Copyright (c) 2026 Tilen MAJERLE
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -61,8 +61,8 @@ class Lwgps {
 #if LWGPS_CFG_STATUS || __DOXYGEN__
     /**
      * \brief           Set processing callback function
-     * 
-     * \param           procfn 
+     *
+     * \param           procfn
      */
     void
     set_process_fn(lwgps_process_fn procfn) {
@@ -95,7 +95,8 @@ class Lwgps {
      * \param[in]       lae: Latitude end coordinate, in units of degrees
      * \param[in]       loe: Longitude end coordinate, in units of degrees
      * \param[out]      d: Pointer to output distance in units of meters
-     * \param[out]      b: Pointer to output bearing between start and end coordinate in relation to north in units of degrees
+     * \param[out]      b: Pointer to output bearing between start and end coordinate in relation to north in units of
+     * degrees
      * \return          `1` on success, `0` otherwise
      */
     static uint8_t
