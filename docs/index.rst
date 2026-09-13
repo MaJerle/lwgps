@@ -18,15 +18,22 @@ Features
 
 * Written in C (C11), compatible with ``stdint.h`` data types
 * Platform independent, easy to use
-* Built-in support for 4 GPS statements
+* Built-in support for all-constellation GNSS statements
 
-  * ``GPGGA`` or ``GNGGA``: GPS fix data
-  * ``GPGSA`` or ``GNGSA``: GPS active satellites and dillusion of position
-  * ``GPGSV`` or ``GNGSV``: List of satellites in view zone
-  * ``GPRMC`` or ``GNRMC``: Recommended minimum specific GPS/Transit data
+  * ``GPGGA``, ``G*GGA`` or ``GNGGA``: GNSS fix data
+  * ``GPGSA``, ``G*GSA`` or ``GNGSA``: Active satellites and dilution of precision
+  * ``GPGSV``, ``G*GSV`` or ``GNGSV``: List of satellites in view zone
+  * ``GPRMC``, ``G*RMC`` or ``GNRMC``: Recommended minimum specific GNSS/Transit data
 
+* Optional support for ``PUBX`` (uBlox proprietary) statements, including ``PUBX_TIME``
+* Optional detailed per-satellite info (elevation, azimuth, SNR) for ``GSV`` statement
+* Optional NMEA checksum validation
+* Distance and bearing calculation between two coordinates
+* Speed conversion helper between many units: metric, imperial and pace
+* Optional per-statement processing callback
+* C++ wrapper class available
 * Optional ``float`` or ``double`` floating point units
-* Low-level layer is separated from application layer, thus allows you to add custom communication with GPS device
+* Low-level layer is separated from application layer, thus allowing you to add custom communication with GPS device
 * Works with operating systems
 * Works with different communication interfaces
 * Can be used as an ESP-IDF component
