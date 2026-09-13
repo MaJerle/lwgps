@@ -3,7 +3,7 @@ LwGPS |version| documentation
 
 Welcome to the documentation for version |version|.
 
-LwGPS is lightweight, platform independent library to parse NMEA statements from GPS receivers. It is highly optimized for embedded systems.
+LwGPS is a lightweight, platform independent, all-constellation GNSS NMEA parser library for embedded systems.
 
 .. image:: static/images/logo.svg
     :align: center

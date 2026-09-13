@@ -1,6 +1,6 @@
 # Lightweight GPS NMEA parser
 
-Platform independent all-constellation GNSS NMEA parser for embedded systems.
+LwGPS is a lightweight, platform independent, all-constellation GNSS NMEA parser library for embedded systems.
 
 [Open documentation](https://docs.majerle.eu/projects/lwgps/)
 
