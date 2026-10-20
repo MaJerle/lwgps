@@ -53,7 +53,7 @@ test_run(void) {
     RUN_TEST(INT_IS_EQUAL(hgps.year, 11));
     RUN_TEST(INT_IS_EQUAL(hgps.hours, 9));
     RUN_TEST(INT_IS_EQUAL(hgps.minutes, 27));
-    RUN_TEST(INT_IS_EQUAL(hgps.seconds, 51));
+    RUN_TEST(INT_IS_EQUAL(hgps.seconds, 50));
 
     return 0;
 }

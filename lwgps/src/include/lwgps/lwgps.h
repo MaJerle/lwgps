@@ -95,12 +95,19 @@ typedef struct {
     lwgps_float_t geo_sep;   /*!< Geoid separation in units of meters */
     uint8_t sats_in_use;     /*!< Number of satellites in use */
     uint8_t fix;             /*!< Fix status. `0` = invalid, `1` = GPS fix, `2` = DGPS fix, `3` = PPS fix */
-    uint8_t hours;           /*!< Hours in UTC */
-    uint8_t minutes;         /*!< Minutes in UTC */
-    uint8_t seconds;         /*!< Seconds in UTC */
-    uint8_t time_valid;      /*!< Flag whether time data has been provided by GPS modem in a valid `6` digit format */
-    lwgps_float_t dgps_age;  /*!< Age of DGPS correction data (in seconds) */
 #endif                       /* LWGPS_CFG_STATEMENT_GPGGA || __DOXYGEN__ */
+
+#if LWGPS_CFG_STATEMENT_GPGGA || LWGPS_CFG_STATEMENT_GPRMC || __DOXYGEN__
+    /* Time information shared by GPGGA and GPRMC statements */
+    uint8_t hours;      /*!< Hours in UTC */
+    uint8_t minutes;    /*!< Minutes in UTC */
+    uint8_t seconds;    /*!< Seconds in UTC */
+    uint8_t time_valid; /*!< Flag whether time data has been provided by GPS modem in a valid `6` digit format */
+#endif                  /* LWGPS_CFG_STATEMENT_GPGGA || LWGPS_CFG_STATEMENT_GPRMC || __DOXYGEN__ */
+
+#if LWGPS_CFG_STATEMENT_GPGGA || __DOXYGEN__
+    lwgps_float_t dgps_age; /*!< Age of DGPS correction data (in seconds) */
+#endif                      /* LWGPS_CFG_STATEMENT_GPGGA || __DOXYGEN__ */
 
 #if LWGPS_CFG_STATEMENT_GPGSA || __DOXYGEN__
     /* Information related to GPGSA statement */
@@ -134,12 +141,12 @@ typedef struct {
 #endif                       /* LWGPS_CFG_STATEMENT_GPRMC || __DOXYGEN__ */
 
 #if LWGPS_CFG_STATEMENT_PUBX_TIME || __DOXYGEN__
-#if !LWGPS_CFG_STATEMENT_GPGGA && !__DOXYGEN__
-    /* rely on time fields from GPGGA if possible */
+#if !LWGPS_CFG_STATEMENT_GPGGA && !LWGPS_CFG_STATEMENT_GPRMC && !__DOXYGEN__
+    /* rely on time fields from GPGGA or GPRMC if possible */
     uint8_t hours;
     uint8_t minutes;
     uint8_t seconds;
-#endif /* !LWGPS_CFG_STATEMENT_GPGGA && !__DOXYGEN__ */
+#endif /* !LWGPS_CFG_STATEMENT_GPGGA && !LWGPS_CFG_STATEMENT_GPRMC && !__DOXYGEN__ */
 #if !LWGPS_CFG_STATEMENT_GPRMC && !__DOXYGEN__
     /* rely on date fields from GPRMC if possible */
     uint8_t date;
@@ -207,6 +214,11 @@ typedef struct {
 #if LWGPS_CFG_STATEMENT_GPRMC
             struct {
                 uint8_t is_valid;        /*!< Status whether GPS status is valid or not */
+                uint8_t hours;           /*!< Current UTC hours */
+                uint8_t minutes;         /*!< Current UTC minutes */
+                uint8_t seconds;         /*!< Current UTC seconds */
+                uint8_t time_valid;      /*!< Flag whether time data has been provided by GPS modem in a valid `6` digit
+                                            format */
                 uint8_t date;            /*!< Current UTC date */
                 uint8_t month;           /*!< Current UTC month */
                 uint8_t year;            /*!< Current UTC year */
