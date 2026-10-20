@@ -219,6 +219,7 @@ prv_parse_term(lwgps_t* ghandle) {
 #if LWGPS_CFG_STATEMENT_GPGGA
     } else if (ghandle->p.stat == STAT_GGA) { /* Process GPGGA statement */
         switch (ghandle->p.term_num) {
+#if !LWGPS_CFG_STATEMENT_GPRMC
             case 1: /* Process UTC time */
                 if (ghandle->p.term_pos >= 6) {
                     ghandle->p.data.gga.hours = 10 * CTN(ghandle->p.term_str[0]) + CTN(ghandle->p.term_str[1]);
@@ -229,6 +230,7 @@ prv_parse_term(lwgps_t* ghandle) {
                     ghandle->p.data.gga.time_valid = 0;
                 }
                 break;
+#endif                                                                      /* !LWGPS_CFG_STATEMENT_GPRMC */
             case 2:                                                         /* Latitude */
                 ghandle->p.data.gga.latitude = prv_parse_lat_long(ghandle); /* Parse latitude */
                 break;
@@ -327,6 +329,16 @@ prv_parse_term(lwgps_t* ghandle) {
 #if LWGPS_CFG_STATEMENT_GPRMC
     } else if (ghandle->p.stat == STAT_RMC) { /* Process GPRMC statement */
         switch (ghandle->p.term_num) {
+            case 1: /* Process UTC time */
+                if (ghandle->p.term_pos >= 6) {
+                    ghandle->p.data.rmc.hours = 10U * CTN(ghandle->p.term_str[0]) + CTN(ghandle->p.term_str[1]);
+                    ghandle->p.data.rmc.minutes = 10U * CTN(ghandle->p.term_str[2]) + CTN(ghandle->p.term_str[3]);
+                    ghandle->p.data.rmc.seconds = 10U * CTN(ghandle->p.term_str[4]) + CTN(ghandle->p.term_str[5]);
+                    ghandle->p.data.rmc.time_valid = 1;
+                } else {
+                    ghandle->p.data.rmc.time_valid = 0;
+                }
+                break;
             case 2: /* Process valid status */ ghandle->p.data.rmc.is_valid = (ghandle->p.term_str[0] == 'A'); break;
             case 7: /* Process ground speed in knots */
                 ghandle->p.data.rmc.speed = prv_parse_float_number(ghandle, NULL);
@@ -457,10 +469,12 @@ prv_copy_from_tmp_memory(lwgps_t* ghandle) {
         ghandle->geo_sep = ghandle->p.data.gga.geo_sep;
         ghandle->sats_in_use = ghandle->p.data.gga.sats_in_use;
         ghandle->fix = ghandle->p.data.gga.fix;
+#if !LWGPS_CFG_STATEMENT_GPRMC
         ghandle->hours = ghandle->p.data.gga.hours;
         ghandle->minutes = ghandle->p.data.gga.minutes;
         ghandle->seconds = ghandle->p.data.gga.seconds;
         ghandle->time_valid = ghandle->p.data.gga.time_valid;
+#endif /* !LWGPS_CFG_STATEMENT_GPRMC */
         ghandle->dgps_age = ghandle->p.data.gga.dgps_age;
 #endif /* LWGPS_CFG_STATEMENT_GPGGA */
 #if LWGPS_CFG_STATEMENT_GPGSA
@@ -483,6 +497,10 @@ prv_copy_from_tmp_memory(lwgps_t* ghandle) {
     } else if (ghandle->p.stat == STAT_RMC) {
         ghandle->course = ghandle->p.data.rmc.course;
         ghandle->is_valid = ghandle->p.data.rmc.is_valid;
+        ghandle->hours = ghandle->p.data.rmc.hours;
+        ghandle->minutes = ghandle->p.data.rmc.minutes;
+        ghandle->seconds = ghandle->p.data.rmc.seconds;
+        ghandle->time_valid = ghandle->p.data.rmc.time_valid;
         ghandle->speed = ghandle->p.data.rmc.speed;
         ghandle->variation = ghandle->p.data.rmc.variation;
         ghandle->date = ghandle->p.data.rmc.date;

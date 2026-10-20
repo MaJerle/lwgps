@@ -102,7 +102,7 @@ extern "C" {
  *                      - Validity of GPS signal
  *                      - Ground speed in knots and coarse in degrees
  *                      - Magnetic variation
- *                      - UTC date
+ *                      - UTC date and time
  */
 #ifndef LWGPS_CFG_STATEMENT_GPRMC
 #define LWGPS_CFG_STATEMENT_GPRMC 1
