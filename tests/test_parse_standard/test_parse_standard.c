@@ -22,6 +22,7 @@ const char gps_rx_data[] = ""
                            "$GPGSA,A,3,02,,,07,,09,24,26,,,,,1.6,1.6,1.0*3D\r\n"
                            "$GPGSV,2,1,08,02,43,088,38,04,42,145,00,05,11,291,00,07,60,043,35*71\r\n"
                            "$GPGSV,2,2,08,08,02,145,00,09,46,303,47,24,16,178,32,26,18,231,43*77\r\n"
+                           "$GPTXT,01,01,01,ANTENNA OK*35\r\n"
                            "";
 
 /**
@@ -53,13 +54,13 @@ test_run(void) {
 
     RUN_TEST(INT_IS_EQUAL(hgps.sats_in_use, 5));
     RUN_TEST(INT_IS_EQUAL(hgps.satellites_ids[0], 2));
-    RUN_TEST(INT_IS_EQUAL(hgps.satellites_ids[1], 0));
-    RUN_TEST(INT_IS_EQUAL(hgps.satellites_ids[2], 0));
-    RUN_TEST(INT_IS_EQUAL(hgps.satellites_ids[3], 7));
-    RUN_TEST(INT_IS_EQUAL(hgps.satellites_ids[4], 0));
-    RUN_TEST(INT_IS_EQUAL(hgps.satellites_ids[5], 9));
-    RUN_TEST(INT_IS_EQUAL(hgps.satellites_ids[6], 24));
-    RUN_TEST(INT_IS_EQUAL(hgps.satellites_ids[7], 26));
+    RUN_TEST(INT_IS_EQUAL(hgps.satellites_ids[1], 7));
+    RUN_TEST(INT_IS_EQUAL(hgps.satellites_ids[2], 9));
+    RUN_TEST(INT_IS_EQUAL(hgps.satellites_ids[3], 24));
+    RUN_TEST(INT_IS_EQUAL(hgps.satellites_ids[4], 26));
+    RUN_TEST(INT_IS_EQUAL(hgps.satellites_ids[5], 0));
+    RUN_TEST(INT_IS_EQUAL(hgps.satellites_ids[6], 0));
+    RUN_TEST(INT_IS_EQUAL(hgps.satellites_ids[7], 0));
     RUN_TEST(INT_IS_EQUAL(hgps.satellites_ids[8], 0));
     RUN_TEST(INT_IS_EQUAL(hgps.satellites_ids[9], 0));
     RUN_TEST(INT_IS_EQUAL(hgps.satellites_ids[10], 0));

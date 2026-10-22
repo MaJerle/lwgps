@@ -42,6 +42,7 @@
 #define D2R(x)       FLT(FLT(x) * FLT(0.01745329251994))  /*!< Degrees to radians */
 #define R2D(x)       FLT(FLT(x) * FLT(57.29577951308232)) /*!< Radians to degrees */
 #define EARTH_RADIUS FLT(6371.0)                          /*!< Earth radius in units of kilometers */
+#define LWGPS_ARRAYSIZE(x) (sizeof(x) / sizeof((x)[0]))
 
 #if LWGPS_CFG_CRC
 #define CRC_ADD(_gh, ch) (_gh)->p.crc_calc ^= (uint8_t)(ch)
@@ -164,6 +165,41 @@ prv_parse_lat_long(lwgps_t* ghandle) {
 }
 
 /**
+ * \brief           Publish working `GSA`/`GSV` data once their block of statements ends
+ *
+ *                  Multi-GNSS receivers send one `GSA` statement and one `GSV` series per constellation.
+ *                  User-facing satellite data is updated at once, when the first statement of a different
+ *                  type is detected, so the application never reads half-collected, inconsistent lists.
+ *
+ * \note            The block ends even if this statement's checksum later turns out to be invalid.
+ *                  Only checksum-verified statements are ever accumulated in the working data,
+ *                  and a corrupted sentence can't leave the block stuck "active" into the next epoch.
+ *
+ * \param[in]       ghandle: GPS handle
+ */
+static void
+prv_publish_blocks(lwgps_t* ghandle) {
+#if LWGPS_CFG_STATEMENT_GPGSA
+    if (ghandle->p.stat != STAT_GSA && ghandle->gsa_cycle_active) {
+        LWGPS_MEMCPY(ghandle->satellites_ids, ghandle->satellites_ids_tmp, sizeof(ghandle->satellites_ids));
+        ghandle->gsa_cycle_active = 0;
+    }
+#endif /* LWGPS_CFG_STATEMENT_GPGSA */
+#if LWGPS_CFG_STATEMENT_GPGSV
+    if (ghandle->p.stat != STAT_GSV && ghandle->gsv_cycle_active) {
+        ghandle->sats_in_view = ghandle->sats_in_view_tmp;
+#if LWGPS_CFG_STATEMENT_GPGSV_SAT_DET
+        LWGPS_MEMCPY(ghandle->sats_in_view_desc, ghandle->sats_in_view_desc_tmp, sizeof(ghandle->sats_in_view_desc));
+#endif /* LWGPS_CFG_STATEMENT_GPGSV_SAT_DET */
+        ghandle->gsv_cycle_active = 0;
+    }
+#endif /* LWGPS_CFG_STATEMENT_GPGSV */
+#if !LWGPS_CFG_STATEMENT_GPGSA && !LWGPS_CFG_STATEMENT_GPGSV
+    (void)ghandle;
+#endif /* !LWGPS_CFG_STATEMENT_GPGSA && !LWGPS_CFG_STATEMENT_GPGSV */
+}
+
+/**
  * \brief           Parse received term
  * \param[in]       ghandle: GPS handle
  * \return          `1` on success, `0` otherwise
@@ -199,18 +235,7 @@ prv_parse_term(lwgps_t* ghandle) {
         } else {
             ghandle->p.stat = STAT_UNKNOWN; /* Invalid statement for library */
         }
-#if LWGPS_CFG_STATEMENT_GPGSV
-        /*
-         * End GSV cycle as soon as any other statement type is recognized, even if
-         * this statement's checksum later turns out to be invalid. Detecting this
-         * here (rather than only after a checksum-verified copy) means a single
-         * corrupted non-GSV sentence can't leave the cycle stuck "active" and bleed
-         * a stale satellite offset into the next epoch.
-         */
-        if (ghandle->p.stat != STAT_GSV) {
-            ghandle->gsv_cycle_active = 0;
-        }
-#endif /* LWGPS_CFG_STATEMENT_GPGSV */
+        prv_publish_blocks(ghandle);
         return 1;
     }
 
@@ -283,15 +308,6 @@ prv_parse_term(lwgps_t* ghandle) {
                 break;
             case 2: /* Current message number within this GSV series */
                 ghandle->p.data.gsv.stat_num = (uint8_t)prv_parse_number(ghandle, NULL);
-                if (ghandle->p.data.gsv.stat_num == 1 && !ghandle->gsv_cycle_active) {
-                    /* First GSV series of this NMEA cycle: clear stale satellite data */
-#if LWGPS_CFG_STATEMENT_GPGSV_SAT_DET
-                    LWGPS_MEMSET(ghandle->sats_in_view_desc, 0, sizeof(ghandle->sats_in_view_desc));
-#endif /* LWGPS_CFG_STATEMENT_GPGSV_SAT_DET */
-                    ghandle->gsv_series_offset = 0;
-                    ghandle->sats_in_view = 0;
-                    ghandle->gsv_cycle_active = 1;
-                }
                 break;
             case 3: /* Process satellites in view */
                 ghandle->p.data.gsv.sats_in_view = (uint8_t)prv_parse_number(ghandle, NULL);
@@ -308,16 +324,15 @@ prv_parse_term(lwgps_t* ghandle) {
                         break;
                     }
 
-                    uint8_t index = ghandle->gsv_series_offset + sat_in_series; /* Absolute index across all series */
-                    if (index < sizeof(ghandle->sats_in_view_desc) / sizeof(ghandle->sats_in_view_desc[0])) {
-                        uint16_t value = (uint16_t)prv_parse_number(ghandle, NULL); /* Parse number as integer */
-                        switch (term_num & 0x03) {
-                            case 0: ghandle->sats_in_view_desc[index].num = (uint8_t)value; break;
-                            case 1: ghandle->sats_in_view_desc[index].elevation = (uint8_t)value; break;
-                            case 2: ghandle->sats_in_view_desc[index].azimuth = value; break;
-                            case 3: ghandle->sats_in_view_desc[index].snr = (uint8_t)value; break;
-                            default: break;
-                        }
+                    /* Store to statement memory, copied to working list only if checksum is valid */
+                    lwgps_sat_t* sat = &ghandle->p.data.gsv.sats[sat_offset];
+                    uint16_t value = (uint16_t)prv_parse_number(ghandle, NULL); /* Parse number as integer */
+                    switch (term_num & 0x03) {
+                        case 0: sat->num = (uint8_t)value; break;
+                        case 1: sat->elevation = (uint8_t)value; break;
+                        case 2: sat->azimuth = value; break;
+                        case 3: sat->snr = (uint8_t)value; break;
+                        default: break;
                     }
                 }
 #endif /* LWGPS_CFG_STATEMENT_GPGSV_SAT_DET */
@@ -469,14 +484,47 @@ prv_copy_from_tmp_memory(lwgps_t* ghandle) {
         ghandle->dop_p = ghandle->p.data.gsa.dop_p;
         ghandle->dop_v = ghandle->p.data.gsa.dop_v;
         ghandle->fix_mode = ghandle->p.data.gsa.fix_mode;
-        LWGPS_MEMCPY(ghandle->satellites_ids, ghandle->p.data.gsa.satellites_ids, sizeof(ghandle->satellites_ids));
+
+        /* First GSA of the block starts a new working list */
+        if (!ghandle->gsa_cycle_active) {
+            LWGPS_MEMSET(ghandle->satellites_ids_tmp, 0x00, sizeof(ghandle->satellites_ids_tmp));
+            ghandle->satellites_ids_cnt = 0;
+            ghandle->gsa_cycle_active = 1;
+        }
+
+        /* Append non-empty IDs of this statement (one statement per constellation) */
+        for (size_t i = 0; i < sizeof(ghandle->p.data.gsa.satellites_ids); ++i) {
+            if (ghandle->p.data.gsa.satellites_ids[i] != 0
+                && ghandle->satellites_ids_cnt < sizeof(ghandle->satellites_ids_tmp)) {
+                ghandle->satellites_ids_tmp[ghandle->satellites_ids_cnt++] = ghandle->p.data.gsa.satellites_ids[i];
+            }
+        }
 #endif /* LWGPS_CFG_STATEMENT_GPGSA */
 #if LWGPS_CFG_STATEMENT_GPGSV
     } else if (ghandle->p.stat == STAT_GSV) {
-        /* Accumulate sats_in_view: add this series' count once (when its last message completes) */
-        if (ghandle->p.data.gsv.stat_num == ghandle->p.data.gsv.num_msgs) {
-            ghandle->sats_in_view += ghandle->p.data.gsv.sats_in_view;
-            ghandle->gsv_series_offset = ghandle->sats_in_view;
+        /* First message of the first series in the block starts new working data */
+        if (ghandle->p.data.gsv.stat_num == 1 && !ghandle->gsv_cycle_active) {
+#if LWGPS_CFG_STATEMENT_GPGSV_SAT_DET
+            LWGPS_MEMSET(ghandle->sats_in_view_desc_tmp, 0x00, sizeof(ghandle->sats_in_view_desc_tmp));
+#endif /* LWGPS_CFG_STATEMENT_GPGSV_SAT_DET */
+            ghandle->sats_in_view_tmp = 0;
+            ghandle->gsv_cycle_active = 1;
+        }
+        if (ghandle->gsv_cycle_active) {
+#if LWGPS_CFG_STATEMENT_GPGSV_SAT_DET
+            for (size_t i = 0; i < LWGPS_ARRAYSIZE(ghandle->p.data.gsv.sats); ++i) {
+                size_t sat_in_series = ((size_t)(ghandle->p.data.gsv.stat_num - 1) << 0x02) + i;
+                size_t index = ghandle->sats_in_view_tmp + sat_in_series; /* Absolute index across all series */
+                if (sat_in_series < ghandle->p.data.gsv.sats_in_view
+                    && index < LWGPS_ARRAYSIZE(ghandle->sats_in_view_desc_tmp)) {
+                    ghandle->sats_in_view_desc_tmp[index] = ghandle->p.data.gsv.sats[i];
+                }
+            }
+#endif /* LWGPS_CFG_STATEMENT_GPGSV_SAT_DET */
+            /* Add this series' count once (when its last message completes) */
+            if (ghandle->p.data.gsv.stat_num == ghandle->p.data.gsv.num_msgs) {
+                ghandle->sats_in_view_tmp += ghandle->p.data.gsv.sats_in_view;
+            }
         }
 #endif /* LWGPS_CFG_STATEMENT_GPGSV */
 #if LWGPS_CFG_STATEMENT_GPRMC

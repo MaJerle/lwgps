@@ -141,6 +141,17 @@ extern "C" {
 #endif
 
 /**
+ * \brief           Maximum number of satellite IDs stored in \ref lwgps_t::satellites_ids.
+ *
+ *                  IDs from all `GSA` statements of one epoch (one per constellation
+ *                  on multi-GNSS receivers) are packed into this list.
+ *                  Each `GSA` statement carries up to `12` IDs.
+ */
+#ifndef LWGPS_CFG_SATS_IN_USE_SIZE
+#define LWGPS_CFG_SATS_IN_USE_SIZE 24
+#endif
+
+/**
  * \brief           Enables `1` or disables `0` parsing and generation
  *                  of PUBX (uBlox) messages
  *
