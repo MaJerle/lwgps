@@ -115,17 +115,31 @@ typedef struct {
     lwgps_float_t dop_v;        /*!< Dolution of precision, vertical */
     lwgps_float_t dop_p;        /*!< Dolution of precision, position */
     uint8_t fix_mode;           /*!< Fix mode. `1` = NO fix, `2` = 2D fix, `3` = 3D fix */
-    uint8_t satellites_ids[12]; /*!< List of satellite IDs in use. Valid range is `0` to `sats_in_use` */
-#endif                          /* LWGPS_CFG_STATEMENT_GPGSA || __DOXYGEN__ */
+    uint8_t satellites_ids[LWGPS_CFG_SATS_IN_USE_SIZE]; /*!< Packed list of satellite IDs in use, collected from
+                                                            all `GSA` statements of one epoch. Unused entries are `0` */
+#if !__DOXYGEN__
+    uint8_t satellites_ids_tmp[LWGPS_CFG_SATS_IN_USE_SIZE]; /*!< Working list, published at the end of `GSA` block */
+    uint8_t satellites_ids_cnt;                             /*!< Number of valid entries in working list */
+    uint8_t gsa_cycle_active;                               /*!< Flag: `GSA` block in progress for this NMEA epoch */
+#endif                                                      /* !__DOXYGEN__ */
+#endif                                                      /* LWGPS_CFG_STATEMENT_GPGSA || __DOXYGEN__ */
 
 #if LWGPS_CFG_STATEMENT_GPGSV || __DOXYGEN__
     /* Information related to GPGSV statement */
-    uint8_t sats_in_view;      /*!< Number of satellites in view (accumulated across all constellations/signals) */
-    uint8_t gsv_series_offset; /*!< Running satellite descriptor index offset for multi-series accumulation */
-    uint8_t gsv_cycle_active;  /*!< Flag: GSV cycle in progress for this NMEA epoch */
+    uint8_t sats_in_view; /*!< Number of satellites in view (accumulated across all constellations/signals).
+                                Updated at once, when complete `GSV` block of the epoch has been received */
 #if LWGPS_CFG_STATEMENT_GPGSV_SAT_DET || __DOXYGEN__
-    lwgps_sat_t sats_in_view_desc[LWGPS_CFG_SATS_IN_VIEW_SIZE];
+    lwgps_sat_t sats_in_view_desc[LWGPS_CFG_SATS_IN_VIEW_SIZE]; /*!< Satellites in view, consistent with
+                                                                    \ref sats_in_view */
 #endif /* LWGPS_CFG_STATEMENT_GPGSV_SAT_DET || __DOXYGEN__ */
+#if !__DOXYGEN__
+    uint8_t sats_in_view_tmp; /*!< Working count, also descriptor offset of the next series */
+    uint8_t gsv_cycle_active; /*!< Flag: `GSV` block in progress for this NMEA epoch */
+#if LWGPS_CFG_STATEMENT_GPGSV_SAT_DET
+    lwgps_sat_t sats_in_view_desc_tmp[LWGPS_CFG_SATS_IN_VIEW_SIZE]; /*!< Working descriptors, published at the end
+                                                                        of `GSV` block */
+#endif /* LWGPS_CFG_STATEMENT_GPGSV_SAT_DET */
+#endif /* !__DOXYGEN__ */
 #endif /* LWGPS_CFG_STATEMENT_GPGSV || __DOXYGEN__ */
 
 #if LWGPS_CFG_STATEMENT_GPRMC || __DOXYGEN__
@@ -209,7 +223,10 @@ typedef struct {
                 uint8_t num_msgs;     /*!< Total number of messages in this GSV series */
                 uint8_t gnss;         /*!< Constellation from talker ID (\ref lwgps_gnss_t) */
                 uint8_t signal_id;    /*!< Signal/band ID (NMEA 4.10+) */
-            } gsv;                    /*!< GPGSV message */
+#if LWGPS_CFG_STATEMENT_GPGSV_SAT_DET
+                lwgps_sat_t sats[4]; /*!< Satellites described in this message */
+#endif                               /* LWGPS_CFG_STATEMENT_GPGSV_SAT_DET */
+            } gsv;                   /*!< GPGSV message */
 #endif                                /* LWGPS_CFG_STATEMENT_GPGSV */
 #if LWGPS_CFG_STATEMENT_GPRMC
             struct {
