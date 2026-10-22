@@ -29,7 +29,7 @@
  * This file is part of LwGPS - Lightweight GPS NMEA parser library.
  *
  * Author:          Tilen MAJERLE <tilen@majerle.eu>
- * Version:         v2.4.0
+ * Version:         v2.4.1
  */
 #ifndef LWGPS_HDR_H
 #define LWGPS_HDR_H
@@ -111,10 +111,10 @@ typedef struct {
 
 #if LWGPS_CFG_STATEMENT_GPGSA || __DOXYGEN__
     /* Information related to GPGSA statement */
-    lwgps_float_t dop_h;        /*!< Dolution of precision, horizontal */
-    lwgps_float_t dop_v;        /*!< Dolution of precision, vertical */
-    lwgps_float_t dop_p;        /*!< Dolution of precision, position */
-    uint8_t fix_mode;           /*!< Fix mode. `1` = NO fix, `2` = 2D fix, `3` = 3D fix */
+    lwgps_float_t dop_h;                                /*!< Dolution of precision, horizontal */
+    lwgps_float_t dop_v;                                /*!< Dolution of precision, vertical */
+    lwgps_float_t dop_p;                                /*!< Dolution of precision, position */
+    uint8_t fix_mode;                                   /*!< Fix mode. `1` = NO fix, `2` = 2D fix, `3` = 3D fix */
     uint8_t satellites_ids[LWGPS_CFG_SATS_IN_USE_SIZE]; /*!< Packed list of satellite IDs in use, collected from
                                                             all `GSA` statements of one epoch. Unused entries are `0` */
 #if !__DOXYGEN__
@@ -131,16 +131,16 @@ typedef struct {
 #if LWGPS_CFG_STATEMENT_GPGSV_SAT_DET || __DOXYGEN__
     lwgps_sat_t sats_in_view_desc[LWGPS_CFG_SATS_IN_VIEW_SIZE]; /*!< Satellites in view, consistent with
                                                                     \ref sats_in_view */
-#endif /* LWGPS_CFG_STATEMENT_GPGSV_SAT_DET || __DOXYGEN__ */
+#endif                                                          /* LWGPS_CFG_STATEMENT_GPGSV_SAT_DET || __DOXYGEN__ */
 #if !__DOXYGEN__
     uint8_t sats_in_view_tmp; /*!< Working count, also descriptor offset of the next series */
     uint8_t gsv_cycle_active; /*!< Flag: `GSV` block in progress for this NMEA epoch */
 #if LWGPS_CFG_STATEMENT_GPGSV_SAT_DET
     lwgps_sat_t sats_in_view_desc_tmp[LWGPS_CFG_SATS_IN_VIEW_SIZE]; /*!< Working descriptors, published at the end
                                                                         of `GSV` block */
-#endif /* LWGPS_CFG_STATEMENT_GPGSV_SAT_DET */
-#endif /* !__DOXYGEN__ */
-#endif /* LWGPS_CFG_STATEMENT_GPGSV || __DOXYGEN__ */
+#endif                                                              /* LWGPS_CFG_STATEMENT_GPGSV_SAT_DET */
+#endif                                                              /* !__DOXYGEN__ */
+#endif                                                              /* LWGPS_CFG_STATEMENT_GPGSV || __DOXYGEN__ */
 
 #if LWGPS_CFG_STATEMENT_GPRMC || __DOXYGEN__
     /* Information related to GPRMC statement */
@@ -227,7 +227,7 @@ typedef struct {
                 lwgps_sat_t sats[4]; /*!< Satellites described in this message */
 #endif                               /* LWGPS_CFG_STATEMENT_GPGSV_SAT_DET */
             } gsv;                   /*!< GPGSV message */
-#endif                                /* LWGPS_CFG_STATEMENT_GPGSV */
+#endif                               /* LWGPS_CFG_STATEMENT_GPGSV */
 #if LWGPS_CFG_STATEMENT_GPRMC
             struct {
                 uint8_t is_valid;        /*!< Status whether GPS status is valid or not */
@@ -295,23 +295,25 @@ typedef enum {
     LWGPS_SPEED_SMPH, /*!< Sea miles per hour */
 } lwgps_speed_t;
 
-#define lwgps_speed_kps    LWGPS_SPEED_KPS    /*!< Backward compatibility. \deprecated Use \ref lwgps_speed_t instead */
-#define lwgps_speed_kph    LWGPS_SPEED_KPH    /*!< Backward compatibility. \deprecated Use \ref lwgps_speed_t instead */
-#define lwgps_speed_mps    LWGPS_SPEED_MPS    /*!< Backward compatibility. \deprecated Use \ref lwgps_speed_t instead */
-#define lwgps_speed_mpm    LWGPS_SPEED_MPM    /*!< Backward compatibility. \deprecated Use \ref lwgps_speed_t instead */
-#define lwgps_speed_mips   LWGPS_SPEED_MIPS   /*!< Backward compatibility. \deprecated Use \ref lwgps_speed_t instead */
-#define lwgps_speed_mph    LWGPS_SPEED_MPH    /*!< Backward compatibility. \deprecated Use \ref lwgps_speed_t instead */
-#define lwgps_speed_fps    LWGPS_SPEED_FPS    /*!< Backward compatibility. \deprecated Use \ref lwgps_speed_t instead */
-#define lwgps_speed_fpm    LWGPS_SPEED_FPM    /*!< Backward compatibility. \deprecated Use \ref lwgps_speed_t instead */
-#define lwgps_speed_mpk    LWGPS_SPEED_MPK    /*!< Backward compatibility. \deprecated Use \ref lwgps_speed_t instead */
-#define lwgps_speed_spk    LWGPS_SPEED_SPK    /*!< Backward compatibility. \deprecated Use \ref lwgps_speed_t instead */
-#define lwgps_speed_sp100m LWGPS_SPEED_SP100M /*!< Backward compatibility. \deprecated Use \ref lwgps_speed_t instead  \
-                                               */
-#define lwgps_speed_mipm   LWGPS_SPEED_MIPM   /*!< Backward compatibility. \deprecated Use \ref lwgps_speed_t instead */
-#define lwgps_speed_spm    LWGPS_SPEED_SPM    /*!< Backward compatibility. \deprecated Use \ref lwgps_speed_t instead */
-#define lwgps_speed_sp100y LWGPS_SPEED_SP100Y /*!< Backward compatibility. \deprecated Use \ref lwgps_speed_t instead  \
-                                               */
-#define lwgps_speed_smph   LWGPS_SPEED_SMPH   /*!< Backward compatibility. \deprecated Use \ref lwgps_speed_t instead */
+#define lwgps_speed_kps  LWGPS_SPEED_KPS  /*!< Backward compatibility. \deprecated Use \ref lwgps_speed_t instead */
+#define lwgps_speed_kph  LWGPS_SPEED_KPH  /*!< Backward compatibility. \deprecated Use \ref lwgps_speed_t instead */
+#define lwgps_speed_mps  LWGPS_SPEED_MPS  /*!< Backward compatibility. \deprecated Use \ref lwgps_speed_t instead */
+#define lwgps_speed_mpm  LWGPS_SPEED_MPM  /*!< Backward compatibility. \deprecated Use \ref lwgps_speed_t instead */
+#define lwgps_speed_mips LWGPS_SPEED_MIPS /*!< Backward compatibility. \deprecated Use \ref lwgps_speed_t instead */
+#define lwgps_speed_mph  LWGPS_SPEED_MPH  /*!< Backward compatibility. \deprecated Use \ref lwgps_speed_t instead */
+#define lwgps_speed_fps  LWGPS_SPEED_FPS  /*!< Backward compatibility. \deprecated Use \ref lwgps_speed_t instead */
+#define lwgps_speed_fpm  LWGPS_SPEED_FPM  /*!< Backward compatibility. \deprecated Use \ref lwgps_speed_t instead */
+#define lwgps_speed_mpk  LWGPS_SPEED_MPK  /*!< Backward compatibility. \deprecated Use \ref lwgps_speed_t instead */
+#define lwgps_speed_spk  LWGPS_SPEED_SPK  /*!< Backward compatibility. \deprecated Use \ref lwgps_speed_t instead */
+#define lwgps_speed_sp100m                                                                                             \
+    LWGPS_SPEED_SP100M                    /*!< Backward compatibility. \deprecated Use \ref lwgps_speed_t instead      \
+                                           */
+#define lwgps_speed_mipm LWGPS_SPEED_MIPM /*!< Backward compatibility. \deprecated Use \ref lwgps_speed_t instead */
+#define lwgps_speed_spm  LWGPS_SPEED_SPM  /*!< Backward compatibility. \deprecated Use \ref lwgps_speed_t instead */
+#define lwgps_speed_sp100y                                                                                             \
+    LWGPS_SPEED_SP100Y                    /*!< Backward compatibility. \deprecated Use \ref lwgps_speed_t instead      \
+                                           */
+#define lwgps_speed_smph LWGPS_SPEED_SMPH /*!< Backward compatibility. \deprecated Use \ref lwgps_speed_t instead */
 
 /**
  * \brief           Signature for caller-suplied callback function from gps_process

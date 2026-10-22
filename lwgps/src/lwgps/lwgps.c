@@ -29,7 +29,7 @@
  * This file is part of LwGPS - Lightweight GPS NMEA parser library.
  *
  * Author:          Tilen MAJERLE <tilen@majerle.eu>
- * Version:         v2.4.0
+ * Version:         v2.4.1
  */
 #include <stdlib.h>
 #include <string.h>
@@ -38,10 +38,10 @@
 #include <math.h>
 #endif
 
-#define FLT(x)       ((lwgps_float_t)(x))
-#define D2R(x)       FLT(FLT(x) * FLT(0.01745329251994))  /*!< Degrees to radians */
-#define R2D(x)       FLT(FLT(x) * FLT(57.29577951308232)) /*!< Radians to degrees */
-#define EARTH_RADIUS FLT(6371.0)                          /*!< Earth radius in units of kilometers */
+#define FLT(x)             ((lwgps_float_t)(x))
+#define D2R(x)             FLT(FLT(x) * FLT(0.01745329251994))  /*!< Degrees to radians */
+#define R2D(x)             FLT(FLT(x) * FLT(57.29577951308232)) /*!< Radians to degrees */
+#define EARTH_RADIUS       FLT(6371.0)                          /*!< Earth radius in units of kilometers */
 #define LWGPS_ARRAYSIZE(x) (sizeof(x) / sizeof((x)[0]))
 
 #if LWGPS_CFG_CRC

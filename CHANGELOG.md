@@ -2,6 +2,8 @@
 
 ## Develop
 
+## v2.4.1
+
 - Fix inconsistent satellite data with multi-GNSS receivers (#49): `sats_in_view`, `sats_in_view_desc` and `satellites_ids` are now collected in working buffers and published at once, when the complete `GSV`/`GSA` block of an epoch has been received. They are updated on the first sentence following the block
 - `satellites_ids` now packs IDs from all `GSA` statements of the epoch (one per constellation) without empty gaps; its size is set by the new `LWGPS_CFG_SATS_IN_USE_SIZE` option (default `24`)
 - `GSV` satellite details are only stored after statement checksum is verified
@@ -50,4 +52,3 @@
 ## v1.0.0
 
 - Initial release
-
