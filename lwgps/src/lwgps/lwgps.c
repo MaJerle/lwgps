@@ -321,7 +321,7 @@ prv_parse_term(lwgps_t* ghandle) {
                     uint8_t sat_offset = term_num >> 2;         /* Satellite offset within this message (0-3) */
 
                     /* Reject terms beyond the declared satellite count (e.g. NMEA 4.10+ signal ID field) */
-                    uint8_t sat_in_series = ((ghandle->p.data.gsv.stat_num - 1) << 0x02) + sat_offset;
+                    size_t sat_in_series = ((size_t)(ghandle->p.data.gsv.stat_num - 1) << 0x02) + sat_offset;
                     if (sat_in_series >= ghandle->p.data.gsv.sats_in_view) {
                         break;
                     }
