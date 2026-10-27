@@ -175,6 +175,10 @@ prv_parse_lat_long(lwgps_t* ghandle) {
  *                  Only checksum-verified statements are ever accumulated in the working data,
  *                  and a corrupted sentence can't leave the block stuck "active" into the next epoch.
  *
+ * \note            It is assumed that statements of the same type come in a sequence,
+ *                  which mean we can act when the new current statement isn't anymore the expected one,
+ *                  while the flag for active cycle remains active
+ *
  * \param[in]       ghandle: GPS handle
  */
 static void
@@ -245,7 +249,8 @@ prv_parse_term(lwgps_t* ghandle) {
     } else if (ghandle->p.stat == STAT_GGA) { /* Process GPGGA statement */
         switch (ghandle->p.term_num) {
 #if !LWGPS_CFG_STATEMENT_GPRMC
-            case 1: /* Process UTC time */
+            case 1: {
+                /* Process UTC time */
                 if (ghandle->p.term_pos >= 6) {
                     ghandle->p.data.gga.hours = 10 * CTN(ghandle->p.term_str[0]) + CTN(ghandle->p.term_str[1]);
                     ghandle->p.data.gga.minutes = 10 * CTN(ghandle->p.term_str[2]) + CTN(ghandle->p.term_str[3]);
@@ -255,80 +260,130 @@ prv_parse_term(lwgps_t* ghandle) {
                     ghandle->p.data.gga.time_valid = 0;
                 }
                 break;
-#endif                                                                      /* !LWGPS_CFG_STATEMENT_GPRMC */
-            case 2:                                                         /* Latitude */
-                ghandle->p.data.gga.latitude = prv_parse_lat_long(ghandle); /* Parse latitude */
+            }
+#endif /* !LWGPS_CFG_STATEMENT_GPRMC */
+            case 2: {
+                /* Parse latitude */
+                ghandle->p.data.gga.latitude = prv_parse_lat_long(ghandle);
                 break;
-            case 3: /* Latitude north/south information */
+            }
+            case 3: {
+                /* Latitude north/south information */
                 if (ghandle->p.term_str[0] == 'S' || ghandle->p.term_str[0] == 's') {
                     ghandle->p.data.gga.latitude = -ghandle->p.data.gga.latitude;
                 }
                 break;
-            case 4:                                                          /* Longitude */
-                ghandle->p.data.gga.longitude = prv_parse_lat_long(ghandle); /* Parse longitude */
+            }
+            case 4: {
+                /* Parse longitude */
+                ghandle->p.data.gga.longitude = prv_parse_lat_long(ghandle);
                 break;
-            case 5: /* Longitude east/west information */
+            }
+            case 5: {
+                /* Longitude east/west information */
                 if (ghandle->p.term_str[0] == 'W' || ghandle->p.term_str[0] == 'w') {
                     ghandle->p.data.gga.longitude = -ghandle->p.data.gga.longitude;
                 }
                 break;
-            case 6: /* Fix status */ ghandle->p.data.gga.fix = (uint8_t)prv_parse_number(ghandle, NULL); break;
-            case 7: /* Satellites in use */
+            }
+            case 6: {
+                /* Fix status */
+                ghandle->p.data.gga.fix = (uint8_t)prv_parse_number(ghandle, NULL);
+                break;
+            }
+            case 7: {
+                /* Satellites in use */
                 ghandle->p.data.gga.sats_in_use = (uint8_t)prv_parse_number(ghandle, NULL);
                 break;
-            case 9: /* Altitude */ ghandle->p.data.gga.altitude = prv_parse_float_number(ghandle, NULL); break;
-            case 11: /* Altitude above ellipsoid */
+            }
+            case 9: {
+                /* Altitude */
+                ghandle->p.data.gga.altitude = prv_parse_float_number(ghandle, NULL);
+                break;
+            }
+            case 11: {
+                /* Altitude above ellipsoid */
                 ghandle->p.data.gga.geo_sep = prv_parse_float_number(ghandle, NULL);
                 break;
-            case 13: /* Age of differential GPS correction data */
+            }
+            case 13: {
+                /* Age of differential GPS correction data */
                 ghandle->p.data.gga.dgps_age = prv_parse_float_number(ghandle, NULL);
                 break;
+            }
             default: break;
         }
 #endif /* LWGPS_CFG_STATEMENT_GPGGA */
 #if LWGPS_CFG_STATEMENT_GPGSA
     } else if (ghandle->p.stat == STAT_GSA) { /* Process GPGSA statement */
         switch (ghandle->p.term_num) {
-            case 2: ghandle->p.data.gsa.fix_mode = (uint8_t)prv_parse_number(ghandle, NULL); break;
-            case 15: ghandle->p.data.gsa.dop_p = prv_parse_float_number(ghandle, NULL); break;
-            case 16: ghandle->p.data.gsa.dop_h = prv_parse_float_number(ghandle, NULL); break;
-            case 17: ghandle->p.data.gsa.dop_v = prv_parse_float_number(ghandle, NULL); break;
-            default:
+            case 2: {
+                ghandle->p.data.gsa.fix_mode = (uint8_t)prv_parse_number(ghandle, NULL);
+                break;
+            }
+            case 15: {
+                ghandle->p.data.gsa.dop_p = prv_parse_float_number(ghandle, NULL);
+                break;
+            }
+            case 16: {
+                ghandle->p.data.gsa.dop_h = prv_parse_float_number(ghandle, NULL);
+                break;
+            }
+            case 17: {
+                ghandle->p.data.gsa.dop_v = prv_parse_float_number(ghandle, NULL);
+                break;
+            }
+            default: {
                 /* Parse satellite IDs */
                 if (ghandle->p.term_num >= 3 && ghandle->p.term_num <= 14) {
                     ghandle->p.data.gsa.satellites_ids[ghandle->p.term_num - 3] = (uint8_t)prv_parse_number(ghandle,
                                                                                                             NULL);
                 }
                 break;
+            }
         }
 #endif /* LWGPS_CFG_STATEMENT_GPGSA */
 #if LWGPS_CFG_STATEMENT_GPGSV
     } else if (ghandle->p.stat == STAT_GSV) { /* Process GPGSV statement */
         switch (ghandle->p.term_num) {
-            case 1: /* Total number of messages in this GSV series */
+            case 1: {
+                /* Total number of messages in this GSV series */
                 ghandle->p.data.gsv.num_msgs = (uint8_t)prv_parse_number(ghandle, NULL);
                 break;
-            case 2: /* Current message number within this GSV series */
+            }
+            case 2: {
+                /* Current message number within this GSV series */
                 ghandle->p.data.gsv.stat_num = (uint8_t)prv_parse_number(ghandle, NULL);
                 break;
-            case 3: /* Process satellites in view */
+            }
+            case 3: {
+                /* Process satellites in view */
                 ghandle->p.data.gsv.sats_in_view = (uint8_t)prv_parse_number(ghandle, NULL);
                 break;
-            default:
+            }
+            default: {
 #if LWGPS_CFG_STATEMENT_GPGSV_SAT_DET
                 if (ghandle->p.term_num >= 4 && ghandle->p.term_num <= 19) { /* Check current term number */
                     uint8_t term_num = ghandle->p.term_num - 4; /* Normalize term number from 4-19 to 0-15 */
                     uint8_t sat_offset = term_num >> 2;         /* Satellite offset within this message (0-3) */
+                    lwgps_sat_t* sat = NULL;
+                    uint16_t value = 0;
 
-                    /* Reject terms beyond the declared satellite count (e.g. NMEA 4.10+ signal ID field) */
+                    /*
+                     * Reject terms beyond the declared satellite count (e.g. NMEA 4.10+ signal ID field)
+
+                     * We use the `size_t` for value before shifting,
+                     * so that if `stat_num` from GSV is invalid (=0), doing -1 and shifting
+                     * yields to very large number which is then large than the number of sats in view
+                     */
                     size_t sat_in_series = ((size_t)(ghandle->p.data.gsv.stat_num - 1) << 0x02) + sat_offset;
                     if (sat_in_series >= ghandle->p.data.gsv.sats_in_view) {
                         break;
                     }
 
                     /* Store to statement memory, copied to working list only if checksum is valid */
-                    lwgps_sat_t* sat = &ghandle->p.data.gsv.sats[sat_offset];
-                    uint16_t value = (uint16_t)prv_parse_number(ghandle, NULL); /* Parse number as integer */
+                    sat = &ghandle->p.data.gsv.sats[sat_offset];
+                    value = (uint16_t)prv_parse_number(ghandle, NULL); /* Parse number as integer */
                     switch (term_num & 0x03) {
                         case 0: sat->num = (uint8_t)value; break;
                         case 1: sat->elevation = (uint8_t)value; break;
@@ -339,12 +394,14 @@ prv_parse_term(lwgps_t* ghandle) {
                 }
 #endif /* LWGPS_CFG_STATEMENT_GPGSV_SAT_DET */
                 break;
+            }
         }
 #endif /* LWGPS_CFG_STATEMENT_GPGSV */
 #if LWGPS_CFG_STATEMENT_GPRMC
     } else if (ghandle->p.stat == STAT_RMC) { /* Process GPRMC statement */
         switch (ghandle->p.term_num) {
-            case 1: /* Process UTC time */
+            case 1: {
+                /* Process UTC time */
                 if (ghandle->p.term_pos >= 6) {
                     ghandle->p.data.rmc.hours = 10U * CTN(ghandle->p.term_str[0]) + CTN(ghandle->p.term_str[1]);
                     ghandle->p.data.rmc.minutes = 10U * CTN(ghandle->p.term_str[2]) + CTN(ghandle->p.term_str[3]);
@@ -354,14 +411,24 @@ prv_parse_term(lwgps_t* ghandle) {
                     ghandle->p.data.rmc.time_valid = 0;
                 }
                 break;
-            case 2: /* Process valid status */ ghandle->p.data.rmc.is_valid = (ghandle->p.term_str[0] == 'A'); break;
-            case 7: /* Process ground speed in knots */
+            }
+            case 2: {
+                /* Process valid status */
+                ghandle->p.data.rmc.is_valid = (ghandle->p.term_str[0] == 'A');
+                break;
+            }
+            case 7: {
+                /* Process ground speed in knots */
                 ghandle->p.data.rmc.speed = prv_parse_float_number(ghandle, NULL);
                 break;
-            case 8: /* Process true ground coarse */
+            }
+            case 8: {
+                /* Process true ground coarse */
                 ghandle->p.data.rmc.course = prv_parse_float_number(ghandle, NULL);
                 break;
-            case 9: /* Process date */
+            }
+            case 9: {
+                /* Process date */
                 if (ghandle->p.term_pos >= 6) {
                     ghandle->p.data.rmc.date = (uint8_t)(10U * CTN(ghandle->p.term_str[0])
                                                          + CTN(ghandle->p.term_str[1]));
@@ -374,14 +441,19 @@ prv_parse_term(lwgps_t* ghandle) {
                     ghandle->p.data.rmc.date_valid = 0;
                 }
                 break;
-            case 10: /* Process magnetic variation */
+            }
+            case 10: {
+                /* Process magnetic variation */
                 ghandle->p.data.rmc.variation = prv_parse_float_number(ghandle, NULL);
                 break;
-            case 11: /* Process magnetic variation east/west */
+            }
+            case 11: {
+                /* Process magnetic variation east/west */
                 if (ghandle->p.term_str[0] == 'W' || ghandle->p.term_str[0] == 'w') {
                     ghandle->p.data.rmc.variation = -ghandle->p.data.rmc.variation;
                 }
                 break;
+            }
             default: break;
         }
 #endif /* LWGPS_CFG_STATEMENT_GPRMC */
@@ -393,7 +465,8 @@ prv_parse_term(lwgps_t* ghandle) {
 #if LWGPS_CFG_STATEMENT_PUBX_TIME
     } else if (ghandle->p.stat == STAT_UBX_TIME) { /* Process PUBX (uBlox) TIME statement */
         switch (ghandle->p.term_num) {
-            case 2: /* Process UTC time; ignore fractions of seconds */
+            case 2: {
+                /* Process UTC time; ignore fractions of seconds */
                 if (ghandle->p.term_pos >= 6) {
                     ghandle->p.data.time.hours = 10U * CTN(ghandle->p.term_str[0]) + CTN(ghandle->p.term_str[1]);
                     ghandle->p.data.time.minutes = 10U * CTN(ghandle->p.term_str[2]) + CTN(ghandle->p.term_str[3]);
@@ -404,7 +477,9 @@ prv_parse_term(lwgps_t* ghandle) {
                     ghandle->p.data.time.seconds = 0;
                 }
                 break;
-            case 3: /* Process UTC date */
+            }
+            case 3: {
+                /* Process UTC date */
                 if (ghandle->p.term_pos >= 6) {
                     ghandle->p.data.time.date = 10U * CTN(ghandle->p.term_str[0]) + CTN(ghandle->p.term_str[1]);
                     ghandle->p.data.time.month = 10U * CTN(ghandle->p.term_str[2]) + CTN(ghandle->p.term_str[3]);
@@ -415,11 +490,19 @@ prv_parse_term(lwgps_t* ghandle) {
                     ghandle->p.data.time.year = 0;
                 }
                 break;
-            case 4: /* Process UTC TimeOfWeek */
+            }
+            case 4: {
+                /* Process UTC TimeOfWeek */
                 ghandle->p.data.time.utc_tow = prv_parse_float_number(ghandle, NULL);
                 break;
-            case 5: /* Process UTC WeekNumber */ ghandle->p.data.time.utc_wk = prv_parse_number(ghandle, NULL); break;
-            case 6: /* Process UTC leap seconds */
+            }
+            case 5: {
+                /* Process UTC WeekNumber */
+                ghandle->p.data.time.utc_wk = prv_parse_number(ghandle, NULL);
+                break;
+            }
+            case 6: {
+                /* Process UTC leap seconds */
                 /*
                  * Accomodate a 2- or 3-digit leap second count
                  * a trailing 'D' means this is the firmware's default value.
@@ -433,13 +516,22 @@ prv_parse_term(lwgps_t* ghandle) {
                                                     + 10U * CTN(ghandle->p.term_str[1]) + CTN(ghandle->p.term_str[2]);
                 }
                 break;
-            case 7: /* Process clock bias */ ghandle->p.data.time.clk_bias = prv_parse_number(ghandle, NULL); break;
-            case 8: /* Process clock drift */
+            }
+            case 7: {
+                /* Process clock bias */
+                ghandle->p.data.time.clk_bias = prv_parse_number(ghandle, NULL);
+                break;
+            }
+            case 8: {
+                /* Process clock drift */
                 ghandle->p.data.time.clk_drift = prv_parse_float_number(ghandle, NULL);
                 break;
-            case 9: /* Process time pulse granularity */
+            }
+            case 9: {
+                /* Process time pulse granularity */
                 ghandle->p.data.time.tp_gran = prv_parse_number(ghandle, NULL);
                 break;
+            }
             default: break;
         }
 #endif /* LWGPS_CFG_STATEMENT_PUBX_TIME */
@@ -526,12 +618,17 @@ prv_copy_from_tmp_memory(lwgps_t* ghandle) {
         }
         if (ghandle->gsv_cycle_active) {
 #if LWGPS_CFG_STATEMENT_GPGSV_SAT_DET
-            for (size_t i = 0; i < LWGPS_ARRAYSIZE(ghandle->p.data.gsv.sats); ++i) {
-                size_t sat_in_series = ((size_t)(ghandle->p.data.gsv.stat_num - 1) << 0x02) + i;
+            /*
+             * We use the `size_t` for value before shifting,
+             * so that if `stat_num` from GSV is invalid (=0), doing -1 and shifting
+             * yields to very large number which is then large than the number of sats in view
+             */
+            for (size_t idx = 0; idx < LWGPS_ARRAYSIZE(ghandle->p.data.gsv.sats); ++idx) {
+                size_t sat_in_series = ((size_t)(ghandle->p.data.gsv.stat_num - 1) << 0x02U) + idx;
                 size_t index = ghandle->sats_in_view_tmp + sat_in_series; /* Absolute index across all series */
                 if (sat_in_series < ghandle->p.data.gsv.sats_in_view
                     && index < LWGPS_ARRAYSIZE(ghandle->sats_in_view_desc_tmp)) {
-                    ghandle->sats_in_view_desc_tmp[index] = ghandle->p.data.gsv.sats[i];
+                    ghandle->sats_in_view_desc_tmp[index] = ghandle->p.data.gsv.sats[idx];
                 }
             }
 #endif /* LWGPS_CFG_STATEMENT_GPGSV_SAT_DET */
