@@ -71,6 +71,20 @@
          : (((x) >= 'a' && (x) <= 'z') ? ((x) - 'a' + 10) : (((x) >= 'A' && (x) <= 'Z') ? ((x) - 'A' + 10) : 0)))
 
 /**
+ * \brief           Send the event status in the processing function
+ */
+#if LWGPS_CFG_STATUS
+#define SEND_EVENT_STATUS(value)                                                                                       \
+    do {                                                                                                               \
+        if (evt_fn != NULL) {                                                                                          \
+            evt_fn(value);                                                                                             \
+        }                                                                                                              \
+    } while (0)
+#else
+#define SEND_EVENT_STATUS(value)
+#endif /* LWGPS_CFG_STATUS */
+
+/**
  * \brief           Parse number as integer
  * \param[in]       ghandle: GPS handle
  * \param[in]       text: Text to parse. Set to `NULL` to parse current GPS term
@@ -165,6 +179,25 @@ prv_parse_lat_long(lwgps_t* ghandle) {
 }
 
 /**
+ * \brief           Aborts any active cycles when the failure is detected during the stream parsing
+ *
+ * \param           ghandle: GPS handle object
+ */
+static void
+prv_abort_blocks(lwgps_t* ghandle) {
+    if (0) {
+#if LWGPS_CFG_STATEMENT_GPGSV
+    } else if (ghandle->p.stat == STAT_GSV) {
+        ghandle->gsv_cycle_active = 0;
+#endif /* LWGPS_CFG_STATEMENT_GPGSV */
+#if LWGPS_CFG_STATEMENT_GPGSA
+    } else if (ghandle->p.stat == STAT_GSA) {
+        ghandle->gsa_cycle_active = 0;
+#endif /* LWGPS_CFG_STATEMENT_GPGSA */
+    }
+}
+
+/**
  * \brief           Publish working `GSA`/`GSV` data once their block of statements ends
  *
  *                  Multi-GNSS receivers send one `GSA` statement and one `GSV` series per constellation.
@@ -210,7 +243,13 @@ prv_publish_blocks(lwgps_t* ghandle) {
  */
 static uint8_t
 prv_parse_term(lwgps_t* ghandle) {
-    if (ghandle->p.term_num == 0) { /* Check string type */
+    uint8_t retval = 1;
+
+    /*
+     * Check for statement type,
+     * will early return no matter the result
+     */
+    if (ghandle->p.term_num == 0) {
         if (0) {
 #if LWGPS_CFG_STATEMENT_GPGGA
         } else if (ghandle->p.term_str[0] == '$' && (ghandle->p.term_str[1] == 'G' || ghandle->p.term_str[1] == 'B')
@@ -354,6 +393,9 @@ prv_parse_term(lwgps_t* ghandle) {
             case 2: {
                 /* Current message number within this GSV series */
                 ghandle->p.data.gsv.stat_num = (uint8_t)prv_parse_number(ghandle, NULL);
+                if (ghandle->p.data.gsv.stat_num == 0 || ghandle->p.data.gsv.stat_num > ghandle->p.data.gsv.num_msgs) {
+                    retval = 0; /* Invalid message */
+                }
                 break;
             }
             case 3: {
@@ -537,7 +579,7 @@ prv_parse_term(lwgps_t* ghandle) {
 #endif /* LWGPS_CFG_STATEMENT_PUBX_TIME */
 #endif /* LWGPS_CFG_STATEMENT_PUBX */
     }
-    return 1;
+    return retval;
 }
 
 #if LWGPS_CFG_CRC
@@ -698,37 +740,44 @@ lwgps_process(lwgps_t* ghandle, const void* data, size_t len, lwgps_process_fn e
 #else  /* LWGPS_CFG_STATUS */
 lwgps_process(lwgps_t* ghandle, const void* data, size_t len) {
 #endif /* !LWGPS_CFG_STATUS */
-    const uint8_t* d = data;
+    const uint8_t* d_ptr = data;
 
-    for (; len > 0; ++d, --len) {                                /* Process all bytes */
-        if (*d == '$') {                                         /* Check for beginning of NMEA line */
+    for (; len > 0; ++d_ptr, --len) {                            /* Process all bytes */
+        if (*d_ptr == '$') {                                     /* Check for beginning of NMEA line */
             LWGPS_MEMSET(&ghandle->p, 0x00, sizeof(ghandle->p)); /* Reset private memory */
-            TERM_ADD(ghandle, *d);                               /* Add character to term */
-        } else if (*d == ',') {                                  /* Term separator character */
-            prv_parse_term(ghandle);                             /* Parse term we have currently in memory */
-            CRC_ADD(ghandle, *d);                                /* Add character to CRC computation */
-            TERM_NEXT(ghandle);                                  /* Start with next term */
-        } else if (*d == '*') {                                  /* Start indicates end of data for CRC computation */
-            prv_parse_term(ghandle);                             /* Parse term we have currently in memory */
-            ghandle->p.star = 1;                                 /* STAR detected */
-            TERM_NEXT(ghandle);                                  /* Start with next term */
-        } else if (*d == '\r') {
-            if (prv_check_crc(ghandle)) { /* Check for CRC result */
-                /* CRC is OK, in theory we can copy data from statements to user data */
-                prv_copy_from_tmp_memory(ghandle); /* Copy memory from temporary to user memory */
-#if LWGPS_CFG_STATUS
-                if (evt_fn != NULL) {
-                    evt_fn(ghandle->p.stat);
+            TERM_ADD(ghandle, *d_ptr);                           /* Add character to term */
+        } else if (*d_ptr == ',') {                              /* Term separator character */
+            if (!ghandle->p.discard && !prv_parse_term(ghandle)) {
+                ghandle->p.discard = 1; /* Invalid parsing, discard the rest of the statement */
+            }
+            CRC_ADD(ghandle, *d_ptr); /* Add character to CRC computation */
+            TERM_NEXT(ghandle);       /* Start with next term */
+        } else if (*d_ptr == '*') {   /* Start indicates end of data for CRC computation */
+            if (!ghandle->p.discard && !prv_parse_term(ghandle)) {
+                ghandle->p.discard = 1; /* Invalid parsing, discard the rest of the statement */
+            }
+            ghandle->p.star = 1; /* STAR detected */
+            TERM_NEXT(ghandle);  /* Start with next term */
+        } else if (*d_ptr == '\r') {
+            /* Verify the valid data here */
+            if (!ghandle->p.discard) {
+                if (prv_check_crc(ghandle)) {
+                    /* CRC is OK, in theory we can copy data from statements to user data */
+                    prv_copy_from_tmp_memory(ghandle); /* Copy memory from temporary to user memory */
+                    SEND_EVENT_STATUS(ghandle->p.stat);
+                } else {
+                    prv_abort_blocks(ghandle);
+                    SEND_EVENT_STATUS(STAT_CHECKSUM_FAIL);
                 }
-            } else if (evt_fn != NULL) {
-                evt_fn(STAT_CHECKSUM_FAIL);
-#endif /* LWGPS_CFG_STATUS */
+            } else {
+                prv_abort_blocks(ghandle);
+                SEND_EVENT_STATUS(STAT_INVALID_DATA);
             }
         } else {
-            if (!ghandle->p.star) {   /* Add to CRC only if star not yet detected */
-                CRC_ADD(ghandle, *d); /* Add to CRC */
+            if (!ghandle->p.star) {       /* Add to CRC only if star not yet detected */
+                CRC_ADD(ghandle, *d_ptr); /* Add to CRC */
             }
-            TERM_ADD(ghandle, *d); /* Add character to term */
+            TERM_ADD(ghandle, *d_ptr); /* Add character to term */
         }
     }
     return 1;

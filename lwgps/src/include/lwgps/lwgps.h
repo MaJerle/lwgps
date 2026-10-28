@@ -73,14 +73,15 @@ typedef struct {
  * \brief           ENUM of possible GPS statements parsed
  */
 typedef enum {
-    STAT_UNKNOWN = 0,              /*!< Unknown NMEA statement */
-    STAT_GGA = 1,                  /*!< GPGGA statement */
-    STAT_GSA = 2,                  /*!< GPGSA statement */
-    STAT_GSV = 3,                  /*!< GPGSV statement */
-    STAT_RMC = 4,                  /*!< GPRMC statement */
-    STAT_UBX = 5,                  /*!< UBX statement (uBlox specific) */
-    STAT_UBX_TIME = 6,             /*!< UBX TIME statement (uBlox specific) */
-    STAT_CHECKSUM_FAIL = UINT8_MAX /*!< Special case, used when checksum fails */
+    STAT_UNKNOWN = 0,                  /*!< Unknown NMEA statement */
+    STAT_GGA = 1,                      /*!< GPGGA statement */
+    STAT_GSA = 2,                      /*!< GPGSA statement */
+    STAT_GSV = 3,                      /*!< GPGSV statement */
+    STAT_RMC = 4,                      /*!< GPRMC statement */
+    STAT_UBX = 5,                      /*!< UBX statement (uBlox specific) */
+    STAT_UBX_TIME = 6,                 /*!< UBX TIME statement (uBlox specific) */
+    STAT_INVALID_DATA = UINT8_MAX - 1, /*!< Event on invalid data detection, with discard enabled */
+    STAT_CHECKSUM_FAIL = UINT8_MAX     /*!< Special case, used when checksum fails */
 } lwgps_statement_t;
 
 /**
@@ -182,9 +183,8 @@ typedef struct {
         char term_str[13];      /*!< Current term in string format */
         uint8_t term_pos;       /*!< Current index position in term */
         uint8_t term_num;       /*!< Current term number */
-
-        uint8_t star; /*!< Star detected flag */
-
+        uint8_t star;           /*!< Star detected flag */
+        uint8_t discard;        /*!< Discard the statement flag */
 #if LWGPS_CFG_CRC
         uint8_t crc_calc; /*!< Calculated CRC string */
 #endif                    /* LWGPS_CFG_CRC */
