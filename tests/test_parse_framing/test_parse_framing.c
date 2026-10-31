@@ -113,15 +113,22 @@ test_run(void) {
     RUN_TEST(INT_IS_EQUAL(events[0], STAT_GGA));
     RUN_TEST(FLT_IS_EQUAL(hgps.altitude, 99.9));
 
-    /* Invalid term with valid checksum is reported as invalid data */
-    prv_process(&hgps, "$GPGSV,1,0,02,10,63,137,17,07,61,098,15*78\r\n");
-    RUN_TEST(INT_IS_EQUAL(events_cnt, 1));
+    /* Invalid term with valid checksum is reported as invalid data, published data is untouched */
+    RUN_TEST(INT_IS_EQUAL(hgps.sats_in_view, 2));
+    prv_process(&hgps, "$GPGSV,1,0,03,10,63,137,17,07,61,098,15,08,10,100,20*43\r\n"
+                       "$GPGGA,092750.000,5321.6802,N,00630.3372,W,1,8,1.03,61.7,M,55.2,M,,*76\r\n");
+    RUN_TEST(INT_IS_EQUAL(events_cnt, 2));
     RUN_TEST(INT_IS_EQUAL(events[0], STAT_INVALID_DATA));
+    RUN_TEST(INT_IS_EQUAL(events[1], STAT_GGA));
+    RUN_TEST(INT_IS_EQUAL(hgps.sats_in_view, 2));
 
-    /* Invalid term with invalid checksum reports the checksum failure */
-    prv_process(&hgps, "$GPGSV,1,0,02,10,63,137,17,07,61,098,15*79\r\n");
-    RUN_TEST(INT_IS_EQUAL(events_cnt, 1));
+    /* Invalid term with invalid checksum reports the checksum failure, published data is untouched */
+    prv_process(&hgps, "$GPGSV,1,0,03,10,63,137,17,07,61,098,15,08,10,100,20*42\r\n"
+                       "$GPGGA,092750.000,5321.6802,N,00630.3372,W,1,8,1.03,61.7,M,55.2,M,,*76\r\n");
+    RUN_TEST(INT_IS_EQUAL(events_cnt, 2));
     RUN_TEST(INT_IS_EQUAL(events[0], STAT_CHECKSUM_FAIL));
+    RUN_TEST(INT_IS_EQUAL(events[1], STAT_GGA));
+    RUN_TEST(INT_IS_EQUAL(hgps.sats_in_view, 2));
 
     return 0;
 }

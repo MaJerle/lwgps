@@ -19,13 +19,22 @@
 const char gps_rx_data[] = ""
                            "$GPRMC,183729,A,3907.356,N,12102.482,W,000.0,360.0,080301,015.5,E*6F\r\n"
                            "$GPGGA,183730,3907.356,N,12102.482,W,1,05,1.6,646.4,M,-24.1,M,,*75\r\n"
-                           "$GPGSA,A,3,02,,,07,,09,24,26,,,,,1.6,1.6,1.0*3D\r\n"
-                           /* Invalid message number 0, must be ignored */
+                           /* Invalid message number 0, aborts its block, ended by the next statement */
                            "$GPGSV,2,0,08,02,43,088,38,04,42,145,00,05,11,291,00,07,60,043,35*70\r\n"
+                           "$GPGSA,A,3,02,,,07,,09,24,26,,,,,1.6,1.6,1.0*3D\r\n"
                            "$GPGSV,2,1,08,02,43,088,38,04,42,145,00,05,11,291,00,07,60,043,35*71\r\n"
                            "$GPGSV,2,2,08,08,02,145,00,09,46,303,47,24,16,178,32,26,18,231,43*77\r\n"
                            "$GPTXT,01,01,01,ANTENNA OK*35\r\n"
                            "";
+
+/**
+ * \brief           Next epoch, `GSV` block starts with invalid message number 0
+ */
+const char gps_rx_data_num_0[] = ""
+                                 "$GPGSV,2,0,08,31,43,088,38,32,42,145,00,33,11,291,00,34,60,043,35*70\r\n"
+                                 "$GPGSV,2,2,08,35,02,145,00,36,46,303,47,37,16,178,32,38,18,231,43*78\r\n"
+                                 "$GPTXT,01,01,01,ANTENNA OK*35\r\n"
+                                 "";
 
 /**
  * \brief           Run the test of raw input data
@@ -111,6 +120,19 @@ test_run(void) {
     RUN_TEST(INT_IS_EQUAL(hgps.hours, 18));
     RUN_TEST(INT_IS_EQUAL(hgps.minutes, 37));
     RUN_TEST(INT_IS_EQUAL(hgps.seconds, 29));
+
+    /* Block with different satellites, starting with invalid message number 0, must keep previous data */
+    lwgps_process(&hgps, gps_rx_data_num_0, strlen(gps_rx_data_num_0));
+    RUN_TEST(INT_IS_EQUAL(hgps.sats_in_view, 8));
+    RUN_TEST(INT_IS_EQUAL(hgps.sats_in_view_desc[0].num, 2));
+    RUN_TEST(INT_IS_EQUAL(hgps.sats_in_view_desc[1].num, 4));
+    RUN_TEST(INT_IS_EQUAL(hgps.sats_in_view_desc[2].num, 5));
+    RUN_TEST(INT_IS_EQUAL(hgps.sats_in_view_desc[3].num, 7));
+    RUN_TEST(INT_IS_EQUAL(hgps.sats_in_view_desc[4].num, 8));
+    RUN_TEST(INT_IS_EQUAL(hgps.sats_in_view_desc[5].num, 9));
+    RUN_TEST(INT_IS_EQUAL(hgps.sats_in_view_desc[6].num, 24));
+    RUN_TEST(INT_IS_EQUAL(hgps.sats_in_view_desc[7].num, 26));
+    RUN_TEST(INT_IS_EQUAL(hgps.sats_in_view_desc[8].num, 0));
 
     return 0;
 }
