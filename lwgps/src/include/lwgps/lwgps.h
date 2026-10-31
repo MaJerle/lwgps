@@ -183,7 +183,7 @@ typedef struct {
         char term_str[13];      /*!< Current term in string format */
         uint8_t term_pos;       /*!< Current index position in term */
         uint8_t term_num;       /*!< Current term number */
-        uint8_t star;           /*!< Star detected flag */
+        uint8_t state;          /*!< Line framing state: waiting for `$`, data or checksum */
         uint8_t discard;        /*!< Discard the statement flag */
 #if LWGPS_CFG_CRC
         uint8_t crc_calc; /*!< Calculated CRC string */

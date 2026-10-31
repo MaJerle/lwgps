@@ -62,6 +62,22 @@
         ++(_gh)->p.term_num;                                                                                           \
     } while (0)
 
+#define TERM_PARSE(_gh)                                                                                                \
+    do {                                                                                                               \
+        if (!(_gh)->p.discard && !prv_parse_term(_gh)) {                                                               \
+            (_gh)->p.discard = 1; /* Invalid parsing, discard the rest of the statement */                             \
+        }                                                                                                              \
+    } while (0)
+
+/**
+ * \brief           Line framing state, used in `p.state`
+ */
+typedef enum {
+    LINE_STATE_IDLE = 0x00, /*!< Waiting for `$`. Must be `0`, as it is the state after private memory reset */
+    LINE_STATE_DATA,        /*!< Receiving statement data, between `$` and `*` */
+    LINE_STATE_CRC,         /*!< Receiving checksum, after `*` */
+} prv_line_state_t;
+
 #define CIN(x)  ((x) >= '0' && (x) <= '9')
 #define CIHN(x) (((x) >= '0' && (x) <= '9') || ((x) >= 'a' && (x) <= 'f') || ((x) >= 'A' && (x) <= 'F'))
 #define CTN(x)  ((x) - '0')
@@ -247,7 +263,7 @@ prv_parse_term(lwgps_t* ghandle) {
 
     /*
      * Check for statement type,
-     * will early return no matter the result
+     * on match it will early return no matter the result
      */
     if (ghandle->p.term_num == 0) {
         if (0) {
@@ -591,6 +607,12 @@ prv_parse_term(lwgps_t* ghandle) {
 static uint8_t
 prv_check_crc(lwgps_t* ghandle) {
     uint8_t crc;
+
+    /* Checksum must be present, with exactly 2 hex characters after the star */
+    if (ghandle->p.state != LINE_STATE_CRC || ghandle->p.term_pos != 2 || !CIHN(ghandle->p.term_str[0])
+        || !CIHN(ghandle->p.term_str[1])) {
+        return 0;
+    }
     crc = (uint8_t)((CHTN(ghandle->p.term_str[0]) & 0x0FU) << 0x04U)
           | (CHTN(ghandle->p.term_str[1]) & 0x0FU); /* Convert received CRC from string (hex) to number */
     if (ghandle->p.crc_calc != crc) {
@@ -731,53 +753,78 @@ lwgps_init(lwgps_t* ghandle) {
  * \param[in]       data: Received data
  * \param[in]       len: Number of bytes to process
  * \param[in]       evt_fn: Event function to notify application layer.
- *                      This parameter is available only if \ref LWGPS_CFG_STATUS is enabled
+ *                      This parameter is available only when \ref LWGPS_CFG_STATUS is enabled
  * \return          `1` on success, `0` otherwise
  */
 uint8_t
+lwgps_process(lwgps_t* ghandle, const void* data, size_t len
 #if LWGPS_CFG_STATUS || __DOXYGEN__
-lwgps_process(lwgps_t* ghandle, const void* data, size_t len, lwgps_process_fn evt_fn) {
-#else  /* LWGPS_CFG_STATUS */
-lwgps_process(lwgps_t* ghandle, const void* data, size_t len) {
+              ,
+              lwgps_process_fn evt_fn
 #endif /* !LWGPS_CFG_STATUS */
+) {
     const uint8_t* d_ptr = data;
 
-    for (; len > 0; ++d_ptr, --len) {                            /* Process all bytes */
-        if (*d_ptr == '$') {                                     /* Check for beginning of NMEA line */
-            LWGPS_MEMSET(&ghandle->p, 0x00, sizeof(ghandle->p)); /* Reset private memory */
-            TERM_ADD(ghandle, *d_ptr);                           /* Add character to term */
-        } else if (*d_ptr == ',') {                              /* Term separator character */
-            if (!ghandle->p.discard && !prv_parse_term(ghandle)) {
-                ghandle->p.discard = 1; /* Invalid parsing, discard the rest of the statement */
+    for (; len > 0; ++d_ptr, --len) {
+        if (*d_ptr == '$') { /* Beginning of an entry? */
+            LWGPS_MEMSET(&ghandle->p, 0x00, sizeof(ghandle->p));
+            ghandle->p.state = LINE_STATE_DATA;
+            TERM_ADD(ghandle, *d_ptr);
+        } else if (ghandle->p.state == LINE_STATE_IDLE) {
+            /* Ignore everything until start of next statement,
+                we wait until valid $ sign starts */
+        } else if (*d_ptr == '\r' || *d_ptr == '\n') { /* End of statement */
+            /* No checksum field, last term is not yet parsed */
+            if (ghandle->p.state == LINE_STATE_DATA) {
+                TERM_PARSE(ghandle);
             }
-            CRC_ADD(ghandle, *d_ptr); /* Add character to CRC computation */
-            TERM_NEXT(ghandle);       /* Start with next term */
-        } else if (*d_ptr == '*') {   /* Start indicates end of data for CRC computation */
-            if (!ghandle->p.discard && !prv_parse_term(ghandle)) {
-                ghandle->p.discard = 1; /* Invalid parsing, discard the rest of the statement */
-            }
-            ghandle->p.star = 1; /* STAR detected */
-            TERM_NEXT(ghandle);  /* Start with next term */
-        } else if (*d_ptr == '\r') {
-            /* Verify the valid data here */
-            if (!ghandle->p.discard) {
-                if (prv_check_crc(ghandle)) {
-                    /* CRC is OK, in theory we can copy data from statements to user data */
-                    prv_copy_from_tmp_memory(ghandle); /* Copy memory from temporary to user memory */
-                    SEND_EVENT_STATUS(ghandle->p.stat);
-                } else {
-                    prv_abort_blocks(ghandle);
-                    SEND_EVENT_STATUS(STAT_CHECKSUM_FAIL);
-                }
-            } else {
+
+            /* Checksum has priority over invalid data, as it may be the reason for it */
+            if (!prv_check_crc(ghandle)) {
+                prv_abort_blocks(ghandle);
+                SEND_EVENT_STATUS(STAT_CHECKSUM_FAIL);
+            } else if (ghandle->p.discard) {
                 prv_abort_blocks(ghandle);
                 SEND_EVENT_STATUS(STAT_INVALID_DATA);
+            } else {
+                /* All good = Copy memory from temporary to user memory */
+                prv_copy_from_tmp_memory(ghandle);
+                SEND_EVENT_STATUS(ghandle->p.stat);
             }
+            ghandle->p.state = LINE_STATE_IDLE; /* Statement is processed only once */
+        } else if (ghandle->p.state == LINE_STATE_CRC) {
+            /* Collect checksum, verified at the end of statement */
+            TERM_ADD(ghandle, *d_ptr);
+        } else if (*d_ptr == ',') { /* Term separator character */
+            /*
+             * Term separator indicates the end of the current term.
+             * We need to:
+             * - parse current term
+             * - add char to CRC
+             * - move to the next term.
+             */
+            TERM_PARSE(ghandle);
+            CRC_ADD(ghandle, *d_ptr);
+            TERM_NEXT(ghandle);
+        } else if (*d_ptr == '*') {
+            /*
+             * Star indicates end of data that goes into CRC computation.
+             * This is also end of the current term, so we:
+             *
+             * - Parse the current term
+             * - Set state to CRC and start processing the data which will be computed
+             *      at the "line end" character
+             */
+            TERM_PARSE(ghandle);
+            ghandle->p.state = LINE_STATE_CRC;
+            TERM_NEXT(ghandle);
         } else {
-            if (!ghandle->p.star) {       /* Add to CRC only if star not yet detected */
-                CRC_ADD(ghandle, *d_ptr); /* Add to CRC */
-            }
-            TERM_ADD(ghandle, *d_ptr); /* Add character to term */
+            /*
+             * Regular character within a term
+             * Add to CRC and term memory
+             */
+            CRC_ADD(ghandle, *d_ptr);
+            TERM_ADD(ghandle, *d_ptr);
         }
     }
     return 1;
