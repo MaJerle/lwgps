@@ -118,6 +118,8 @@ typedef struct {
     uint8_t fix_mode;                                   /*!< Fix mode. `1` = NO fix, `2` = 2D fix, `3` = 3D fix */
     uint8_t satellites_ids[LWGPS_CFG_SATS_IN_USE_SIZE]; /*!< Packed list of satellite IDs in use, collected from
                                                             all `GSA` statements of one epoch. Unused entries are `0`.
+                                                            Published at the end of the next valid statement
+                                                            of a different type.
                                                             Kept unchanged if any statement of the block is invalid */
 #if !__DOXYGEN__
     uint8_t satellites_ids_tmp[LWGPS_CFG_SATS_IN_USE_SIZE]; /*!< Working list, published at the end of `GSA` block */
@@ -130,6 +132,8 @@ typedef struct {
     /* Information related to GPGSV statement */
     uint8_t sats_in_view; /*!< Number of satellites in view (accumulated across all constellations/signals).
                                 Updated at once, when complete `GSV` block of the epoch has been received.
+                                Published at the end of the next valid statement of a different type,
+                                which may be in the next output packet when `GSV` is the last block.
                                 Kept unchanged if any statement of the block is invalid */
 #if LWGPS_CFG_STATEMENT_GPGSV_SAT_DET || __DOXYGEN__
     lwgps_sat_t sats_in_view_desc[LWGPS_CFG_SATS_IN_VIEW_SIZE]; /*!< Satellites in view, consistent with

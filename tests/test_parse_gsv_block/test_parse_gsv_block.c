@@ -50,6 +50,7 @@ static const uint8_t ids_b[] = {11, 12, 71};
 
 static lwgps_t hgps;
 static lwgps_statement_t events[16];
+static uint8_t events_sats_in_view[16]; /*!< Published satellites in view, at the time of the event */
 static size_t events_cnt;
 
 /**
@@ -59,6 +60,7 @@ static void
 prv_evt_fn(lwgps_statement_t res) {
     if (events_cnt < sizeof(events) / sizeof(events[0])) {
         events[events_cnt] = res;
+        events_sats_in_view[events_cnt] = hgps.sats_in_view;
     }
     ++events_cnt;
 }
@@ -177,6 +179,51 @@ test_run(void) {
     prv_process(B_GP1 B_GP2 B_GL1);
     RUN_TEST(CHECK_SATS_A());
     prv_process(GGA);
+    RUN_TEST(CHECK_SATS_B());
+
+    /*
+     * GSV block last in the burst: it is published by the first statement of the next burst,
+     * exactly at its end of line, before its event is reported
+     */
+    lwgps_init(&hgps);
+    prv_process(GGA A_GPGSA A_GLGSA A_GP1 A_GP2 A_GL1);
+    RUN_TEST(INT_IS_EQUAL(events_cnt, 6));
+    for (size_t i = 0; i < events_cnt; ++i) {
+        RUN_TEST(INT_IS_EQUAL(events_sats_in_view[i], 0)); /* Nothing published during the burst */
+    }
+    RUN_TEST(INT_IS_EQUAL(hgps.sats_in_view, 0));
+    RUN_TEST(INT_IS_EQUAL(hgps.sats_in_view_desc[0].num, 0));
+    RUN_TEST(CHECK_IDS_A()); /* GSA block was ended by the first GSV statement */
+
+    /* First statement of the next burst, byte by byte: unchanged until its end of line */
+    events_cnt = 0;
+    for (const char* ch = GGA; *ch != '\0'; ++ch) {
+        lwgps_process(&hgps, ch, 1, prv_evt_fn);
+        if (*ch == '\r') {
+            break;
+        }
+        RUN_TEST(INT_IS_EQUAL(hgps.sats_in_view, 0));
+        RUN_TEST(INT_IS_EQUAL(hgps.sats_in_view_desc[0].num, 0));
+        RUN_TEST(INT_IS_EQUAL(events_cnt, 0));
+    }
+    RUN_TEST(CHECK_SATS_A());
+    RUN_TEST(INT_IS_EQUAL(events_cnt, 1));
+    RUN_TEST(INT_IS_EQUAL(events[0], STAT_GGA));
+    RUN_TEST(INT_IS_EQUAL(events_sats_in_view[0], sizeof(sats_a))); /* Already published in the event */
+
+    /* Rest of the burst, GSV last again: previous block stays published */
+    prv_process("\n" B_GPGSA B_GLGSA B_GP1 B_GP2 B_GL1);
+    RUN_TEST(INT_IS_EQUAL(events_cnt, 5));
+    for (size_t i = 0; i < events_cnt; ++i) {
+        RUN_TEST(INT_IS_EQUAL(events_sats_in_view[i], sizeof(sats_a)));
+    }
+    RUN_TEST(CHECK_SATS_A());
+
+    /* Statement unknown to the library ends the block too */
+    prv_process("$GPTXT,01,01,01,ANTENNA OK*35\r\n");
+    RUN_TEST(INT_IS_EQUAL(events_cnt, 1));
+    RUN_TEST(INT_IS_EQUAL(events[0], STAT_UNKNOWN));
+    RUN_TEST(INT_IS_EQUAL(events_sats_in_view[0], sizeof(sats_b)));
     RUN_TEST(CHECK_SATS_B());
 
     /* Faulty epochs keep previous data, and next clean epoch recovers */
