@@ -79,13 +79,13 @@ typedef enum {
 } prv_line_state_t;
 
 /**
- * \brief           Block state of multi-statement data (`GSA`, `GSV`), used in `gsa_state` and `gsv_state`
+ * \brief           Block state of multi-statement data (`GSA`, `GSV`), used in `tmp.gsa.state` and `tmp.gsv.state`
  */
 typedef enum {
     BLOCK_STATE_IDLE = 0x00, /*!< No block in progress. Must be `0`, as it is the state after init */
     BLOCK_STATE_ACTIVE,      /*!< Block in progress, all statements so far are valid */
     BLOCK_STATE_ABORTED,     /*!< Invalid statement detected, ignore the rest of the block */
-} prv_block_state_t;
+} block_state_t;
 
 #define CIN(x)  ((x) >= '0' && (x) <= '9')
 #define CIHN(x) (((x) >= '0' && (x) <= '9') || ((x) >= 'a' && (x) <= 'f') || ((x) >= 'A' && (x) <= 'F'))
@@ -237,18 +237,18 @@ prv_update_blocks(lwgps_t* ghandle, uint8_t crc_valid) {
      *      Both go back to idle, so that next GSA statement starts a new block
      */
     if (!crc_valid) {
-        if (ghandle->gsa_state == BLOCK_STATE_ACTIVE) {
-            ghandle->gsa_state = BLOCK_STATE_ABORTED;
+        if (ghandle->tmp.gsa.state == BLOCK_STATE_ACTIVE) {
+            ghandle->tmp.gsa.state = BLOCK_STATE_ABORTED;
         }
     } else if (ghandle->p.stat == STAT_GSA) {
         if (ghandle->p.discard) {
-            ghandle->gsa_state = BLOCK_STATE_ABORTED;
+            ghandle->tmp.gsa.state = BLOCK_STATE_ABORTED;
         }
     } else {
-        if (ghandle->gsa_state == BLOCK_STATE_ACTIVE) {
-            LWGPS_MEMCPY(ghandle->satellites_ids, ghandle->satellites_ids_tmp, sizeof(ghandle->satellites_ids));
+        if (ghandle->tmp.gsa.state == BLOCK_STATE_ACTIVE) {
+            LWGPS_MEMCPY(ghandle->satellites_ids, ghandle->tmp.gsa.satellites_ids, sizeof(ghandle->satellites_ids));
         }
-        ghandle->gsa_state = BLOCK_STATE_IDLE;
+        ghandle->tmp.gsa.state = BLOCK_STATE_IDLE;
     }
 #endif /* LWGPS_CFG_STATEMENT_GPGSA */
 #if LWGPS_CFG_STATEMENT_GPGSV
@@ -267,29 +267,29 @@ prv_update_blocks(lwgps_t* ghandle, uint8_t crc_valid) {
      *      Both go back to idle, so that next GSV statement starts a new block
      */
     if (!crc_valid) {
-        if (ghandle->gsv_state == BLOCK_STATE_ACTIVE) {
-            ghandle->gsv_state = BLOCK_STATE_ABORTED;
+        if (ghandle->tmp.gsv.state == BLOCK_STATE_ACTIVE) {
+            ghandle->tmp.gsv.state = BLOCK_STATE_ABORTED;
         }
     } else if (ghandle->p.stat == STAT_GSV) {
         if (ghandle->p.discard) {
-            ghandle->gsv_state = BLOCK_STATE_ABORTED;
+            ghandle->tmp.gsv.state = BLOCK_STATE_ABORTED;
         }
     } else {
         /* Publish only if last series is complete */
-        if (ghandle->gsv_state == BLOCK_STATE_ACTIVE && ghandle->gsv_next_num == 0) {
-            ghandle->sats_in_view = ghandle->sats_in_view_tmp;
+        if (ghandle->tmp.gsv.state == BLOCK_STATE_ACTIVE && ghandle->tmp.gsv.next_num == 0) {
+            ghandle->sats_in_view = ghandle->tmp.gsv.sats_in_view;
 #if LWGPS_CFG_STATEMENT_GPGSV_SAT_DET
-            LWGPS_MEMCPY(ghandle->sats_in_view_desc, ghandle->sats_in_view_desc_tmp,
+            LWGPS_MEMCPY(ghandle->sats_in_view_desc, ghandle->tmp.gsv.sats_in_view_desc,
                          sizeof(ghandle->sats_in_view_desc));
 #endif /* LWGPS_CFG_STATEMENT_GPGSV_SAT_DET */
         }
-        ghandle->gsv_state = BLOCK_STATE_IDLE;
+        ghandle->tmp.gsv.state = BLOCK_STATE_IDLE;
     }
 #endif /* LWGPS_CFG_STATEMENT_GPGSV */
-#if !LWGPS_CFG_STATEMENT_GPGSA && !LWGPS_CFG_STATEMENT_GPGSV
+
+    /* Might be unused in some configurations */
     (void)ghandle;
     (void)crc_valid;
-#endif /* !LWGPS_CFG_STATEMENT_GPGSA && !LWGPS_CFG_STATEMENT_GPGSV */
 }
 
 /**
@@ -452,21 +452,21 @@ prv_parse_term(lwgps_t* ghandle) {
                 ghandle->p.data.gsv.stat_num = (uint8_t)prv_parse_number(ghandle, NULL);
                 if (ghandle->p.data.gsv.stat_num == 0 || ghandle->p.data.gsv.stat_num > ghandle->p.data.gsv.num_msgs) {
                     retval = 0; /* Invalid message */
-                } else if (ghandle->gsv_state == BLOCK_STATE_ACTIVE) {
+                } else if (ghandle->tmp.gsv.state == BLOCK_STATE_ACTIVE) {
                     /*
                      * Must be the next message of the open series, or the first message of a new series.
                      *
                      * - Check that it is first one if the series is just starting
                      * - Check that it is the next message if the series is already active
                      */
-                    if (ghandle->gsv_next_num == 0) {
+                    if (ghandle->tmp.gsv.next_num == 0) {
                         if (ghandle->p.data.gsv.stat_num != 1) {
                             retval = 0;
                         }
-                    } else if (ghandle->p.data.gsv.stat_num != ghandle->gsv_next_num
-                               || ghandle->p.data.gsv.num_msgs != ghandle->gsv_num_msgs
-                               || ghandle->p.data.gsv.talker[0] != ghandle->gsv_talker[0]
-                               || ghandle->p.data.gsv.talker[1] != ghandle->gsv_talker[1]) {
+                    } else if (ghandle->p.data.gsv.stat_num != ghandle->tmp.gsv.next_num
+                               || ghandle->p.data.gsv.num_msgs != ghandle->tmp.gsv.num_msgs
+                               || ghandle->p.data.gsv.talker[0] != ghandle->tmp.gsv.talker[0]
+                               || ghandle->p.data.gsv.talker[1] != ghandle->tmp.gsv.talker[1]) {
                         retval = 0;
                     }
                 }
@@ -477,8 +477,8 @@ prv_parse_term(lwgps_t* ghandle) {
                 ghandle->p.data.gsv.sats_in_view = (uint8_t)prv_parse_number(ghandle, NULL);
                 if (ghandle->p.data.gsv.sats_in_view > (4U * ghandle->p.data.gsv.num_msgs)) {
                     retval = 0; /* More satellites than the series can describe */
-                } else if (ghandle->gsv_state == BLOCK_STATE_ACTIVE && ghandle->gsv_next_num != 0
-                           && ghandle->p.data.gsv.sats_in_view != ghandle->gsv_series_sats) {
+                } else if (ghandle->tmp.gsv.state == BLOCK_STATE_ACTIVE && ghandle->tmp.gsv.next_num != 0
+                           && ghandle->p.data.gsv.sats_in_view != ghandle->tmp.gsv.series_sats) {
                     retval = 0; /* Must be the same in all messages of the series */
                 }
                 break;
@@ -722,18 +722,19 @@ prv_copy_from_tmp_memory(lwgps_t* ghandle) {
         ghandle->fix_mode = ghandle->p.data.gsa.fix_mode;
 
         /* First GSA of the block starts a new working list */
-        if (ghandle->gsa_state == BLOCK_STATE_IDLE) {
-            LWGPS_MEMSET(ghandle->satellites_ids_tmp, 0x00, sizeof(ghandle->satellites_ids_tmp));
-            ghandle->satellites_ids_cnt = 0;
-            ghandle->gsa_state = BLOCK_STATE_ACTIVE;
+        if (ghandle->tmp.gsa.state == BLOCK_STATE_IDLE) {
+            LWGPS_MEMSET(ghandle->tmp.gsa.satellites_ids, 0x00, sizeof(ghandle->tmp.gsa.satellites_ids));
+            ghandle->tmp.gsa.satellites_ids_cnt = 0;
+            ghandle->tmp.gsa.state = BLOCK_STATE_ACTIVE;
         }
 
         /* Append non-empty IDs of this statement (one statement per constellation) */
-        if (ghandle->gsa_state == BLOCK_STATE_ACTIVE) {
+        if (ghandle->tmp.gsa.state == BLOCK_STATE_ACTIVE) {
             for (size_t idx = 0; idx < sizeof(ghandle->p.data.gsa.satellites_ids); ++idx) {
                 if (ghandle->p.data.gsa.satellites_ids[idx] != 0
-                    && ghandle->satellites_ids_cnt < sizeof(ghandle->satellites_ids_tmp)) {
-                    ghandle->satellites_ids_tmp[ghandle->satellites_ids_cnt++] = ghandle->p.data.gsa.satellites_ids[idx];
+                    && ghandle->tmp.gsa.satellites_ids_cnt < sizeof(ghandle->tmp.gsa.satellites_ids)) {
+                    ghandle->tmp.gsa.satellites_ids[ghandle->tmp.gsa.satellites_ids_cnt++] =
+                        ghandle->p.data.gsa.satellites_ids[idx];
                 }
             }
         }
@@ -744,16 +745,16 @@ prv_copy_from_tmp_memory(lwgps_t* ghandle) {
          * First message of the first series in the block starts new working data.
          * Block starting with any other message (e.g. after power-up) is aborted
          */
-        if (ghandle->gsv_state == BLOCK_STATE_IDLE) {
+        if (ghandle->tmp.gsv.state == BLOCK_STATE_IDLE) {
             if (ghandle->p.data.gsv.stat_num == 1) {
 #if LWGPS_CFG_STATEMENT_GPGSV_SAT_DET
-                LWGPS_MEMSET(ghandle->sats_in_view_desc_tmp, 0x00, sizeof(ghandle->sats_in_view_desc_tmp));
+                LWGPS_MEMSET(ghandle->tmp.gsv.sats_in_view_desc, 0x00, sizeof(ghandle->tmp.gsv.sats_in_view_desc));
 #endif /* LWGPS_CFG_STATEMENT_GPGSV_SAT_DET */
-                ghandle->sats_in_view_tmp = 0;
-                ghandle->gsv_next_num = 0;
-                ghandle->gsv_state = BLOCK_STATE_ACTIVE;
+                ghandle->tmp.gsv.sats_in_view = 0;
+                ghandle->tmp.gsv.next_num = 0;
+                ghandle->tmp.gsv.state = BLOCK_STATE_ACTIVE;
             } else {
-                ghandle->gsv_state = BLOCK_STATE_ABORTED;
+                ghandle->tmp.gsv.state = BLOCK_STATE_ABORTED;
             }
         }
 
@@ -764,28 +765,28 @@ prv_copy_from_tmp_memory(lwgps_t* ghandle) {
          * This gets accumulated across multiple GSV messages until the entire block is received,
          * and also across multiple series within the block (GPS, Glonass, ...).
          */
-        if (ghandle->gsv_state == BLOCK_STATE_ACTIVE) {
+        if (ghandle->tmp.gsv.state == BLOCK_STATE_ACTIVE) {
 #if LWGPS_CFG_STATEMENT_GPGSV_SAT_DET
             for (size_t idx = 0; idx < LWGPS_ARRAYSIZE(ghandle->p.data.gsv.sats); ++idx) {
                 size_t sat_in_series = ((size_t)(ghandle->p.data.gsv.stat_num - 1) << 0x02U) + idx;
-                size_t index = ghandle->sats_in_view_tmp + sat_in_series; /* Absolute index across all series */
+                size_t index = ghandle->tmp.gsv.sats_in_view + sat_in_series; /* Absolute index across all series */
                 if (sat_in_series < ghandle->p.data.gsv.sats_in_view
-                    && index < LWGPS_ARRAYSIZE(ghandle->sats_in_view_desc_tmp)) {
-                    ghandle->sats_in_view_desc_tmp[index] = ghandle->p.data.gsv.sats[idx];
+                    && index < LWGPS_ARRAYSIZE(ghandle->tmp.gsv.sats_in_view_desc)) {
+                    ghandle->tmp.gsv.sats_in_view_desc[index] = ghandle->p.data.gsv.sats[idx];
                 }
             }
 #endif /* LWGPS_CFG_STATEMENT_GPGSV_SAT_DET */
 
             /* Add this series' count once (when its last message completes), or expect the next message */
             if (ghandle->p.data.gsv.stat_num == ghandle->p.data.gsv.num_msgs) {
-                ghandle->sats_in_view_tmp += ghandle->p.data.gsv.sats_in_view;
-                ghandle->gsv_next_num = 0;
+                ghandle->tmp.gsv.sats_in_view += ghandle->p.data.gsv.sats_in_view;
+                ghandle->tmp.gsv.next_num = 0;
             } else {
-                ghandle->gsv_next_num = ghandle->p.data.gsv.stat_num + 1;
-                ghandle->gsv_num_msgs = ghandle->p.data.gsv.num_msgs;
-                ghandle->gsv_series_sats = ghandle->p.data.gsv.sats_in_view;
-                ghandle->gsv_talker[0] = ghandle->p.data.gsv.talker[0];
-                ghandle->gsv_talker[1] = ghandle->p.data.gsv.talker[1];
+                ghandle->tmp.gsv.next_num = ghandle->p.data.gsv.stat_num + 1;
+                ghandle->tmp.gsv.num_msgs = ghandle->p.data.gsv.num_msgs;
+                ghandle->tmp.gsv.series_sats = ghandle->p.data.gsv.sats_in_view;
+                ghandle->tmp.gsv.talker[0] = ghandle->p.data.gsv.talker[0];
+                ghandle->tmp.gsv.talker[1] = ghandle->p.data.gsv.talker[1];
             }
         }
 #endif /* LWGPS_CFG_STATEMENT_GPGSV */

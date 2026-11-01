@@ -121,12 +121,7 @@ typedef struct {
                                                             Published at the end of the next valid statement
                                                             of a different type.
                                                             Kept unchanged if any statement of the block is invalid */
-#if !__DOXYGEN__
-    uint8_t satellites_ids_tmp[LWGPS_CFG_SATS_IN_USE_SIZE]; /*!< Working list, published at the end of `GSA` block */
-    uint8_t satellites_ids_cnt;                             /*!< Number of valid entries in working list */
-    uint8_t gsa_state;                                      /*!< `GSA` block state: idle, active or aborted */
-#endif                                                      /* !__DOXYGEN__ */
-#endif                                                      /* LWGPS_CFG_STATEMENT_GPGSA || __DOXYGEN__ */
+#endif                                                  /* LWGPS_CFG_STATEMENT_GPGSA || __DOXYGEN__ */
 
 #if LWGPS_CFG_STATEMENT_GPGSV || __DOXYGEN__
     /* Information related to GPGSV statement */
@@ -139,19 +134,7 @@ typedef struct {
     lwgps_sat_t sats_in_view_desc[LWGPS_CFG_SATS_IN_VIEW_SIZE]; /*!< Satellites in view, consistent with
                                                                     \ref sats_in_view */
 #endif                                                          /* LWGPS_CFG_STATEMENT_GPGSV_SAT_DET || __DOXYGEN__ */
-#if !__DOXYGEN__
-    uint8_t sats_in_view_tmp; /*!< Working count, also descriptor offset of the next series */
-    uint8_t gsv_state;        /*!< `GSV` block state: idle, active or aborted */
-    uint8_t gsv_next_num;     /*!< Expected message number of the open series, `0` when no series is open */
-    uint8_t gsv_num_msgs;     /*!< Total number of messages of the open series */
-    uint8_t gsv_series_sats;  /*!< Satellites in view of the open series */
-    char gsv_talker[2];       /*!< Talker ID of the open series */
-#if LWGPS_CFG_STATEMENT_GPGSV_SAT_DET
-    lwgps_sat_t sats_in_view_desc_tmp[LWGPS_CFG_SATS_IN_VIEW_SIZE]; /*!< Working descriptors, published at the end
-                                                                        of `GSV` block */
-#endif                                                              /* LWGPS_CFG_STATEMENT_GPGSV_SAT_DET */
-#endif                                                              /* !__DOXYGEN__ */
-#endif                                                              /* LWGPS_CFG_STATEMENT_GPGSV || __DOXYGEN__ */
+#endif                                                          /* LWGPS_CFG_STATEMENT_GPGSV || __DOXYGEN__ */
 
 #if LWGPS_CFG_STATEMENT_GPRMC || __DOXYGEN__
     /* Information related to GPRMC statement */
@@ -188,12 +171,40 @@ typedef struct {
 #endif                       /* LWGPS_CFG_STATEMENT_PUBX_TIME || __DOXYGEN__ */
 
 #if !__DOXYGEN__
+    /* Working data of multi-statement blocks, published to user fields once the block is complete */
+    struct {
+        uint8_t dummy; /*!< Dummy byte, keeps structure valid when all statements are disabled */
+#if LWGPS_CFG_STATEMENT_GPGSA
+        struct {
+            uint8_t satellites_ids[LWGPS_CFG_SATS_IN_USE_SIZE]; /*!< Working list of satellite IDs in use */
+            uint8_t satellites_ids_cnt;                         /*!< Number of valid entries in working list */
+            uint8_t state;                                      /*!< Block state, value of `block_state_t` enum */
+        } gsa;                                                  /*!< `GSA` block working data */
+#endif                                                          /* LWGPS_CFG_STATEMENT_GPGSA */
+#if LWGPS_CFG_STATEMENT_GPGSV
+        struct {
+            uint8_t sats_in_view; /*!< Working count of satellites in view, combined across all series
+                                        (constellations/signals) of the block. Series is added once its last message
+                                        is received. Also descriptor offset of the next series.
+                                        Published to user \ref sats_in_view at the end of the block */
+            uint8_t state;        /*!< Block state, value of `block_state_t` enum */
+            uint8_t next_num;     /*!< Expected message number of the open series, `0` when no series is open */
+            uint8_t num_msgs;     /*!< Total number of messages of the open series */
+            uint8_t series_sats;  /*!< Satellites in view of the open series */
+            char talker[2];       /*!< Talker ID of the open series */
+#if LWGPS_CFG_STATEMENT_GPGSV_SAT_DET
+            lwgps_sat_t sats_in_view_desc[LWGPS_CFG_SATS_IN_VIEW_SIZE]; /*!< Working satellite descriptors */
+#endif                                                                  /* LWGPS_CFG_STATEMENT_GPGSV_SAT_DET */
+        } gsv;                                                          /*!< `GSV` block working data */
+#endif                                                                  /* LWGPS_CFG_STATEMENT_GPGSV */
+    } tmp; /*!< Structure with working data of statement blocks */
+
     struct {
         lwgps_statement_t stat; /*!< Statement index */
         char term_str[13];      /*!< Current term in string format */
         uint8_t term_pos;       /*!< Current index position in term */
         uint8_t term_num;       /*!< Current term number */
-        uint8_t state;          /*!< Line framing state: waiting for `$`, data or checksum */
+        uint8_t state;          /*!< Line framing state, value of `prv_line_state_t` enum */
         uint8_t discard;        /*!< Discard the statement flag */
 #if LWGPS_CFG_CRC
         uint8_t crc_calc; /*!< Calculated CRC string */
