@@ -2,6 +2,16 @@
 
 ## Develop
 
+- Statement is processed only once per `$`: repeated line endings (`\r\r\n`) no longer copy the same statement twice, and data before the first `$` is ignored
+- Statement end is accepted on `\r` or `\n`, to support `\n`-only line endings
+- Checksum must be present with exactly `2` hex characters after `*`, otherwise statement reports `STAT_CHECKSUM_FAIL`
+- With `LWGPS_CFG_CRC` disabled, the last term of a statement without `*` is now parsed
+- Add `STAT_INVALID_DATA` event, when statement checksum is valid but one of its terms is invalid. Checksum failure has priority
+- `GSV`/`GSA` block data (`sats_in_view`, `sats_in_view_desc`, `satellites_ids`) is published only when the complete block is valid, at the end of the next valid statement of another type. Previous epoch data is kept otherwise
+- Any invalid statement in a `GSV`/`GSA` block, or any checksum failure while a block is in progress, aborts the whole block. Remaining statements of the block are ignored until a valid statement of another type arrives
+- `GSV` series sequence is verified: message numbers must follow `1..num_msgs` without gaps, with the same talker ID, total messages and satellites in view within the series. Block starting in the middle of a series is aborted
+- `GSV` with more satellites in view than its series can describe (`4` per message) is invalid
+
 ## v2.4.1
 
 - Fix inconsistent satellite data with multi-GNSS receivers (#49): `sats_in_view`, `sats_in_view_desc` and `satellites_ids` are now collected in working buffers and published at once, when the complete `GSV`/`GSA` block of an epoch has been received. They are updated on the first sentence following the block

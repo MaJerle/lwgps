@@ -73,14 +73,15 @@ typedef struct {
  * \brief           ENUM of possible GPS statements parsed
  */
 typedef enum {
-    STAT_UNKNOWN = 0,              /*!< Unknown NMEA statement */
-    STAT_GGA = 1,                  /*!< GPGGA statement */
-    STAT_GSA = 2,                  /*!< GPGSA statement */
-    STAT_GSV = 3,                  /*!< GPGSV statement */
-    STAT_RMC = 4,                  /*!< GPRMC statement */
-    STAT_UBX = 5,                  /*!< UBX statement (uBlox specific) */
-    STAT_UBX_TIME = 6,             /*!< UBX TIME statement (uBlox specific) */
-    STAT_CHECKSUM_FAIL = UINT8_MAX /*!< Special case, used when checksum fails */
+    STAT_UNKNOWN = 0,                  /*!< Unknown NMEA statement */
+    STAT_GGA = 1,                      /*!< GPGGA statement */
+    STAT_GSA = 2,                      /*!< GPGSA statement */
+    STAT_GSV = 3,                      /*!< GPGSV statement */
+    STAT_RMC = 4,                      /*!< GPRMC statement */
+    STAT_UBX = 5,                      /*!< UBX statement (uBlox specific) */
+    STAT_UBX_TIME = 6,                 /*!< UBX TIME statement (uBlox specific) */
+    STAT_INVALID_DATA = UINT8_MAX - 1, /*!< Event on invalid data detection, with discard enabled */
+    STAT_CHECKSUM_FAIL = UINT8_MAX     /*!< Special case, used when checksum fails */
 } lwgps_statement_t;
 
 /**
@@ -116,31 +117,24 @@ typedef struct {
     lwgps_float_t dop_p;                                /*!< Dolution of precision, position */
     uint8_t fix_mode;                                   /*!< Fix mode. `1` = NO fix, `2` = 2D fix, `3` = 3D fix */
     uint8_t satellites_ids[LWGPS_CFG_SATS_IN_USE_SIZE]; /*!< Packed list of satellite IDs in use, collected from
-                                                            all `GSA` statements of one epoch. Unused entries are `0` */
-#if !__DOXYGEN__
-    uint8_t satellites_ids_tmp[LWGPS_CFG_SATS_IN_USE_SIZE]; /*!< Working list, published at the end of `GSA` block */
-    uint8_t satellites_ids_cnt;                             /*!< Number of valid entries in working list */
-    uint8_t gsa_cycle_active;                               /*!< Flag: `GSA` block in progress for this NMEA epoch */
-#endif                                                      /* !__DOXYGEN__ */
-#endif                                                      /* LWGPS_CFG_STATEMENT_GPGSA || __DOXYGEN__ */
+                                                            all `GSA` statements of one epoch. Unused entries are `0`.
+                                                            Published at the end of the next valid statement
+                                                            of a different type.
+                                                            Kept unchanged if any statement of the block is invalid */
+#endif                                                  /* LWGPS_CFG_STATEMENT_GPGSA || __DOXYGEN__ */
 
 #if LWGPS_CFG_STATEMENT_GPGSV || __DOXYGEN__
     /* Information related to GPGSV statement */
     uint8_t sats_in_view; /*!< Number of satellites in view (accumulated across all constellations/signals).
-                                Updated at once, when complete `GSV` block of the epoch has been received */
+                                Updated at once, when complete `GSV` block of the epoch has been received.
+                                Published at the end of the next valid statement of a different type,
+                                which may be in the next output packet when `GSV` is the last block.
+                                Kept unchanged if any statement of the block is invalid */
 #if LWGPS_CFG_STATEMENT_GPGSV_SAT_DET || __DOXYGEN__
     lwgps_sat_t sats_in_view_desc[LWGPS_CFG_SATS_IN_VIEW_SIZE]; /*!< Satellites in view, consistent with
                                                                     \ref sats_in_view */
 #endif                                                          /* LWGPS_CFG_STATEMENT_GPGSV_SAT_DET || __DOXYGEN__ */
-#if !__DOXYGEN__
-    uint8_t sats_in_view_tmp; /*!< Working count, also descriptor offset of the next series */
-    uint8_t gsv_cycle_active; /*!< Flag: `GSV` block in progress for this NMEA epoch */
-#if LWGPS_CFG_STATEMENT_GPGSV_SAT_DET
-    lwgps_sat_t sats_in_view_desc_tmp[LWGPS_CFG_SATS_IN_VIEW_SIZE]; /*!< Working descriptors, published at the end
-                                                                        of `GSV` block */
-#endif                                                              /* LWGPS_CFG_STATEMENT_GPGSV_SAT_DET */
-#endif                                                              /* !__DOXYGEN__ */
-#endif                                                              /* LWGPS_CFG_STATEMENT_GPGSV || __DOXYGEN__ */
+#endif                                                          /* LWGPS_CFG_STATEMENT_GPGSV || __DOXYGEN__ */
 
 #if LWGPS_CFG_STATEMENT_GPRMC || __DOXYGEN__
     /* Information related to GPRMC statement */
@@ -177,14 +171,41 @@ typedef struct {
 #endif                       /* LWGPS_CFG_STATEMENT_PUBX_TIME || __DOXYGEN__ */
 
 #if !__DOXYGEN__
+    /* Working data of multi-statement blocks, published to user fields once the block is complete */
+    struct {
+        uint8_t dummy; /*!< Dummy byte, keeps structure valid when all statements are disabled */
+#if LWGPS_CFG_STATEMENT_GPGSA
+        struct {
+            uint8_t satellites_ids[LWGPS_CFG_SATS_IN_USE_SIZE]; /*!< Working list of satellite IDs in use */
+            uint8_t satellites_ids_cnt;                         /*!< Number of valid entries in working list */
+            uint8_t state;                                      /*!< Block state, value of `block_state_t` enum */
+        } gsa;                                                  /*!< `GSA` block working data */
+#endif                                                          /* LWGPS_CFG_STATEMENT_GPGSA */
+#if LWGPS_CFG_STATEMENT_GPGSV
+        struct {
+            uint8_t sats_in_view; /*!< Working count of satellites in view, combined across all series
+                                        (constellations/signals) of the block. Series is added once its last message
+                                        is received. Also descriptor offset of the next series.
+                                        Published to user \ref sats_in_view at the end of the block */
+            uint8_t state;        /*!< Block state, value of `block_state_t` enum */
+            uint8_t next_num;     /*!< Expected message number of the open series, `0` when no series is open */
+            uint8_t num_msgs;     /*!< Total number of messages of the open series */
+            uint8_t series_sats;  /*!< Satellites in view of the open series */
+            char talker[2];       /*!< Talker ID of the open series */
+#if LWGPS_CFG_STATEMENT_GPGSV_SAT_DET
+            lwgps_sat_t sats_in_view_desc[LWGPS_CFG_SATS_IN_VIEW_SIZE]; /*!< Working satellite descriptors */
+#endif                                                                  /* LWGPS_CFG_STATEMENT_GPGSV_SAT_DET */
+        } gsv;                                                          /*!< `GSV` block working data */
+#endif                                                                  /* LWGPS_CFG_STATEMENT_GPGSV */
+    } tmp; /*!< Structure with working data of statement blocks */
+
     struct {
         lwgps_statement_t stat; /*!< Statement index */
         char term_str[13];      /*!< Current term in string format */
         uint8_t term_pos;       /*!< Current index position in term */
         uint8_t term_num;       /*!< Current term number */
-
-        uint8_t star; /*!< Star detected flag */
-
+        uint8_t state;          /*!< Line framing state, value of `prv_line_state_t` enum */
+        uint8_t discard;        /*!< Discard the statement flag */
 #if LWGPS_CFG_CRC
         uint8_t crc_calc; /*!< Calculated CRC string */
 #endif                    /* LWGPS_CFG_CRC */
@@ -221,7 +242,7 @@ typedef struct {
                 uint8_t sats_in_view; /*!< Number of satellites in view for this series */
                 uint8_t stat_num;     /*!< Current message number within this GSV series */
                 uint8_t num_msgs;     /*!< Total number of messages in this GSV series */
-                uint8_t gnss;         /*!< Constellation from talker ID (\ref lwgps_gnss_t) */
+                char talker[2];       /*!< Talker ID, e.g. `GP`, `GL` */
                 uint8_t signal_id;    /*!< Signal/band ID (NMEA 4.10+) */
 #if LWGPS_CFG_STATEMENT_GPGSV_SAT_DET
                 lwgps_sat_t sats[4]; /*!< Satellites described in this message */

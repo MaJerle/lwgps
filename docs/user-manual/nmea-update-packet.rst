@@ -39,6 +39,34 @@ But what would happen if application starts using GPS data while ``GPGGA`` packe
 
 This could be a major issue for some applications. Time, speed and position do not match anymore.
 
+Satellite data blocks
+*********************
+
+``GSA`` and ``GSV`` data is sent as a block of several statements.
+Multi-GNSS receivers send one ``GSA`` statement and one ``GSV`` series (of one or more messages) per constellation,
+for example ``$GPGSV`` messages for GPS, followed by ``$GLGSV`` messages for GLONASS.
+
+The library does not know how many series are part of the block. The block is only known to be complete,
+when the next statement of a different type is received. Therefore:
+
+* ``GSA`` data (``satellites_ids``) and ``GSV`` data (``sats_in_view``, ``sats_in_view_desc``) are collected in working buffers, and published to the application at once
+* They are published at the end of the next statement of a different type, once its checksum is valid.
+  This can be any statement, including the ones not parsed by the library, such as ``$GPTXT`` or ``$GPVTG``
+* Application never reads half-collected satellite lists, or lists mixing different epochs
+
+.. note::
+    Satellite data is published with a delay. When ``GSV`` is the last block of the output packet,
+    which is common, its data is published only with the first statement of the next packet,
+    typically ``1`` second later. Until then, application keeps the data of the previous packet.
+
+    When ``LWGPS_CFG_STATUS`` is enabled (see :ref:`api_lwgps_opt`), the data is already published
+    when the event of the next statement is reported, for example ``STAT_RMC``.
+    The event of the last ``GSV`` statement itself does not mean the new data is available yet.
+
+If any statement of the block is invalid (checksum failure, invalid term, or ``GSV`` messages out of sequence),
+the complete block is discarded and application keeps the data of the previous packet.
+Remaining statements of the discarded block are ignored, until a valid statement of a different type is received.
+
 Common approach
 ***************
 

@@ -62,6 +62,31 @@
         ++(_gh)->p.term_num;                                                                                           \
     } while (0)
 
+#define TERM_PARSE(_gh)                                                                                                \
+    do {                                                                                                               \
+        if (!(_gh)->p.discard && !prv_parse_term(_gh)) {                                                               \
+            (_gh)->p.discard = 1; /* Invalid parsing, discard the rest of the statement */                             \
+        }                                                                                                              \
+    } while (0)
+
+/**
+ * \brief           Line framing state, used in `p.state`
+ */
+typedef enum {
+    LINE_STATE_IDLE = 0x00, /*!< Waiting for `$`. Must be `0`, as it is the state after private memory reset */
+    LINE_STATE_DATA,        /*!< Receiving statement data, between `$` and `*` */
+    LINE_STATE_CRC,         /*!< Receiving checksum, after `*` */
+} prv_line_state_t;
+
+/**
+ * \brief           Block state of multi-statement data (`GSA`, `GSV`), used in `tmp.gsa.state` and `tmp.gsv.state`
+ */
+typedef enum {
+    BLOCK_STATE_IDLE = 0x00, /*!< No block in progress. Must be `0`, as it is the state after init */
+    BLOCK_STATE_ACTIVE,      /*!< Block in progress, all statements so far are valid */
+    BLOCK_STATE_ABORTED,     /*!< Invalid statement detected, ignore the rest of the block */
+} block_state_t;
+
 #define CIN(x)  ((x) >= '0' && (x) <= '9')
 #define CIHN(x) (((x) >= '0' && (x) <= '9') || ((x) >= 'a' && (x) <= 'f') || ((x) >= 'A' && (x) <= 'F'))
 #define CTN(x)  ((x) - '0')
@@ -69,6 +94,20 @@
     (((x) >= '0' && (x) <= '9')                                                                                        \
          ? ((x) - '0')                                                                                                 \
          : (((x) >= 'a' && (x) <= 'z') ? ((x) - 'a' + 10) : (((x) >= 'A' && (x) <= 'Z') ? ((x) - 'A' + 10) : 0)))
+
+/**
+ * \brief           Send the event status in the processing function
+ */
+#if LWGPS_CFG_STATUS
+#define SEND_EVENT_STATUS(value)                                                                                       \
+    do {                                                                                                               \
+        if (evt_fn != NULL) {                                                                                          \
+            evt_fn(value);                                                                                             \
+        }                                                                                                              \
+    } while (0)
+#else
+#define SEND_EVENT_STATUS(value)
+#endif /* LWGPS_CFG_STATUS */
 
 /**
  * \brief           Parse number as integer
@@ -165,42 +204,92 @@ prv_parse_lat_long(lwgps_t* ghandle) {
 }
 
 /**
- * \brief           Publish working `GSA`/`GSV` data once their block of statements ends
+ * \brief           Update `GSA` or `GSV` block states at the end of statement, before its data are copied
  *
  *                  Multi-GNSS receivers send one `GSA` statement and one `GSV` series per constellation.
- *                  User-facing satellite data is updated at once, when the first statement of a different
- *                  type is detected, so the application never reads half-collected, inconsistent lists.
+ *                  User-facing satellite data is updated at once, when the block is complete and valid,
+ *                  so the application never reads half-collected or inconsistent lists.
  *
- * \note            The block ends even if this statement's checksum later turns out to be invalid.
- *                  Only checksum-verified statements are ever accumulated in the working data,
- *                  and a corrupted sentence can't leave the block stuck "active" into the next epoch.
+ *                  - Checksum failure aborts any active block, as statement type cannot be trusted
+ *                  - Invalid statement of the block type aborts the block
+ *                  - Valid statement of another type ends the block. Active block is published,
+ *                      aborted block is discarded. Both go back to idle state
  *
- * \note            It is assumed that statements of the same type come in a sequence,
- *                  which mean we can act when the new current statement isn't anymore the expected one,
- *                  while the flag for active cycle remains active
+ * \note            It is assumed that statements of the same type come in a sequence
  *
  * \param[in]       ghandle: GPS handle
+ * \param[in]       crc_valid: `1` if statement checksum is valid, `0` otherwise
  */
 static void
-prv_publish_blocks(lwgps_t* ghandle) {
+prv_update_blocks(lwgps_t* ghandle, uint8_t crc_valid) {
 #if LWGPS_CFG_STATEMENT_GPGSA
-    if (ghandle->p.stat != STAT_GSA && ghandle->gsa_cycle_active) {
-        LWGPS_MEMCPY(ghandle->satellites_ids, ghandle->satellites_ids_tmp, sizeof(ghandle->satellites_ids));
-        ghandle->gsa_cycle_active = 0;
+    /*
+     * GSA block decision, made once per statement:
+     *
+     * - Checksum failed: statement type is unknown, it could have been a corrupted GSA.
+     *      Active block is aborted to never publish an incomplete list of satellites in use.
+     *      Idle or aborted block stays as is
+     * - Valid checksum, GSA statement: invalid one aborts the block.
+     *      Valid one is accumulated to working list later in the copy from temporary memory
+     * - Valid checksum, another statement type: GSA block has possibly ended.
+     *      Active block is complete and its working list is published to the user,
+     *      aborted block is discarded and user keeps previous data.
+     *      Both go back to idle, so that next GSA statement starts a new block
+     */
+    if (!crc_valid) {
+        if (ghandle->tmp.gsa.state == BLOCK_STATE_ACTIVE) {
+            ghandle->tmp.gsa.state = BLOCK_STATE_ABORTED;
+        }
+    } else if (ghandle->p.stat == STAT_GSA) {
+        if (ghandle->p.discard) {
+            ghandle->tmp.gsa.state = BLOCK_STATE_ABORTED;
+        }
+    } else {
+        if (ghandle->tmp.gsa.state == BLOCK_STATE_ACTIVE) {
+            LWGPS_MEMCPY(ghandle->satellites_ids, ghandle->tmp.gsa.satellites_ids, sizeof(ghandle->satellites_ids));
+        }
+        ghandle->tmp.gsa.state = BLOCK_STATE_IDLE;
     }
 #endif /* LWGPS_CFG_STATEMENT_GPGSA */
 #if LWGPS_CFG_STATEMENT_GPGSV
-    if (ghandle->p.stat != STAT_GSV && ghandle->gsv_cycle_active) {
-        ghandle->sats_in_view = ghandle->sats_in_view_tmp;
+    /*
+     * GSV block decision, made once per statement:
+     *
+     * - Checksum failed: statement type is unknown, it could have been a corrupted GSV.
+     *      Active block is aborted, as one of its messages may be lost.
+     *      Idle or aborted block stays as is
+     * - Valid checksum, GSV statement: invalid one (wrong term or out of series sequence) aborts the block,
+     *      all following GSV statements are ignored until the block ends.
+     *      Valid one is accumulated to working data later, in `prv_copy_from_tmp_memory`
+     * - Valid checksum, another statement type: GSV block has ended.
+     *      Active block is published to the user only if its last series is complete (no message expected),
+     *      otherwise it is discarded together with aborted block, and user keeps previous data.
+     *      Both go back to idle, so that next GSV statement starts a new block
+     */
+    if (!crc_valid) {
+        if (ghandle->tmp.gsv.state == BLOCK_STATE_ACTIVE) {
+            ghandle->tmp.gsv.state = BLOCK_STATE_ABORTED;
+        }
+    } else if (ghandle->p.stat == STAT_GSV) {
+        if (ghandle->p.discard) {
+            ghandle->tmp.gsv.state = BLOCK_STATE_ABORTED;
+        }
+    } else {
+        /* Publish only if last series is complete */
+        if (ghandle->tmp.gsv.state == BLOCK_STATE_ACTIVE && ghandle->tmp.gsv.next_num == 0) {
+            ghandle->sats_in_view = ghandle->tmp.gsv.sats_in_view;
 #if LWGPS_CFG_STATEMENT_GPGSV_SAT_DET
-        LWGPS_MEMCPY(ghandle->sats_in_view_desc, ghandle->sats_in_view_desc_tmp, sizeof(ghandle->sats_in_view_desc));
+            LWGPS_MEMCPY(ghandle->sats_in_view_desc, ghandle->tmp.gsv.sats_in_view_desc,
+                         sizeof(ghandle->sats_in_view_desc));
 #endif /* LWGPS_CFG_STATEMENT_GPGSV_SAT_DET */
-        ghandle->gsv_cycle_active = 0;
+        }
+        ghandle->tmp.gsv.state = BLOCK_STATE_IDLE;
     }
 #endif /* LWGPS_CFG_STATEMENT_GPGSV */
-#if !LWGPS_CFG_STATEMENT_GPGSA && !LWGPS_CFG_STATEMENT_GPGSV
+
+    /* Might be unused in some configurations */
     (void)ghandle;
-#endif /* !LWGPS_CFG_STATEMENT_GPGSA && !LWGPS_CFG_STATEMENT_GPGSV */
+    (void)crc_valid;
 }
 
 /**
@@ -210,7 +299,13 @@ prv_publish_blocks(lwgps_t* ghandle) {
  */
 static uint8_t
 prv_parse_term(lwgps_t* ghandle) {
-    if (ghandle->p.term_num == 0) { /* Check string type */
+    uint8_t retval = 1;
+
+    /*
+     * Check for statement type,
+     * on match it will early return no matter the result
+     */
+    if (ghandle->p.term_num == 0) {
         if (0) {
 #if LWGPS_CFG_STATEMENT_GPGGA
         } else if (ghandle->p.term_str[0] == '$' && (ghandle->p.term_str[1] == 'G' || ghandle->p.term_str[1] == 'B')
@@ -226,6 +321,8 @@ prv_parse_term(lwgps_t* ghandle) {
         } else if (ghandle->p.term_str[0] == '$' && (ghandle->p.term_str[1] == 'G' || ghandle->p.term_str[1] == 'B')
                    && !strncmp(&ghandle->p.term_str[3], "GSV", 3)) {
             ghandle->p.stat = STAT_GSV;
+            ghandle->p.data.gsv.talker[0] = ghandle->p.term_str[1];
+            ghandle->p.data.gsv.talker[1] = ghandle->p.term_str[2];
 #endif /* LWGPS_CFG_STATEMENT_GPGSV */
 #if LWGPS_CFG_STATEMENT_GPRMC
         } else if (ghandle->p.term_str[0] == '$' && (ghandle->p.term_str[1] == 'G' || ghandle->p.term_str[1] == 'B')
@@ -239,7 +336,6 @@ prv_parse_term(lwgps_t* ghandle) {
         } else {
             ghandle->p.stat = STAT_UNKNOWN; /* Invalid statement for library */
         }
-        prv_publish_blocks(ghandle);
         return 1;
     }
 
@@ -354,11 +450,37 @@ prv_parse_term(lwgps_t* ghandle) {
             case 2: {
                 /* Current message number within this GSV series */
                 ghandle->p.data.gsv.stat_num = (uint8_t)prv_parse_number(ghandle, NULL);
+                if (ghandle->p.data.gsv.stat_num == 0 || ghandle->p.data.gsv.stat_num > ghandle->p.data.gsv.num_msgs) {
+                    retval = 0; /* Invalid message */
+                } else if (ghandle->tmp.gsv.state == BLOCK_STATE_ACTIVE) {
+                    /*
+                     * Must be the next message of the open series, or the first message of a new series.
+                     *
+                     * - Check that it is first one if the series is just starting
+                     * - Check that it is the next message if the series is already active
+                     */
+                    if (ghandle->tmp.gsv.next_num == 0) {
+                        if (ghandle->p.data.gsv.stat_num != 1) {
+                            retval = 0;
+                        }
+                    } else if (ghandle->p.data.gsv.stat_num != ghandle->tmp.gsv.next_num
+                               || ghandle->p.data.gsv.num_msgs != ghandle->tmp.gsv.num_msgs
+                               || ghandle->p.data.gsv.talker[0] != ghandle->tmp.gsv.talker[0]
+                               || ghandle->p.data.gsv.talker[1] != ghandle->tmp.gsv.talker[1]) {
+                        retval = 0;
+                    }
+                }
                 break;
             }
             case 3: {
                 /* Process satellites in view */
                 ghandle->p.data.gsv.sats_in_view = (uint8_t)prv_parse_number(ghandle, NULL);
+                if (ghandle->p.data.gsv.sats_in_view > (4U * ghandle->p.data.gsv.num_msgs)) {
+                    retval = 0; /* More satellites than the series can describe */
+                } else if (ghandle->tmp.gsv.state == BLOCK_STATE_ACTIVE && ghandle->tmp.gsv.next_num != 0
+                           && ghandle->p.data.gsv.sats_in_view != ghandle->tmp.gsv.series_sats) {
+                    retval = 0; /* Must be the same in all messages of the series */
+                }
                 break;
             }
             default: {
@@ -370,11 +492,8 @@ prv_parse_term(lwgps_t* ghandle) {
                     uint16_t value = 0;
 
                     /*
-                     * Reject terms beyond the declared satellite count (e.g. NMEA 4.10+ signal ID field)
-
-                     * We use the `size_t` for value before shifting,
-                     * so that if `stat_num` from GSV is invalid (=0), doing -1 and shifting
-                     * yields to very large number which is then large than the number of sats in view
+                     * Reject terms beyond the declared satellite count (e.g. NMEA 4.10+ signal ID field).
+                     * `stat_num` is at least `1` here, invalid value discards the statement before
                      */
                     size_t sat_in_series = ((size_t)(ghandle->p.data.gsv.stat_num - 1) << 0x02) + sat_offset;
                     if (sat_in_series >= ghandle->p.data.gsv.sats_in_view) {
@@ -537,7 +656,7 @@ prv_parse_term(lwgps_t* ghandle) {
 #endif /* LWGPS_CFG_STATEMENT_PUBX_TIME */
 #endif /* LWGPS_CFG_STATEMENT_PUBX */
     }
-    return 1;
+    return retval;
 }
 
 #if LWGPS_CFG_CRC
@@ -549,6 +668,12 @@ prv_parse_term(lwgps_t* ghandle) {
 static uint8_t
 prv_check_crc(lwgps_t* ghandle) {
     uint8_t crc;
+
+    /* Checksum must be present, with exactly 2 hex characters after the star */
+    if (ghandle->p.state != LINE_STATE_CRC || ghandle->p.term_pos != 2 || !CIHN(ghandle->p.term_str[0])
+        || !CIHN(ghandle->p.term_str[1])) {
+        return 0;
+    }
     crc = (uint8_t)((CHTN(ghandle->p.term_str[0]) & 0x0FU) << 0x04U)
           | (CHTN(ghandle->p.term_str[1]) & 0x0FU); /* Convert received CRC from string (hex) to number */
     if (ghandle->p.crc_calc != crc) {
@@ -561,7 +686,12 @@ prv_check_crc(lwgps_t* ghandle) {
 #endif /* LWGPS_CFG_CRC */
 
 /**
- * \brief           Copy temporary memory to user memory
+ * \brief           Copy temporary memory to user memory.
+ *
+ * \note            This function is called after a complete and valid NMEA sentence has been parsed.
+ *                  It is always called, even during mid sequence of multiple lines of the same message block
+ *                  (for example GSV or GSA messages)
+ *
  * \param[in]       ghandle: GPS handle
  * \return          `1` on success, `0` otherwise
  */
@@ -592,49 +722,71 @@ prv_copy_from_tmp_memory(lwgps_t* ghandle) {
         ghandle->fix_mode = ghandle->p.data.gsa.fix_mode;
 
         /* First GSA of the block starts a new working list */
-        if (!ghandle->gsa_cycle_active) {
-            LWGPS_MEMSET(ghandle->satellites_ids_tmp, 0x00, sizeof(ghandle->satellites_ids_tmp));
-            ghandle->satellites_ids_cnt = 0;
-            ghandle->gsa_cycle_active = 1;
+        if (ghandle->tmp.gsa.state == BLOCK_STATE_IDLE) {
+            LWGPS_MEMSET(ghandle->tmp.gsa.satellites_ids, 0x00, sizeof(ghandle->tmp.gsa.satellites_ids));
+            ghandle->tmp.gsa.satellites_ids_cnt = 0;
+            ghandle->tmp.gsa.state = BLOCK_STATE_ACTIVE;
         }
 
         /* Append non-empty IDs of this statement (one statement per constellation) */
-        for (size_t i = 0; i < sizeof(ghandle->p.data.gsa.satellites_ids); ++i) {
-            if (ghandle->p.data.gsa.satellites_ids[i] != 0
-                && ghandle->satellites_ids_cnt < sizeof(ghandle->satellites_ids_tmp)) {
-                ghandle->satellites_ids_tmp[ghandle->satellites_ids_cnt++] = ghandle->p.data.gsa.satellites_ids[i];
+        if (ghandle->tmp.gsa.state == BLOCK_STATE_ACTIVE) {
+            for (size_t idx = 0; idx < sizeof(ghandle->p.data.gsa.satellites_ids); ++idx) {
+                if (ghandle->p.data.gsa.satellites_ids[idx] != 0
+                    && ghandle->tmp.gsa.satellites_ids_cnt < sizeof(ghandle->tmp.gsa.satellites_ids)) {
+                    ghandle->tmp.gsa.satellites_ids[ghandle->tmp.gsa.satellites_ids_cnt++] =
+                        ghandle->p.data.gsa.satellites_ids[idx];
+                }
             }
         }
 #endif /* LWGPS_CFG_STATEMENT_GPGSA */
 #if LWGPS_CFG_STATEMENT_GPGSV
     } else if (ghandle->p.stat == STAT_GSV) {
-        /* First message of the first series in the block starts new working data */
-        if (ghandle->p.data.gsv.stat_num == 1 && !ghandle->gsv_cycle_active) {
+        /*
+         * First message of the first series in the block starts new working data.
+         * Block starting with any other message (e.g. after power-up) is aborted
+         */
+        if (ghandle->tmp.gsv.state == BLOCK_STATE_IDLE) {
+            if (ghandle->p.data.gsv.stat_num == 1) {
 #if LWGPS_CFG_STATEMENT_GPGSV_SAT_DET
-            LWGPS_MEMSET(ghandle->sats_in_view_desc_tmp, 0x00, sizeof(ghandle->sats_in_view_desc_tmp));
+                LWGPS_MEMSET(ghandle->tmp.gsv.sats_in_view_desc, 0x00, sizeof(ghandle->tmp.gsv.sats_in_view_desc));
 #endif /* LWGPS_CFG_STATEMENT_GPGSV_SAT_DET */
-            ghandle->sats_in_view_tmp = 0;
-            ghandle->gsv_cycle_active = 1;
+                ghandle->tmp.gsv.sats_in_view = 0;
+                ghandle->tmp.gsv.next_num = 0;
+                ghandle->tmp.gsv.state = BLOCK_STATE_ACTIVE;
+            } else {
+                ghandle->tmp.gsv.state = BLOCK_STATE_ABORTED;
+            }
         }
-        if (ghandle->gsv_cycle_active) {
+
+        /*
+         * When we are active, process the current GSV message that has been parsed,
+         * into the temporary storage with the list of all satellites in view so far.
+         *
+         * This gets accumulated across multiple GSV messages until the entire block is received,
+         * and also across multiple series within the block (GPS, Glonass, ...).
+         */
+        if (ghandle->tmp.gsv.state == BLOCK_STATE_ACTIVE) {
 #if LWGPS_CFG_STATEMENT_GPGSV_SAT_DET
-            /*
-             * We use the `size_t` for value before shifting,
-             * so that if `stat_num` from GSV is invalid (=0), doing -1 and shifting
-             * yields to very large number which is then large than the number of sats in view
-             */
             for (size_t idx = 0; idx < LWGPS_ARRAYSIZE(ghandle->p.data.gsv.sats); ++idx) {
                 size_t sat_in_series = ((size_t)(ghandle->p.data.gsv.stat_num - 1) << 0x02U) + idx;
-                size_t index = ghandle->sats_in_view_tmp + sat_in_series; /* Absolute index across all series */
+                size_t index = ghandle->tmp.gsv.sats_in_view + sat_in_series; /* Absolute index across all series */
                 if (sat_in_series < ghandle->p.data.gsv.sats_in_view
-                    && index < LWGPS_ARRAYSIZE(ghandle->sats_in_view_desc_tmp)) {
-                    ghandle->sats_in_view_desc_tmp[index] = ghandle->p.data.gsv.sats[idx];
+                    && index < LWGPS_ARRAYSIZE(ghandle->tmp.gsv.sats_in_view_desc)) {
+                    ghandle->tmp.gsv.sats_in_view_desc[index] = ghandle->p.data.gsv.sats[idx];
                 }
             }
 #endif /* LWGPS_CFG_STATEMENT_GPGSV_SAT_DET */
-            /* Add this series' count once (when its last message completes) */
+
+            /* Add this series' count once (when its last message completes), or expect the next message */
             if (ghandle->p.data.gsv.stat_num == ghandle->p.data.gsv.num_msgs) {
-                ghandle->sats_in_view_tmp += ghandle->p.data.gsv.sats_in_view;
+                ghandle->tmp.gsv.sats_in_view += ghandle->p.data.gsv.sats_in_view;
+                ghandle->tmp.gsv.next_num = 0;
+            } else {
+                ghandle->tmp.gsv.next_num = ghandle->p.data.gsv.stat_num + 1;
+                ghandle->tmp.gsv.num_msgs = ghandle->p.data.gsv.num_msgs;
+                ghandle->tmp.gsv.series_sats = ghandle->p.data.gsv.sats_in_view;
+                ghandle->tmp.gsv.talker[0] = ghandle->p.data.gsv.talker[0];
+                ghandle->tmp.gsv.talker[1] = ghandle->p.data.gsv.talker[1];
             }
         }
 #endif /* LWGPS_CFG_STATEMENT_GPGSV */
@@ -689,46 +841,79 @@ lwgps_init(lwgps_t* ghandle) {
  * \param[in]       data: Received data
  * \param[in]       len: Number of bytes to process
  * \param[in]       evt_fn: Event function to notify application layer.
- *                      This parameter is available only if \ref LWGPS_CFG_STATUS is enabled
+ *                      This parameter is available only when \ref LWGPS_CFG_STATUS is enabled
  * \return          `1` on success, `0` otherwise
  */
 uint8_t
+lwgps_process(lwgps_t* ghandle, const void* data, size_t len
 #if LWGPS_CFG_STATUS || __DOXYGEN__
-lwgps_process(lwgps_t* ghandle, const void* data, size_t len, lwgps_process_fn evt_fn) {
-#else  /* LWGPS_CFG_STATUS */
-lwgps_process(lwgps_t* ghandle, const void* data, size_t len) {
+              ,
+              lwgps_process_fn evt_fn
 #endif /* !LWGPS_CFG_STATUS */
-    const uint8_t* d = data;
+) {
+    const uint8_t* d_ptr = data;
 
-    for (; len > 0; ++d, --len) {                                /* Process all bytes */
-        if (*d == '$') {                                         /* Check for beginning of NMEA line */
-            LWGPS_MEMSET(&ghandle->p, 0x00, sizeof(ghandle->p)); /* Reset private memory */
-            TERM_ADD(ghandle, *d);                               /* Add character to term */
-        } else if (*d == ',') {                                  /* Term separator character */
-            prv_parse_term(ghandle);                             /* Parse term we have currently in memory */
-            CRC_ADD(ghandle, *d);                                /* Add character to CRC computation */
-            TERM_NEXT(ghandle);                                  /* Start with next term */
-        } else if (*d == '*') {                                  /* Start indicates end of data for CRC computation */
-            prv_parse_term(ghandle);                             /* Parse term we have currently in memory */
-            ghandle->p.star = 1;                                 /* STAR detected */
-            TERM_NEXT(ghandle);                                  /* Start with next term */
-        } else if (*d == '\r') {
-            if (prv_check_crc(ghandle)) { /* Check for CRC result */
-                /* CRC is OK, in theory we can copy data from statements to user data */
-                prv_copy_from_tmp_memory(ghandle); /* Copy memory from temporary to user memory */
-#if LWGPS_CFG_STATUS
-                if (evt_fn != NULL) {
-                    evt_fn(ghandle->p.stat);
-                }
-            } else if (evt_fn != NULL) {
-                evt_fn(STAT_CHECKSUM_FAIL);
-#endif /* LWGPS_CFG_STATUS */
+    for (; len > 0; ++d_ptr, --len) {
+        if (*d_ptr == '$') { /* Beginning of an entry? */
+            LWGPS_MEMSET(&ghandle->p, 0x00, sizeof(ghandle->p));
+            ghandle->p.state = LINE_STATE_DATA;
+            TERM_ADD(ghandle, *d_ptr);
+        } else if (ghandle->p.state == LINE_STATE_IDLE) {
+            /* Ignore everything until start of next statement,
+                we wait until valid $ sign starts */
+        } else if (*d_ptr == '\r' || *d_ptr == '\n') { /* End of statement */
+            /* No checksum field, last term is not yet parsed */
+            if (ghandle->p.state == LINE_STATE_DATA) {
+                TERM_PARSE(ghandle);
             }
+
+            /* Checksum has priority over invalid data, as it may be the reason for it */
+            if (!prv_check_crc(ghandle)) {
+                prv_update_blocks(ghandle, 0);
+                SEND_EVENT_STATUS(STAT_CHECKSUM_FAIL);
+            } else if (ghandle->p.discard) {
+                prv_update_blocks(ghandle, 1);
+                SEND_EVENT_STATUS(STAT_INVALID_DATA);
+            } else {
+                /* All good = Copy memory from temporary to user memory */
+                prv_update_blocks(ghandle, 1);
+                prv_copy_from_tmp_memory(ghandle);
+                SEND_EVENT_STATUS(ghandle->p.stat);
+            }
+            ghandle->p.state = LINE_STATE_IDLE; /* Statement is processed only once */
+        } else if (ghandle->p.state == LINE_STATE_CRC) {
+            /* Collect checksum, verified at the end of statement */
+            TERM_ADD(ghandle, *d_ptr);
+        } else if (*d_ptr == ',') { /* Term separator character */
+            /*
+             * Term separator indicates the end of the current term.
+             * We need to:
+             * - parse current term
+             * - add char to CRC
+             * - move to the next term.
+             */
+            TERM_PARSE(ghandle);
+            CRC_ADD(ghandle, *d_ptr);
+            TERM_NEXT(ghandle);
+        } else if (*d_ptr == '*') {
+            /*
+             * Star indicates end of data that goes into CRC computation.
+             * This is also end of the current term, so we:
+             *
+             * - Parse the current term
+             * - Set state to CRC and start processing the data which will be computed
+             *      at the "line end" character
+             */
+            TERM_PARSE(ghandle);
+            ghandle->p.state = LINE_STATE_CRC;
+            TERM_NEXT(ghandle);
         } else {
-            if (!ghandle->p.star) {   /* Add to CRC only if star not yet detected */
-                CRC_ADD(ghandle, *d); /* Add to CRC */
-            }
-            TERM_ADD(ghandle, *d); /* Add character to term */
+            /*
+             * Regular character within a term
+             * Add to CRC and term memory
+             */
+            CRC_ADD(ghandle, *d_ptr);
+            TERM_ADD(ghandle, *d_ptr);
         }
     }
     return 1;
